@@ -10,7 +10,7 @@ public class HWMap {
     public DcMotor bLeftWheel = null; //control hub port 1
     public DcMotor bRightWheel = null; //control hub port 0
     public Servo testServo = null;
-    public WebcamName camera = null;
+   public WebcamName camera = null;
 
     public void init(HardwareMap hwMap) {
         fLeftWheel = hwMap.dcMotor.get("FL");
@@ -19,7 +19,7 @@ public class HWMap {
         bRightWheel = hwMap.dcMotor.get("BR");
         testServo = hwMap.servo.get("testServo"); // on  driver hub, input the name within the quotations
 
-        camera = hwMap.get(WebcamName.class, "webcam");
+       camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map
         fRightWheel.setDirection(DcMotor.Direction.REVERSE);
