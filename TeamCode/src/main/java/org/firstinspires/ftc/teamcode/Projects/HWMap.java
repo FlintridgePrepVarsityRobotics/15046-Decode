@@ -9,15 +9,15 @@ public class HWMap {
     public DcMotor fRightWheel = null; //control hub port 3
     public DcMotor bLeftWheel = null; //control hub port 1
     public DcMotor bRightWheel = null; //control hub port 0
-    public Servo testServo = null;
-   public WebcamName camera = null;
+    public WebcamName camera = null; //usb 3 port
 
+    //  public Servo testServo = null;
     public void init(HardwareMap hwMap) {
         fLeftWheel = hwMap.dcMotor.get("FL");
         fRightWheel = hwMap.dcMotor.get("FR");
         bLeftWheel = hwMap.dcMotor.get("BL");
         bRightWheel = hwMap.dcMotor.get("BR");
-        testServo = hwMap.servo.get("testServo"); // on  driver hub, input the name within the quotations
+      //  testServo = hwMap.servo.get("testServo");
 
        camera = hwMap.get(WebcamName.class, "webcam");
 
@@ -46,6 +46,6 @@ public class HWMap {
         fLeftWheel.setPower(0);
         bRightWheel.setPower(0);
         bLeftWheel.setPower(0);
-        testServo.setPosition(1);
+       // testServo.setPosition(1);
     }
 }
