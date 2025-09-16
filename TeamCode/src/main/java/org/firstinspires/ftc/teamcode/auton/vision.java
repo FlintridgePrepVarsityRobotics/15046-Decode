@@ -35,12 +35,11 @@ public class vision extends LinearOpMode{
                 telemetry.addData("z",tag.ftcPose.z);
                 telemetry.addData("pitch",tag.ftcPose.pitch);
                 telemetry.addData("yaw",tag.ftcPose.yaw);
-                telemetry.addData("tag:",tag.id);
+                telemetry.addData("tag ID:",tag.id);
             }
             telemetry.update();
         }
     }
 }
 //https://www.youtube.com/watch?v=CjoXoygzXzI&t=91s = very useful video for open cv april tag detection :) be grateful children- Everson Li/the goat
-
 
