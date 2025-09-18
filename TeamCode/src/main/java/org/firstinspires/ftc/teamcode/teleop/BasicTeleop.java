@@ -4,17 +4,19 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "BasicTeleop")
 
 public class BasicTeleop extends LinearOpMode {
     public HWMap robot = new HWMap();
+    public ElapsedTime buttonTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
 
-        double speed = .9;
+        double speed = 1;
         waitForStart();
         boolean isSpinning = false;
 
@@ -37,6 +39,36 @@ public class BasicTeleop extends LinearOpMode {
             robot.bLeftWheel.setPower(backLeftPower * speed);
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
+
+            if (gamepad1.a){
+                if (buttonTimer.seconds() == 0) {
+                    buttonTimer.reset();
+                }
+                else if (buttonTimer.seconds() >= 1.0) {
+                    robot.intake.setPower(-0.5);
+                }
+                else if (buttonTimer.seconds() < 1.0 && robot.intakeServo.getPosition() == 1){
+                    robot.intakeServo.setPosition(0);
+                }
+                else if (buttonTimer.seconds() < 1.0 && robot.intakeServo.getPosition() == 0){
+                    robot.intakeServo.setPosition(1);
+                }
+                else {
+                    robot.intake.setPower(0);
+                }
+            }
+            else {
+                buttonTimer.reset();
+                robot.intake.setPower(0.0);
+            }
+            if (gamepad1.x){
+                robot.intake.setPower(0.3);
+                sleep(300);
+                robot.intake.setPower(0);
+            }
+            else{
+                robot.intake.setPower(0);
+            }
         }
     }
 }
