@@ -43,14 +43,17 @@ public class HWMap {
         leftencoder.setDirection(DcMotor.Direction.FORWARD);
         rightencoder.setDirection(DcMotor.Direction.FORWARD);
         backencoder.setDirection(DcMotor.Direction.FORWARD);
-
         //set direction
+
+        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        outtake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
         fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        outtake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        outtake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         leftencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
