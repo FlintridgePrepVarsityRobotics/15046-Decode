@@ -35,10 +35,10 @@ public class BasicTeleop extends LinearOpMode {
             double frontRightPower = -(y - x - rx) / denominator;
             double backRightPower = -(y + x - rx) / denominator;
 
-//            robot.fLeftWheel.setPower(frontLeftPower * speed);
-//            robot.bLeftWheel.setPower(backLeftPower * speed);
-//            robot.fRightWheel.setPower(frontRightPower * speed);
-//            robot.bRightWheel.setPower(backRightPower * speed);
+            robot.fLeftWheel.setPower(frontLeftPower * speed);
+            robot.bLeftWheel.setPower(backLeftPower * speed);
+            robot.fRightWheel.setPower(frontRightPower * speed);
+            robot.bRightWheel.setPower(backRightPower * speed);
 
 //            if (gamepad1.a){
 //                if (buttonTimer.seconds() < 0.05) {
