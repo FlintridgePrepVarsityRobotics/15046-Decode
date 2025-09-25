@@ -19,7 +19,7 @@ public class HWMap {
 //    public DcMotor rightencoder = null;// ch port 1
 //    public DcMotor backencoder = null;//ch port 2
 //    public Servo intakeServo = null;
-//    public DcMotorEx launcher = null;
+    public DcMotorEx launcher = null;
     public void init(HardwareMap hwMap) {
         fLeftWheel = hwMap.dcMotor.get("FL");
         fRightWheel = hwMap.dcMotor.get("FR");
@@ -36,10 +36,10 @@ public class HWMap {
 //        camera = hwMap.get(WebcamName.class, "webcam");
 //
 //        // Get motors from hardware map
-        fRightWheel.setDirection(DcMotor.Direction.REVERSE);
-        fLeftWheel.setDirection(DcMotor.Direction.FORWARD);
-        bRightWheel.setDirection(DcMotor.Direction.REVERSE);
-        bLeftWheel.setDirection(DcMotor.Direction.FORWARD);
+        fRightWheel.setDirection(DcMotor.Direction.FORWARD);
+        fLeftWheel.setDirection(DcMotor.Direction.REVERSE);
+        bRightWheel.setDirection(DcMotor.Direction.FORWARD);
+        bLeftWheel.setDirection(DcMotor.Direction.REVERSE);
 //        intake.setDirection(DcMotor.Direction.FORWARD);
 //        outtake.setDirection(DcMotor.Direction.FORWARD);
 //
@@ -71,6 +71,8 @@ public class HWMap {
         fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//            launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
 //        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        camera = hwMap.get(WebcamName.class, "webcam");

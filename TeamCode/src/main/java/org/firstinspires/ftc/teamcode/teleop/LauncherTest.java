@@ -2,6 +2,8 @@
 //
 //import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 //import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+//import com.qualcomm.robotcore.hardware.DcMotor;
+//import com.qualcomm.robotcore.hardware.DcMotorEx;
 //import com.qualcomm.robotcore.util.ElapsedTime;
 //
 //import org.firstinspires.ftc.teamcode.Projects.HWMap;
@@ -21,7 +23,7 @@
 //        boolean isSpinning = false;
 //        int ticksPerRev = 28;
 //        double targetRPM = 0;
-//        double rpmStep = 500; // 500 RPM per tap
+//        double rpmStep = 125; // 500 RPM per tap
 //        double maxRPM = 6000; // motor max free speed
 //        double minRPM = 0;    // optional lower bound
 //
@@ -46,22 +48,24 @@
 ////            robot.bLeftWheel.setPower(backLeftPower * speed);
 ////            robot.fRightWheel.setPower(frontRightPower * speed);
 ////            robot.bRightWheel.setPower(backRightPower * speed);
-//
+//            robot.launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 //            boolean upPressed = gamepad1.dpad_up;
 //            boolean downPressed = gamepad1.dpad_down;
 //
 //            if (upPressed && !lastUp) {
 //                targetRPM += rpmStep;
 //                targetRPM = Math.min(targetRPM, maxRPM);
+//                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 //            }
 //
 //            if (downPressed && !lastDown) {
 //                targetRPM -= rpmStep;
 //                targetRPM = Math.max(targetRPM, minRPM);
+//                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 //            }
 //
 //            if (gamepad1.a){
-//                targetRPM = 0;
+//                targetRPM = -3;
 //            }
 //
 //            lastUp = upPressed;
