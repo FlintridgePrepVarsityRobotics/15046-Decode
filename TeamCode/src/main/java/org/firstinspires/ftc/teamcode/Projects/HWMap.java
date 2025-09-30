@@ -14,10 +14,10 @@ public class HWMap {
     public DcMotor bRightWheel = null; //control hub port
 //    public DcMotor outtake = null;
 //    public DcMotor intake = null;
-//    public WebcamName camera = null; //usb 3 port
-//    public DcMotor leftencoder = null;// ch port 0
-//    public DcMotor rightencoder = null;// ch port 1
-//    public DcMotor backencoder = null;//ch port 2
+    public WebcamName camera = null; //usb 3 port
+    public DcMotor leftencoder = null;// ch port 0
+    public DcMotor rightencoder = null;// ch port 1
+    public DcMotor backencoder = null;//ch port 2
 //    public Servo intakeServo = null;
     public DcMotorEx launcher = null;
     public void init(HardwareMap hwMap) {
@@ -32,8 +32,7 @@ public class HWMap {
 //        leftencoder = hwMap.dcMotor.get("leftencoder");
 //        rightencoder = hwMap.dcMotor.get("rightencoder");
 //        backencoder = hwMap.dcMotor.get("backencoder");
-//
-//        camera = hwMap.get(WebcamName.class, "webcam");
+        camera = hwMap.get(WebcamName.class, "webcam");
 //
 //        // Get motors from hardware map
         fRightWheel.setDirection(DcMotor.Direction.FORWARD);
@@ -62,7 +61,7 @@ public class HWMap {
 //        leftencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        rightencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        backencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//
+
 //        leftencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        rightencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        backencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -75,7 +74,7 @@ public class HWMap {
 
 //        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        camera = hwMap.get(WebcamName.class, "webcam");
+        camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map
 //        intake.setDirection(DcMotor.Direction.FORWARD);
@@ -89,10 +88,10 @@ public class HWMap {
 //        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        outtake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //
-//        fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        outtake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //
@@ -103,11 +102,11 @@ public class HWMap {
 //        leftencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        rightencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        backencoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//
-//        fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 //>>>>>>> origin/master
