@@ -47,6 +47,7 @@ public class reddetect extends LinearOpMode {
 
         while (!isStopRequested() && opModeIsActive()) {
             if(gamepad1.a){
+
                 robot.fRightWheel.setPower(-.2);
                 robot.bRightWheel.setPower(-.2);
                 robot.fLeftWheel.setPower(.2);

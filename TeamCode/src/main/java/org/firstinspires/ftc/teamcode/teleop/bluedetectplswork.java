@@ -11,22 +11,20 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-@TeleOp(name = "bluedetect")
-public class bluedetect extends LinearOpMode {
+@TeleOp(name = "bluedetectplswork")
+public class bluedetectplswork extends LinearOpMode {
     public void leftturn() {
         robot.fRightWheel.setPower(-.5);
         robot.bRightWheel.setPower(-.5);
         robot.fLeftWheel.setPower(.5);
         robot.bLeftWheel.setPower(.5);
     }
-
     public void rightturn() {
         robot.fRightWheel.setPower(.5);
         robot.bRightWheel.setPower(.5);
         robot.fLeftWheel.setPower(-.5);
         robot.bLeftWheel.setPower(-.5);
     }
-
     public void stopdrive() {
         robot.fRightWheel.setPower(0);
         robot.bRightWheel.setPower(0);
@@ -65,9 +63,9 @@ public class bluedetect extends LinearOpMode {
                 if (gamepad1.a) {
                     if (tag.id == 20 && tag.ftcPose.yaw < -5) {
                         rightturn();
-                    } else if (tag.id == 20 && tag.ftcPose.yaw > 5) {
+                    }else if(tag.id == 20 && tag.ftcPose.yaw > 5) {
                         leftturn();
-                    } else {
+                    }else {
                         leftturn();
                     }
                 }
