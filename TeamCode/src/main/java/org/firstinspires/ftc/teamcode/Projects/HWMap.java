@@ -6,13 +6,13 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-//kjnlkjn
+
 
 public class HWMap {
-    public DcMotor fLeftWheel = null;  //control hub port
-    public DcMotor fRightWheel = null; //control hub port
-    public DcMotor bLeftWheel = null; //control hub port
-    public DcMotor bRightWheel = null; //control hub port
+    public DcMotor fLeftWheel = null;  //expansion hub port 0
+    public DcMotor fRightWheel = null; //control hub port 0
+    public DcMotor bLeftWheel = null; //expansion hub port 1
+    public DcMotor bRightWheel = null; //control hub port 1
     public DcMotor outtake = null;
     public DcMotor intake = null;
     public CRServo intakeServo = null;
