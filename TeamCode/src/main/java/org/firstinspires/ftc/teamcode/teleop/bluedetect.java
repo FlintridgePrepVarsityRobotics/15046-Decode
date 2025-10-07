@@ -72,7 +72,7 @@ public class bluedetect extends LinearOpMode {
                     }
                 }
 
-                if (tag.id == 20 && tag.ftcPose.yaw <= -1 && tag.ftcPose.yaw >= 1) {
+                if (tag.id == 20 && tag.ftcPose.yaw >= -1 && tag.ftcPose.yaw <= 1) {
                     stopdrive();
                 }
             }
