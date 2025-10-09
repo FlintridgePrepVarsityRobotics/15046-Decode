@@ -39,24 +39,26 @@ public class reddetect extends LinearOpMode {
 
         int frameWidth = 640;
         int centerX = frameWidth / 2;
-        int tolerance = 30; // pixels within which the tag is "centered"
+        int tolerance = 30; // pixels within which the tag is centered
 
         double speed = 1;
         boolean lastUp = false;
+        boolean lastMid = false;
         boolean lastDown = false;
         int ticksPerRev = 28;
         double targetRPM = 0;
         double rpmStep = 100;
         double maxRPM = 6000;
         double minRPM = 0;
-
+        boolean aPressedLast = false;
+        boolean intakeOn = false;
         waitForStart();
 
         while (opModeIsActive()) {
 
             // --- Driver control ---
             double y = -gamepad1.left_stick_y * -1; // forward/backward
-            double x = gamepad1.left_stick_x * -1.1; // strafe (counteract drift)
+            double x = gamepad1.left_stick_x * 1.1; // strafe (counteract drift)
             double rx = gamepad1.right_stick_x * -1; // rotation
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -70,57 +72,51 @@ public class reddetect extends LinearOpMode {
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 
-            // --- Intake Control (A + B) ---
-            if (gamepad1.a) {
-                if (buttonTimer.seconds() < 0.05) {
-                    buttonTimer.reset();
-                } else if (buttonTimer.seconds() >= 1.0) {
-                    robot.intake.setPower(-0.5);
-                    robot.intakeServo.setPower(-0.6);
-                } else if (buttonTimer.seconds() < 1.0) {
-                    robot.intake.setPower(0.5);
-                    robot.intakeServo.setPower(-0.6);
+
+            if (gamepad1.a && !aPressedLast) {
+                intakeOn = !intakeOn;  // flip the state (on/off)
+                if (intakeOn) {
+                    robot.intake.setPower(0.05);
+                    robot.intakeServo.setPower(.8);
                 } else {
                     robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
                 }
-            } else {
-                buttonTimer.reset();
-                robot.intake.setPower(0.0);
             }
+            aPressedLast = gamepad1.a;
 
-            if (gamepad1.b) {
-                robot.intake.setPower(0.3);
-                robot.intakeServo.setPower(0.4);
-                sleep(300);
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
-            } else {
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
-            }
 
             // --- Launcher RPM Control ---
             robot.launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-            boolean upPressed = gamepad1.dpad_up;
-            boolean downPressed = gamepad1.dpad_down;
+            boolean highSpeed = gamepad1.dpad_right;
+            boolean midSpeed = gamepad1.dpad_up;
+            boolean lowSpeed = gamepad1.dpad_left;
 
-            if (upPressed && !lastUp) {
-                targetRPM += rpmStep;
+            if (highSpeed&& !lastUp) {
+                targetRPM =3200;
                 targetRPM = Math.min(targetRPM, maxRPM);
                 robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
-            if (downPressed && !lastDown) {
-                targetRPM -= rpmStep;
+            if (midSpeed && !lastMid) {
+                targetRPM =2600;
+                targetRPM = Math.max(targetRPM, minRPM);
+                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+            }
+            if (lowSpeed && !lastDown) {
+                targetRPM =2400;
                 targetRPM = Math.max(targetRPM, minRPM);
                 robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
 
             if (gamepad1.x) {
                 targetRPM = -3;
+                sleep(1000);
+                targetRPM=0;
             }
 
-            lastUp = upPressed;
-            lastDown = downPressed;
+            lastUp = highSpeed;
+            lastMid = midSpeed;
+            lastDown= lowSpeed;
 
             double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
             robot.launcher.setVelocity(targetTicksPerSec);
@@ -159,7 +155,7 @@ public class reddetect extends LinearOpMode {
                         telemetry.addData("Tag X", tagX);
                         telemetry.addData("Center", centerX);
                     } else {
-                        telemetry.addLine("Tag detected but not ID 20");
+                        telemetry.addLine("Tag detected but not ID 24");
                     }
                 } else {
                     telemetry.addLine("No tags detected");
