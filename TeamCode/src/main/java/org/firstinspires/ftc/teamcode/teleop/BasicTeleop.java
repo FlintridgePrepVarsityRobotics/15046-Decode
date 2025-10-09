@@ -1,9 +1,14 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,6 +22,19 @@ public class BasicTeleop extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
+        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+                .setDrawTagID(true)
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .setDrawTagOutline(true)
+                .build();
+
+        VisionPortal visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
+                .setCameraResolution(new Size(640, 480)).build();
+
+        waitForStart();
 
         double speed = 1;
         waitForStart();
@@ -57,9 +75,6 @@ public class BasicTeleop extends LinearOpMode {
                 robot.intakeServo.setPower(-0.6);
 
                 }
-                else if (buttonTimer.seconds() < 1.0){
-                    robot.intake.setPower(0.5);
-                }
 
                 else {
                     robot.intake.setPower(0);
@@ -71,8 +86,10 @@ public class BasicTeleop extends LinearOpMode {
             }
             if (gamepad1.b){
                 robot.intake.setPower(0.3);
-                sleep(300);
+                targetRPM = -100;
+                sleep(500);
                 robot.intake.setPower(0);
+                targetRPM = 0;
             }
             else{
                 robot.intake.setPower(0);
@@ -96,6 +113,7 @@ public class BasicTeleop extends LinearOpMode {
             if (gamepad1.x){
                 targetRPM = -3;
             }
+
 
             lastUp = upPressed;
             lastDown = downPressed;
