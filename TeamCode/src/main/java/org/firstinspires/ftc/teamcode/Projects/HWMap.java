@@ -68,18 +68,17 @@ public class HWMap {
         fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map
 //
-        fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Stop();
 
 
