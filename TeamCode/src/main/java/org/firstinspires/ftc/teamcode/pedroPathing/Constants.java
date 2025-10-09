@@ -42,9 +42,9 @@ public class Constants {
             .leftPodY(4)
             .rightPodY(-4)
             .strafePodX(-4.5)
-            .leftEncoder_HardwareMapName("leftencoder")
-            .rightEncoder_HardwareMapName("rightencoder")
-            .strafeEncoder_HardwareMapName("backencoder")
+            .leftEncoder_HardwareMapName("FL")
+            .rightEncoder_HardwareMapName("FR")
+            .strafeEncoder_HardwareMapName("BR")
             .leftEncoderDirection(Encoder.REVERSE)
             .rightEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.REVERSE);
