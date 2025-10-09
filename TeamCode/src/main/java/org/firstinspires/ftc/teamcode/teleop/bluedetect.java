@@ -70,12 +70,19 @@ public class bluedetect extends LinearOpMode {
                     } else {
                         leftturn();
                     }
+                    if (tag.id == 20 && tag.ftcPose.yaw >= -1 && tag.ftcPose.yaw <= 1) {
+                        stopdrive();
+                    }
                 }
 
                 if (tag.id == 20 && tag.ftcPose.yaw >= -1 && tag.ftcPose.yaw <= 1) {
                     stopdrive();
                 }
+                    if (tag.id == 20 && tag.ftcPose.yaw >= -1 && tag.ftcPose.yaw <= 1) {
+                        stopdrive();
+                    }
             }
+
 
             telemetry.update();
         }
