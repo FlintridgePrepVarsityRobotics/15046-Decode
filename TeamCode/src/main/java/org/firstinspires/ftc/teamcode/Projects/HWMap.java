@@ -13,7 +13,6 @@ public class HWMap {
     public DcMotor fRightWheel = null; //control hub port 0
     public DcMotor bLeftWheel = null; //expansion hub port 1
     public DcMotor bRightWheel = null; //control hub port 1
-    public DcMotor outtake = null;
     public DcMotor intake = null;
     public CRServo intakeServo = null;
     public WebcamName camera = null; //usb 3 port
@@ -28,7 +27,6 @@ public class HWMap {
         bLeftWheel = hwMap.dcMotor.get("BL");
         bRightWheel = hwMap.dcMotor.get("BR");
         intake = hwMap.dcMotor.get("intake");
-        outtake = hwMap.dcMotor.get("outtake");
         intakeServo = hwMap.crservo.get("intakeServo");
         launcher = hwMap.get(DcMotorEx.class, "launcher");
         leftencoder = hwMap.dcMotor.get("leftencoder");
@@ -42,7 +40,7 @@ public class HWMap {
         bRightWheel.setDirection(DcMotor.Direction.FORWARD);
         bLeftWheel.setDirection(DcMotor.Direction.REVERSE);
         intake.setDirection(DcMotor.Direction.FORWARD);
-        outtake.setDirection(DcMotor.Direction.FORWARD);
+        intakeServo.setDirection(CRServo.Direction.FORWARD);
 
         leftencoder.setDirection(DcMotor.Direction.FORWARD);
         rightencoder.setDirection(DcMotor.Direction.FORWARD);
@@ -54,7 +52,6 @@ public class HWMap {
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        outtake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -75,7 +72,6 @@ public class HWMap {
             launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        outtake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map
@@ -84,8 +80,7 @@ public class HWMap {
         fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        outtake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER;
         Stop();
 
 
@@ -97,7 +92,6 @@ public class HWMap {
         bRightWheel.setPower(0);
         bLeftWheel.setPower(0);
         intake.setPower(0);
-        outtake.setPower(0);
         intakeServo.setPower(0);
         launcher.setPower(0);
     }

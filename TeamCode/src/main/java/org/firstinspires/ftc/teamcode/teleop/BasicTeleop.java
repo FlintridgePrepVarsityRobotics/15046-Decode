@@ -50,9 +50,6 @@ public class BasicTeleop extends LinearOpMode {
                 else if (buttonTimer.seconds() < 1.0){
                     robot.intakeServo.setPower(0.6);
                 }
-                else if (buttonTimer.seconds() < 1.0){
-                    robot.intakeServo.setPower(-0.6);
-                }
                 else {
                     robot.intake.setPower(0);
                 }
