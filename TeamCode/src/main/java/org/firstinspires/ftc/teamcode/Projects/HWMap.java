@@ -9,18 +9,18 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 //kjnlkjn
 
 public class HWMap {
-    public DcMotor fLeftWheel = null;  //control hub port
-    public DcMotor fRightWheel = null; //control hub port
-    public DcMotor bLeftWheel = null; //control hub port
-    public DcMotor bRightWheel = null; //control hub port
+    public DcMotor fLeftWheel = null;  //expansion hub port0
+    public DcMotor fRightWheel = null; //control hub port0
+    public DcMotor bLeftWheel = null; //expansion hub port1
+    public DcMotor bRightWheel = null; //control hub port1
 //    public DcMotor outtake = null;
     public DcMotor intake = null;
     public WebcamName camera = null; //usb 3 port
-    public DcMotor leftencoder = null;// ch port 0
-    public DcMotor rightencoder = null;// ch port 1
-    public DcMotor backencoder = null;//ch port 2
+//    public DcMotor leftencoder = null;// ch port 0
+//    public DcMotor rightencoder = null;// ch port 1
+//    public DcMotor backencoder = null;//ch port 2
     public CRServo intakeServo = null;
-    public DcMotorEx launcher = null;
+    public DcMotorEx launcher = null; //control hub 2
     public void init(HardwareMap hwMap) {
         fLeftWheel = hwMap.dcMotor.get("FL");
         fRightWheel = hwMap.dcMotor.get("FR");
@@ -29,21 +29,21 @@ public class HWMap {
         intake = hwMap.dcMotor.get("intake");
         intakeServo = hwMap.crservo.get("intakeServo");
         launcher = hwMap.get(DcMotorEx.class, "launcher");
-        leftencoder = hwMap.dcMotor.get("leftencoder");
-        rightencoder = hwMap.dcMotor.get("rightencoder");
-        backencoder = hwMap.dcMotor.get("backencoder");
+//        leftencoder = hwMap.dcMotor.get("leftencoder");
+//        rightencoder = hwMap.dcMotor.get("rightencoder");
+//        backencoder = hwMap.dcMotor.get("backencoder");
         camera = hwMap.get(WebcamName.class, "webcam");
 //
 //        // Get motors from hardware map
-        fRightWheel.setDirection(DcMotor.Direction.REVERSE);
-        fLeftWheel.setDirection(DcMotor.Direction.FORWARD);
-        bRightWheel.setDirection(DcMotor.Direction.REVERSE);
-        bLeftWheel.setDirection(DcMotor.Direction.FORWARD);
+        fRightWheel.setDirection(DcMotor.Direction.FORWARD);
+        fLeftWheel.setDirection(DcMotor.Direction.REVERSE);
+        bRightWheel.setDirection(DcMotor.Direction.FORWARD);
+        bLeftWheel.setDirection(DcMotor.Direction.REVERSE);
         intake.setDirection(DcMotor.Direction.FORWARD);
 
-        leftencoder.setDirection(DcMotor.Direction.FORWARD);
-        rightencoder.setDirection(DcMotor.Direction.FORWARD);
-        backencoder.setDirection(DcMotor.Direction.FORWARD);
+//        leftencoder.setDirection(DcMotor.Direction.FORWARD);
+//        rightencoder.setDirection(DcMotor.Direction.FORWARD);
+//        backencoder.setDirection(DcMotor.Direction.FORWARD);
 //
 //        //set direction
         fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -56,13 +56,13 @@ public class HWMap {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 //<<<<<<< HEAD
-        leftencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        backencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//
-        leftencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        leftencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        rightencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        backencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+////
+//        leftencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        rightencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        backencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //
         fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
