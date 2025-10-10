@@ -158,6 +158,7 @@ public class bluedetect extends LinearOpMode {
             lastMid = midSpeed;
             lastDown = lowSpeed
             ;
+            //
 
             double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
 
