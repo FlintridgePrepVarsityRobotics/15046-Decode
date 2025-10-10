@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-        .mass(7);
+        .mass(10);
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
@@ -27,10 +27,10 @@ public class Constants {
     }
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .rightFrontMotorName("RF")
-            .rightRearMotorName("RB")
-            .leftRearMotorName("LB")
-            .leftFrontMotorName("LF")
+            .rightFrontMotorName("FR")
+            .rightRearMotorName("BR")
+            .leftRearMotorName("BL")
+            .leftFrontMotorName("FL")
             .leftFrontMotorDirection(DcMotor.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
@@ -39,14 +39,14 @@ public class Constants {
             .forwardTicksToInches(.001989436789)
             .strafeTicksToInches(.001989436789)
             .turnTicksToInches(.001989436789)
-            .leftPodY(1)
-            .rightPodY(-1)
-            .strafePodX(-2.5)
-            .leftEncoder_HardwareMapName("leftencoder")
-            .rightEncoder_HardwareMapName("rightencoder")
-            .strafeEncoder_HardwareMapName("backencoder")
-            .leftEncoderDirection(Encoder.FORWARD)
+            .leftPodY(4)
+            .rightPodY(-4)
+            .strafePodX(-4.5)
+            .leftEncoder_HardwareMapName("FL")
+            .rightEncoder_HardwareMapName("FR")
+            .strafeEncoder_HardwareMapName("BR")
+            .leftEncoderDirection(Encoder.REVERSE)
             .rightEncoderDirection(Encoder.FORWARD)
-            .strafeEncoderDirection(Encoder.FORWARD);
+            .strafeEncoderDirection(Encoder.REVERSE);
 }
 //Everson was here

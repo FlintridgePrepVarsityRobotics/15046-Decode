@@ -9,10 +9,10 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 //kjnlkjn
 
 public class HWMap {
-    public DcMotor fLeftWheel = null;  //control hub port
-    public DcMotor fRightWheel = null; //control hub port
-    public DcMotor bLeftWheel = null; //control hub port
-    public DcMotor bRightWheel = null; //control hub port
+    public DcMotor fLeftWheel = null;  //expansion hub port0
+    public DcMotor fRightWheel = null; //control hub port0
+    public DcMotor bLeftWheel = null; //expansion hub port1
+    public DcMotor bRightWheel = null; //control hub port1
 //    public DcMotor outtake = null;
     public DcMotor intake = null;
     public WebcamName camera = null; //usb 3 port
@@ -20,7 +20,7 @@ public class HWMap {
 //    public DcMotor rightencoder = null;// ch port 1
 //    public DcMotor backencoder = null;//ch port 2
     public CRServo intakeServo = null;
-    public DcMotorEx launcher = null;
+    public DcMotorEx launcher = null; //control hub 2
     public void init(HardwareMap hwMap) {
         fLeftWheel = hwMap.dcMotor.get("FL");
         fRightWheel = hwMap.dcMotor.get("FR");
@@ -68,18 +68,17 @@ public class HWMap {
         fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map
 //
-        fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        fLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Stop();
 
 
