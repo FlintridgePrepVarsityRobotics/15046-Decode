@@ -9,7 +9,7 @@ dependencies {
 
     implementation 'com.pedropathing:ftc:2.0.1' //pedropathing
     implementation 'com.pedropathing:telemetry:0.0.6' //pedropathing
-    implementation 'com.bylazar:fullpanels:1.0.2' //pedropathing
+    implementation 'com.bylazar:fullpanels:1.0.7' //pedropathing
 
     implementation 'org.firstinspires.ftc:Inspection:11.0.0'
     implementation 'org.firstinspires.ftc:Blocks:11.0.0'

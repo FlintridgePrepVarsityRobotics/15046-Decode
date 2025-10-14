@@ -80,6 +80,7 @@ public class bluedetect extends LinearOpMode {
             boolean highSpeed = gamepad1.dpad_right;
             boolean midSpeed = gamepad1.dpad_up;
             boolean lowSpeed = gamepad1.dpad_left;
+            boolean aPressed = false;
 
             if (highSpeed&& !lastUp) {
                 targetRPM =3200;
@@ -105,9 +106,13 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("CurrentRPM", currentRPM);
                 telemetry.update();
             }
-            if (gamepad1.a){
+            if (gamepad1.a&&aPressed==false){
                     robot.intake.setPower(0.5);
                     robot.intakeServo.setPower(0.6);
+            }
+            else if (gamepad1.a&&aPressed==true){
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(0);
             }
             else if (gamepad1.dpad_down){
                 robot.intake.setPower(-0.3);
@@ -121,7 +126,7 @@ public class bluedetect extends LinearOpMode {
             else if (gamepad1.b) {
                 robot.intake.setPower(0.3);
                 robot.intakeServo.setPower(0.4);
-                sleep(300);
+                sleep(200);
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             } else {
