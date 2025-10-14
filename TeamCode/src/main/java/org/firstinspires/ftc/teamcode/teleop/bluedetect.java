@@ -104,33 +104,17 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("TargetRPM", targetRPM);
                 telemetry.addData("CurrentRPM", currentRPM);
                 telemetry.update();
-                sleep(750);
-                targetRPM = 0;
-                targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
-                robot.launcher.setVelocity(targetTicksPerSec);
-                currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
-                telemetry.addData("TargetRPM", targetRPM);
-                telemetry.addData("CurrentRPM", currentRPM);
             }
             if (gamepad1.a){
                     robot.intake.setPower(0.5);
                     robot.intakeServo.setPower(0.6);
             }
-
-            if (gamepad1.dpad_down){
+            else if (gamepad1.dpad_down){
                 robot.intake.setPower(-0.3);
                 targetRPM=-1000;
                 double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
                 robot.launcher.setVelocity(targetTicksPerSec);
                 double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
-                telemetry.addData("TargetRPM", targetRPM);
-                telemetry.addData("CurrentRPM", currentRPM);
-                sleep(250);
-                robot.intake.setPower(0);
-                targetRPM = 0;
-                targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
-                robot.launcher.setVelocity(targetTicksPerSec);
-                currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
                 telemetry.addData("TargetRPM", targetRPM);
                 telemetry.addData("CurrentRPM", currentRPM);
             }
@@ -163,17 +147,17 @@ public class bluedetect extends LinearOpMode {
 
                         if (tagX < centerX - tolerance) {
                             // Turn left to center
-                            robot.fRightWheel.setPower(-0.4);
-                            robot.bRightWheel.setPower(-0.4);
-                            robot.fLeftWheel.setPower(0.4);
-                            robot.bLeftWheel.setPower(0.4);
-                            telemetry.addLine("Turning left to center tag");
-                        } else if (tagX > centerX + tolerance) {
-                            // Turn right to center
                             robot.fRightWheel.setPower(0.4);
                             robot.bRightWheel.setPower(0.4);
                             robot.fLeftWheel.setPower(-0.4);
                             robot.bLeftWheel.setPower(-0.4);
+                            telemetry.addLine("Turning left to center tag");
+                        } else if (tagX > centerX + tolerance) {
+                            // Turn right to center
+                            robot.fRightWheel.setPower(-0.4);
+                            robot.bRightWheel.setPower(-0.4);
+                            robot.fLeftWheel.setPower(0.4);
+                            robot.bLeftWheel.setPower(0.4);
                             telemetry.addLine("Turning right to center tag");
                         } else {
                             // Tag is centered
