@@ -73,17 +73,17 @@ public class bluedetect extends LinearOpMode {
             robot.bRightWheel.setPower(backRightPower * speed);
 
 
-            if (gamepad1.a && !aPressedLast) {
-                intakeOn = !intakeOn;  // flip the state (on/off)
-                if (intakeOn) {
-                    robot.intake.setPower(0.05);
-                    robot.intakeServo.setPower(.8);
-                } else {
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
-                }
-            }
-            aPressedLast = gamepad1.a;
+//            if (gamepad1.a && !aPressedLast) {
+//                intakeOn = !intakeOn;  // flip the state (on/off)
+//                if (intakeOn) {
+//                    robot.intake.setPower(0.05);
+//                    robot.intakeServo.setPower(.8);
+//                } else {
+//                    robot.intake.setPower(0);
+//                    robot.intakeServo.setPower(0);
+//                }
+//            }
+//            aPressedLast = gamepad1.a;
 
 
             // --- Launcher RPM Control ---
@@ -112,6 +112,16 @@ public class bluedetect extends LinearOpMode {
                 targetRPM = -3;
                 sleep(1000);
                 targetRPM=0;
+            }
+            if (gamepad1.b) {
+                robot.intake.setPower(0.3);
+                robot.intakeServo.setPower(0.4);
+                sleep(300);
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(0);
+            } else {
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(0);
             }
 
             lastUp = highSpeed;
