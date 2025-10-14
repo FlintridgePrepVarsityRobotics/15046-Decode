@@ -57,9 +57,9 @@ public class reddetect extends LinearOpMode {
         while (opModeIsActive()) {
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y * -1; // forward/backward
-            double x = gamepad1.left_stick_x * 1.1; // strafe (counteract drift)
-            double rx = gamepad1.right_stick_x * -1; // rotation
+            double y = -gamepad1.left_stick_y * 1; // forward/backward
+            double x = gamepad1.left_stick_x * -1.1; // strafe (counteract drift)
+            double rx = gamepad1.right_stick_x * 1; // rotation
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;

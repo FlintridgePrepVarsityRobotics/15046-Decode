@@ -13,10 +13,10 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-@TeleOp(name = "bluetele")
+@TeleOp(name = "bluedetect")
 public class bluedetect extends LinearOpMode {
 
-    public HWMap robot = new HWMap();
+    public HWMap robot = new HWMap ();
     public ElapsedTime buttonTimer = new ElapsedTime();
 
     @Override
@@ -57,9 +57,9 @@ public class bluedetect extends LinearOpMode {
         while (opModeIsActive()) {
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y * -1; // forward/backward
-            double x = gamepad1.left_stick_x * 1.1; // strafe (counteract drift)
-            double rx = gamepad1.right_stick_x * -1; // rotation
+            double y = -gamepad1.left_stick_y * 1; // forward/backward
+            double x = gamepad1.left_stick_x * -1.1; // strafe (counteract drift)
+            double rx = gamepad1.right_stick_x * 1; // rotation
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -73,17 +73,6 @@ public class bluedetect extends LinearOpMode {
             robot.bRightWheel.setPower(backRightPower * speed);
 
 
-//            if (gamepad1.a && !aPressedLast) {
-//                intakeOn = !intakeOn;  // flip the state (on/off)
-//                if (intakeOn) {
-//                    robot.intake.setPower(0.05);
-//                    robot.intakeServo.setPower(.8);
-//                } else {
-//                    robot.intake.setPower(0);
-//                    robot.intakeServo.setPower(0);
-//                }
-//            }
-//            aPressedLast = gamepad1.a;
 
 
             // --- Launcher RPM Control ---
@@ -98,7 +87,7 @@ public class bluedetect extends LinearOpMode {
                 robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
             if (midSpeed && !lastMid) {
-                targetRPM =2600;
+                targetRPM = 2600;
                 targetRPM = Math.max(targetRPM, minRPM);
                 robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
@@ -107,13 +96,45 @@ public class bluedetect extends LinearOpMode {
                 targetRPM = Math.max(targetRPM, minRPM);
                 robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
             }
-
-            if (gamepad1.x) {
-                targetRPM = -3;
-                sleep(1000);
-                targetRPM=0;
+            if (gamepad1.x){
+                targetRPM = -100;
+                double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
+                robot.launcher.setVelocity(targetTicksPerSec);
+                double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
+                telemetry.addData("TargetRPM", targetRPM);
+                telemetry.addData("CurrentRPM", currentRPM);
+                telemetry.update();
+                sleep(750);
+                targetRPM = 0;
+                targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
+                robot.launcher.setVelocity(targetTicksPerSec);
+                currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
+                telemetry.addData("TargetRPM", targetRPM);
+                telemetry.addData("CurrentRPM", currentRPM);
             }
-            if (gamepad1.b) {
+            if (gamepad1.a){
+                    robot.intake.setPower(0.5);
+                    robot.intakeServo.setPower(0.6);
+            }
+
+            if (gamepad1.dpad_down){
+                robot.intake.setPower(-0.3);
+                targetRPM=-1000;
+                double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
+                robot.launcher.setVelocity(targetTicksPerSec);
+                double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
+                telemetry.addData("TargetRPM", targetRPM);
+                telemetry.addData("CurrentRPM", currentRPM);
+                sleep(250);
+                robot.intake.setPower(0);
+                targetRPM = 0;
+                targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
+                robot.launcher.setVelocity(targetTicksPerSec);
+                currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
+                telemetry.addData("TargetRPM", targetRPM);
+                telemetry.addData("CurrentRPM", currentRPM);
+            }
+            else if (gamepad1.b) {
                 robot.intake.setPower(0.3);
                 robot.intakeServo.setPower(0.4);
                 sleep(300);

@@ -61,7 +61,6 @@ public class BasicTeleop extends LinearOpMode {
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 
-
                 if (gamepad1.a) {
                     if (buttonTimer.seconds() < 0.05) {
                         buttonTimer.reset();
@@ -71,9 +70,10 @@ public class BasicTeleop extends LinearOpMode {
 
                     } else if (buttonTimer.seconds() < 1.0) {
                         robot.intake.setPower(0.5);
-                        robot.intakeServo.setPower(-0.6);
+                        robot.intakeServo.setPower(0.6);
                     } else {
                         robot.intake.setPower(0);
+                        robot.intakeServo.setPower(0);
                     }
                 } else {
                     buttonTimer.reset();
