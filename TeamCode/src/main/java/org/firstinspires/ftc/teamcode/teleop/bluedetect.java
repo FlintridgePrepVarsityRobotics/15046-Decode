@@ -50,7 +50,6 @@ public class bluedetect extends LinearOpMode {
         double rpmStep = 100;
         double maxRPM = 6000;
         double minRPM = 0;
-        boolean aPressedLast = false;
         boolean intakeOn = false;
         waitForStart();
 
@@ -106,15 +105,22 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("CurrentRPM", currentRPM);
                 telemetry.update();
             }
-            if (gamepad1.a&&aPressed==false){
+            if (gamepad1.a && !aPressed) {
+                // Button was just pressed (not held)
+                intakeOn = !intakeOn; // toggle the intake state
+
+                if (intakeOn) {
                     robot.intake.setPower(0.5);
                     robot.intakeServo.setPower(0.6);
+                } else {
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
+                }
             }
-            else if (gamepad1.a&&aPressed==true){
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
-            }
-            else if (gamepad1.dpad_down){
+
+
+
+            if(gamepad1.dpad_down){
                 robot.intake.setPower(-0.3);
                 targetRPM=-1000;
                 double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
@@ -123,7 +129,7 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("TargetRPM", targetRPM);
                 telemetry.addData("CurrentRPM", currentRPM);
             }
-            else if (gamepad1.b) {
+            if (gamepad1.b) {
                 robot.intake.setPower(0.3);
                 robot.intakeServo.setPower(0.4);
                 sleep(200);
