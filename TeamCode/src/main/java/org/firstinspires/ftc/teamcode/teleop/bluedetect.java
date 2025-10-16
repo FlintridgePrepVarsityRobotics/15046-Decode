@@ -50,8 +50,10 @@ public class bluedetect extends LinearOpMode {
         double rpmStep = 100;
         double maxRPM = 6000;
         double minRPM = 0;
+        int counter = 0;
         boolean intakeOn = false;
         boolean bWasPressed = false;
+        boolean isMotorRunning = false;
         waitForStart();
 
         while (opModeIsActive()) {
@@ -106,20 +108,23 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("CurrentRPM", currentRPM);
                 telemetry.update();
             }
-            if (gamepad1.a && !aPressed) {
+            if (gamepad1.aWasPressed()) {
                 // Button was just pressed (not held)
-                intakeOn = !intakeOn; // toggle the intake state
-
-                if (intakeOn) {
-                    robot.intake.setPower(0.5);
-                    robot.intakeServo.setPower(0.6);
+                if (isMotorRunning == true){
+                    isMotorRunning = false;
                 }
-                else {
+                else if (isMotorRunning == false){
+                    isMotorRunning = true;
+                }
+                if (isMotorRunning == true) {
+                    robot.intake.setPower(0.5);
+                    robot.intakeServo.setPower(0.8);
+                }
+                else if (isMotorRunning == false) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
             }
-
             if(gamepad1.dpad_down){
                 robot.intake.setPower(-0.3);
                 targetRPM=-1000;
@@ -134,7 +139,7 @@ public class bluedetect extends LinearOpMode {
                 if (!bWasPressed) {
                     buttonTimer.reset();
                     robot.intake.setPower(0.3);
-                    robot.intakeServo.setPower(0.4);
+                    robot.intakeServo.setPower(0.6);
                     bWasPressed = true;
                 }
 
@@ -144,13 +149,12 @@ public class bluedetect extends LinearOpMode {
                     robot.intakeServo.setPower(0);
                 }
 
-            } else {
+            } else if (!isMotorRunning){
                 // Reset for next press
                 bWasPressed = false;
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             }
-
 
             lastUp = highSpeed;
             lastMid = midSpeed;
