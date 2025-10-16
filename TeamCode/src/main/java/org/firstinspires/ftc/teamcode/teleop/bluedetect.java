@@ -51,6 +51,7 @@ public class bluedetect extends LinearOpMode {
         double maxRPM = 6000;
         double minRPM = 0;
         boolean intakeOn = false;
+        boolean bWasPressed = false;
         waitForStart();
 
         while (opModeIsActive()) {
@@ -112,13 +113,12 @@ public class bluedetect extends LinearOpMode {
                 if (intakeOn) {
                     robot.intake.setPower(0.5);
                     robot.intakeServo.setPower(0.6);
-                } else {
+                }
+                else {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
             }
-
-
 
             if(gamepad1.dpad_down){
                 robot.intake.setPower(-0.3);
@@ -130,15 +130,27 @@ public class bluedetect extends LinearOpMode {
                 telemetry.addData("CurrentRPM", currentRPM);
             }
             if (gamepad1.b) {
-                robot.intake.setPower(0.3);
-                robot.intakeServo.setPower(0.4);
-                sleep(200);
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                // Only reset timer when B is first pressed
+                if (!bWasPressed) {
+                    buttonTimer.reset();
+                    robot.intake.setPower(0.3);
+                    robot.intakeServo.setPower(0.4);
+                    bWasPressed = true;
+                }
+
+                // Stop after 200 ms
+                if (buttonTimer.milliseconds() >= 200) {
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
+                }
+
             } else {
+                // Reset for next press
+                bWasPressed = false;
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             }
+
 
             lastUp = highSpeed;
             lastMid = midSpeed;
