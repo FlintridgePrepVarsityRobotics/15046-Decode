@@ -7,6 +7,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.config.Config;
 
 import android.util.Size;
 
@@ -15,7 +18,7 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
+@Config
 @TeleOp(name = "bluedetect2")
 public class bluedetect2 extends LinearOpMode {
 
@@ -24,24 +27,26 @@ public class bluedetect2 extends LinearOpMode {
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public double kP = 0.0008;
-    public double kI = 0.0;
-    public double kD = 0.0002;
-    public double kF = 0.0;
+    public static double kP = 0.0008;
+    public static double kI = 0.0;
+    public static double kD = 0.0002;
+    public static double kF = 0.0;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
-    public double kS = 0.05;
-    public double kV = 0.00035;
-    public double kA = 0.0;
+
+    public static double kS = 0.05;
+    public static double kV = 0.00035;
+    public static double kA = 0.0;
+
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
+
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
-
         // --- Vision setup ---
         AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagID(true)
@@ -67,6 +72,7 @@ public class bluedetect2 extends LinearOpMode {
         boolean bWasPressed = false;
         boolean isMotorRunning = false;
 
+
         // For A-button toggle
         boolean lastAState = false;
 
@@ -77,10 +83,16 @@ public class bluedetect2 extends LinearOpMode {
         // Ensure launcher has encoder mode set if you want velocity feedback
         robot.launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        dashboard.setTelemetryTransmissionInterval(25);
 
         waitForStart();
 
         while (opModeIsActive()) {
+            // Creating obj for PID Tuning
+            TelemetryPacket packet = new TelemetryPacket();
+            pidf.setPIDF(kP, kI, kD, kF);
+            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
             // --- Driver control ---
             double y = -gamepad1.left_stick_y;
@@ -190,10 +202,15 @@ public class bluedetect2 extends LinearOpMode {
 
             // --- Telemetry for tuning ---
             telemetry.addData("Setpoint RPM", setpointRPM);
+            packet.put("Setpoint RPM", setpointRPM);
             telemetry.addData("Measured RPM", "%.1f", measuredRPM);
+            packet.put("Measured RPM", measuredRPM);
             telemetry.addData("FF Output", "%.4f", ffOutput);
+            packet.put("FF Output", ffOutput);
             telemetry.addData("PID Output", "%.4f", pidOutput);
+            packet.put("PID Output", pidOutput);
             telemetry.addData("Combined (power)", "%.4f", combinedOutput);
+            packet.put("Combined (power)", combinedOutput);
 
             // --- AprilTag Centering (Y button) ---
             if (gamepad1.y) {
@@ -229,7 +246,7 @@ public class bluedetect2 extends LinearOpMode {
                     telemetry.addLine("No tags detected");
                 }
             }
-
+            dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 
             // store previous D-pad states

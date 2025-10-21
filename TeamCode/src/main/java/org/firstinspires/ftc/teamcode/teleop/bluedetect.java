@@ -1,10 +1,19 @@
 package org.firstinspires.ftc.teamcode.teleop;
+import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PController;
+import com.arcrobotics.ftclib.controller.PDController;
+
 
 import android.util.Size;
 
+
+import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -12,16 +21,32 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.DcMotorControllerEx;
+
+
 
 @TeleOp(name = "bluedetect")
 public class bluedetect extends LinearOpMode {
-
     public HWMap robot = new HWMap ();
     public ElapsedTime buttonTimer = new ElapsedTime();
+
+
+    public double kP = 2.5;
+    public double kI = 0.1;
+    public double kD = 0.2;
+    public double kF = 0.5;
+    public double kA = 0;
+    public double kS = 0;
+    public double kV = 0;
+    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+    // Creates a PIDFController with gains kP, kI, kD, and kF
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
+
 
         // --- Vision setup ---
         AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
@@ -46,15 +71,33 @@ public class bluedetect extends LinearOpMode {
         boolean lastMid = false;
         boolean lastDown = false;
         int ticksPerRev = 28;
+        double setpoint = 0;
         double targetRPM = 0;
         double rpmStep = 100;
         double maxRPM = 6000;
         double minRPM = 0;
         int counter = 0;
+        double foutput;
         boolean intakeOn = false;
         boolean bWasPressed = false;
         boolean isMotorRunning = false;
+
+
         waitForStart();
+        // Get the port number of our configured motor.
+
+        // Get the PIDF coefficients for the RUN_USING_ENCODER RunMode.
+
+
+        /*
+         * A sample control loop for a motor
+         */
+
+// We set the setpoint here.
+// Now we don't have to declare the setpoint
+// in our calculate() method arguments.
+        pidf.setSetPoint(1200);
+        // Create a new SimpleMotorFeedforward with gains kS, kV, and kA
 
         while (opModeIsActive()) {
 
@@ -84,20 +127,28 @@ public class bluedetect extends LinearOpMode {
             boolean lowSpeed = gamepad1.dpad_left;
             boolean aPressed = false;
 
+
             if (highSpeed&& !lastUp) {
-                targetRPM =3200;
-                targetRPM = Math.min(targetRPM, maxRPM);
-                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                setpoint = 3000;
+                foutput = pidf.calculate(
+                        robot.launcher.getCurrentPosition() , setpoint  // the measured value
+                );
+                robot.launcher.setVelocity(foutput);
             }
             if (midSpeed && !lastMid) {
-                targetRPM = 2600;
-                targetRPM = Math.max(targetRPM, minRPM);
-                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                setpoint = 2600;
+                foutput = pidf.calculate(
+                        robot.launcher.getCurrentPosition() , setpoint // the measured value
+                );
+                robot.launcher.setVelocity(foutput);
             }
             if (lowSpeed && !lastDown) {
-                targetRPM =2400;
-                targetRPM = Math.max(targetRPM, minRPM);
-                robot.launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                setpoint = 2400;
+                foutput = pidf.calculate(
+                        robot.launcher.getCurrentPosition(), setpoint  // the measured value
+                );
+
+                robot.launcher.setVelocity(foutput);
             }
             if (gamepad1.x){
                 targetRPM = -100;
