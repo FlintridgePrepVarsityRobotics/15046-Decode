@@ -14,7 +14,10 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-        .mass(10);
+        .mass(10)
+        .forwardZeroPowerAcceleration(-44.856855719974476)
+        .lateralZeroPowerAcceleration(-69.10235330262704);
+
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
@@ -27,8 +30,9 @@ public class Constants {
     }
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .xVelocity(53.26527061873287)
-            .yVelocity(45.14149260478018)
+            .xVelocity(54.26405819786426)
+            .yVelocity(44.67281491873611)
+
             .rightFrontMotorName("FR")
             .rightRearMotorName("BR")
             .leftRearMotorName("BL")
@@ -47,8 +51,8 @@ public class Constants {
             .leftEncoder_HardwareMapName("FL")
             .rightEncoder_HardwareMapName("FR")
             .strafeEncoder_HardwareMapName("BR")
-            .leftEncoderDirection(Encoder.REVERSE)
-            .rightEncoderDirection(Encoder.FORWARD)
-            .strafeEncoderDirection(Encoder.REVERSE);
+            .leftEncoderDirection(Encoder.FORWARD)
+            .rightEncoderDirection(Encoder.REVERSE)
+            .strafeEncoderDirection(Encoder.FORWARD);
 }
 //Everson was here
