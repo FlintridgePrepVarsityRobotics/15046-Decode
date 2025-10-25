@@ -251,7 +251,7 @@ public class reddetect extends LinearOpMode {
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 
-            // store previous D-pad states-
+            // store previous D-pad states
             lastUp = highSpeed;
             lastMid = midSpeed;
             lastDown = lowSpeed;
