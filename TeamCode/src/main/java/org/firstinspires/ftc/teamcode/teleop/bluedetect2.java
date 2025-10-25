@@ -69,6 +69,7 @@ public class bluedetect2 extends LinearOpMode {
         boolean lastUp = false;
         boolean lastMid = false;
         boolean lastDown = false;
+        boolean lastX = false;
         boolean bWasPressed = false;
         boolean isMotorRunning = false;
 
@@ -117,9 +118,10 @@ public class bluedetect2 extends LinearOpMode {
 
             // Update setpoint only when a D-pad button is newly pressed (rising edge),
             // so you don't keep re-setting it each loop.
-            if (highSpeed && !lastUp) setpointRPM = 3000;
+            if (highSpeed && !lastUp) setpointRPM = 3200;
             if (midSpeed && !lastMid) setpointRPM = 2600;
             if (lowSpeed && !lastDown) setpointRPM = 2400;
+            if (gamepad1.x && !lastX) setpointRPM = 0;
 
             // Measurements in ticks/sec
             double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
@@ -142,20 +144,20 @@ public class bluedetect2 extends LinearOpMode {
             robot.launcher.setPower(combinedOutput);
 
             // --- X button logic (reverse slowly) ---
-            if (gamepad1.x) {
-                // reverse at low speed: -100 RPM example
-                targetRPM = -100;
-                double targetTicksPerSecX = targetRPM / 60.0 * ticksPerRev;
-                // convert to a power using feedforward (and clamp)
-                double revPower = feedforward.calculate(targetTicksPerSecX);
-                revPower = Math.max(-1.0, Math.min(1.0, revPower));
-                robot.launcher.setPower(revPower);
-
-                double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
-                telemetry.addData("Reverse Mode", "Active");
-                telemetry.addData("TargetRPM (X)", targetRPM);
-                telemetry.addData("CurrentRPM", currentRPM);
-            }
+//            if (gamepad1.x) {
+//                // reverse at low speed: -100 RPM example
+//                targetRPM = -100;
+//                double targetTicksPerSecX = targetRPM / 60.0 * ticksPerRev;
+//                // convert to a power using feedforward (and clamp)
+//                double revPower = feedforward.calculate(targetTicksPerSecX);
+//                revPower = Math.max(-1.0, Math.min(1.0, revPower));
+//                robot.launcher.setPower(revPower);
+//
+//                double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
+//                telemetry.addData("Reverse Mode", "Active");
+//                telemetry.addData("TargetRPM (X)", targetRPM);
+//                telemetry.addData("CurrentRPM", currentRPM);
+//            }
 
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
@@ -182,15 +184,15 @@ public class bluedetect2 extends LinearOpMode {
             }
             lastAState = aNow;
 
-            // --- B button: timed intake pulse ---
-            if (gamepad1.b) {
+            // --- B button: timed intake pu lse ---
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
-                    robot.intake.setPower(0.3);
-                    robot.intakeServo.setPower(0.6);
+                    robot.intake.setPower(0.6);
+                    robot.intakeServo.setPower(1);
                     bWasPressed = true;
                 }
-                if (buttonTimer.milliseconds() >= 200) {
+                if (buttonTimer.milliseconds() >= 150) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
