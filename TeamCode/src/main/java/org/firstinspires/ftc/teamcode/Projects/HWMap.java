@@ -78,7 +78,7 @@ public class HWMap {
 //        fRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        fLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        bRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        bLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         Stop();
 
 

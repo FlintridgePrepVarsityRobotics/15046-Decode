@@ -11,7 +11,6 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-
 import java.util.function.Supplier;
 
 @Configurable
@@ -19,6 +18,7 @@ import java.util.function.Supplier;
 public class pedroPathTeleop extends OpMode {
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this
+    private boolean automatedDrive;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
     private boolean slowMode = false;
@@ -51,7 +51,11 @@ public class pedroPathTeleop extends OpMode {
         follower.update();
         telemetryM.update();
 
+        if (!automatedDrive) {
+            //Make the last parameter false for field-centric
+            //In case the drivers want to use a "slowMode" you can scale the vectors
 
+            //This is the normal version to use in the TeleOp
             if (!slowMode) follower.setTeleOpDrive(
                     -gamepad1.left_stick_y,
                     -gamepad1.left_stick_x,
@@ -68,10 +72,35 @@ public class pedroPathTeleop extends OpMode {
             );
         }
 
-
+        //Automated PathFollowing
+        if (gamepad1.aWasPressed()) {
+            follower.followPath(pathChain.get());
+            automatedDrive = true;
+        }
 
         //Stop automated following if the follower is done
+        if (automatedDrive && (gamepad1.bWasPressed() || !follower.isBusy())) {
+            follower.startTeleopDrive();
+            automatedDrive = false;
+        }
 
+        //Slow Mode
+        if (gamepad1.rightBumperWasPressed()) {
+            slowMode = !slowMode;
+        }
+
+        //Optional way to change slow mode strength
+        if (gamepad1.xWasPressed()) {
+            slowModeMultiplier += 0.25;
+        }
+
+        //Optional way to change slow mode strength
+        if (gamepad2.yWasPressed()) {
+            slowModeMultiplier -= 0.25;
+        }
+
+        telemetryM.debug("position", follower.getPose());
+        telemetryM.debug("velocity", follower.getVelocity());
+        telemetryM.debug("automatedDrive", automatedDrive);
     }
-
-//Everson was here
+}
