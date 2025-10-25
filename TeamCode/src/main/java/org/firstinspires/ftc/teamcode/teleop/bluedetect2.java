@@ -27,16 +27,16 @@ public class bluedetect2 extends LinearOpMode {
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public static double kP = 0.0008;
-    public static double kI = 0.0;
-    public static double kD = 0.0002;
+    public static double kP = 0.0003;
+    public static double kI = 0.0006;
+    public static double kD = 0.0;
     public static double kF = 0.0;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
-    public static double kS = 0.05;
-    public static double kV = 0.00035;
+    public static double kS = 0.0;
+    public static double kV = 0.00042;
     public static double kA = 0.0;
 
 
