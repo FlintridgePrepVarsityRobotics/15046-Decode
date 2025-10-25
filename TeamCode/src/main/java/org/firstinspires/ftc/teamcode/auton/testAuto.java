@@ -28,7 +28,7 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
-@Autonomous(name = "testauto", group = "poo")
+@Autonomous(name = "BlueberryAuto", group = "fruitauto")
 public class testAuto extends OpMode {
 
     public HWMap robot = new HWMap();
@@ -40,7 +40,7 @@ public class testAuto extends OpMode {
     private final Pose startPose = new Pose(16.06530612244898, 118.92244897959183, Math.toRadians(144)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(38.4, 96.39183673469388, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pickup1Pose = new Pose(44.27755102040816, 79, Math.toRadians(180));
-    private final Pose pickupintakePose = new Pose(26, 84.24489795918367, Math.toRadians(180));
+    private final Pose pickupintakePose = new Pose(28.367, 84.24489795918367, Math.toRadians(180));
     private Path scorePreload;
     private boolean returningToScore = false;
 
@@ -186,8 +186,8 @@ public class testAuto extends OpMode {
 
                     // Start intake once launcher stopped
                     if (currentRPM <= 100 && !robot.intake.isBusy()) {
-                        robot.intake.setPower(0.5);
-                        robot.intakeServo.setPower(0.8);
+                        robot.intake.setPower(0.65);
+                        robot.intakeServo.setPower(1);
 
                         follower.followPath(intakePickup1, true);
                         actionTimer.resetTimer();
