@@ -17,11 +17,11 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
         .mass(10)
-        .forwardZeroPowerAcceleration(-63.5760690)
-        .lateralZeroPowerAcceleration(-72.10235330262704)
+        .forwardZeroPowerAcceleration(-63.5760690)//-63.5760690
+        .lateralZeroPowerAcceleration(-72.10235330262704)//-72.10235330262704
         .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.007, .03))
         .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.06, 0.02))
-        .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025,0.0,0.00001,0.6,0.01))
+        .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025,0.0,0.00001,0.3,0.01))
         .centripetalScaling(0.003);
 
 
@@ -37,8 +37,7 @@ public class Constants {
     }
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)
-            .xVelocity(75.972055096)
-            .yVelocity(60.0469213)
+            .xVelocity(70.972055096)//70.972055096------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//60.0469213
             .rightFrontMotorName("FR")
             .rightRearMotorName("BR")
             .leftRearMotorName("BL")
