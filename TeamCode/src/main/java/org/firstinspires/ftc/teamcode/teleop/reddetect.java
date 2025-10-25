@@ -19,7 +19,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "bluedetect2")
+@TeleOp(name = "reddetect")
 public class reddetect extends LinearOpMode {
 
     public HWMap robot = new HWMap();
@@ -221,16 +221,16 @@ public class reddetect extends LinearOpMode {
                     if (tag.id == 24) {
                         double tagX = tag.center.x;
                         if (tagX < centerX - tolerance) {
-                            robot.fRightWheel.setPower(-0.4);
-                            robot.bRightWheel.setPower(-0.4);
-                            robot.fLeftWheel.setPower(0.4);
-                            robot.bLeftWheel.setPower(0.4);
-                            telemetry.addLine("Turning left to center tag");
-                        } else if (tagX > centerX + tolerance) {
                             robot.fRightWheel.setPower(0.4);
                             robot.bRightWheel.setPower(0.4);
                             robot.fLeftWheel.setPower(-0.4);
                             robot.bLeftWheel.setPower(-0.4);
+                            telemetry.addLine("Turning left to center tag");
+                        } else if (tagX > centerX + tolerance) {
+                            robot.fRightWheel.setPower(-0.4);
+                            robot.bRightWheel.setPower(-0.4);
+                            robot.fLeftWheel.setPower(0.4);
+                            robot.bLeftWheel.setPower(0.4);
                             telemetry.addLine("Turning right to center tag");
                         } else {
                             robot.fRightWheel.setPower(0);
