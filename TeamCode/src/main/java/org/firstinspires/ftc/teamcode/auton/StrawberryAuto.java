@@ -31,7 +31,7 @@ public class StrawberryAuto extends OpMode {
     private final Pose startPose = new Pose(144 - 16.06530612244898, 118.92244897959183, Math.toRadians(180 - 144));
     private final Pose scorePose = new Pose(144 - 38.4, 96.39183673469388, Math.toRadians(180 - 135));
     private final Pose pickup1Pose = new Pose(144 - 44.27755102040816, 79, Math.toRadians(180 - 180));
-    private final Pose pickupintakePose = new Pose(144 - 28.367, 84.24489795918367, Math.toRadians(180 - 180));
+    private final Pose pickupintakePose = new Pose(144 - 30, 84.24489795918367, Math.toRadians(180 - 180));
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1;
