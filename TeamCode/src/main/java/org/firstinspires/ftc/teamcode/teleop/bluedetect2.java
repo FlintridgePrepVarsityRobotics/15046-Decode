@@ -220,32 +220,62 @@ public class bluedetect2 extends LinearOpMode {
                     AprilTagDetection tag = tagProcessor.getDetections().get(0);
                     if (tag.id == 20) {
                         double tagX = tag.center.x;
-                        if (tagX < centerX - tolerance) {
-                            robot.fRightWheel.setPower(0.4);
-                            robot.bRightWheel.setPower(0.4);
-                            robot.fLeftWheel.setPower(-0.4);
-                            robot.bLeftWheel.setPower(-0.4);
-                            telemetry.addLine("Turning left to center tag");
-                        } else if (tagX > centerX + tolerance) {
-                            robot.fRightWheel.setPower(-0.4);
-                            robot.bRightWheel.setPower(-0.4);
-                            robot.fLeftWheel.setPower(0.4);
-                            robot.bLeftWheel.setPower(0.4);
-                            telemetry.addLine("Turning right to center tag");
+                        double tagZ = tag.ftcPose.z;
+                        double tagYaw = tag.ftcPose.yaw;
+                        double leftBias = 30;
+                        double baseRightBias = 60;
+                        double angleBiasAdjustment = 0;
+                        double closeRange = 59.87;
+                        double midRange = 94.05;
+
+                        if (tagZ < closeRange) {
+                            angleBiasAdjustment = tagYaw * 1.5;
+                        }
+
+                        double adjustedRightBias = baseRightBias + angleBiasAdjustment;
+                        double adjustedLeftCenter = centerX - leftBias;
+                        double adjustedRightCenter = centerX + adjustedRightBias;
+
+                        double basePower = 0.4;
+                        double turnPower;
+
+                        if (tagZ > midRange) {
+                            turnPower = basePower * 0.4;
+                        } else if (tagZ >= closeRange) {
+                            turnPower = basePower * 0.6;
                         } else {
+                            turnPower = basePower;
+                        }
+                        //greater than 94.05 --> turn left very very slightly
+                        //yaw is 0 degrees(facing the apriltag head on) --> don't adjust
+                        //yaw is 20 degrees --> turn right very slightly
+                        if (tagX < adjustedLeftCenter - tolerance) {
+                            // Turn left
+                            robot.fRightWheel.setPower(turnPower);
+                            robot.bRightWheel.setPower(turnPower);
+                            robot.fLeftWheel.setPower(-turnPower);
+                            robot.bLeftWheel.setPower(-turnPower);
+                        } else if (-40<tagYaw&&tagYaw<-20) {
+                            // Turn right
+                            robot.fRightWheel.setPower(-turnPower);
+                            robot.bRightWheel.setPower(-turnPower);
+                            robot.fLeftWheel.setPower(turnPower);
+                            robot.bLeftWheel.setPower(turnPower);
+                        } else {
+                            // Stop
                             robot.fRightWheel.setPower(0);
                             robot.bRightWheel.setPower(0);
                             robot.fLeftWheel.setPower(0);
                             robot.bLeftWheel.setPower(0);
-                            telemetry.addLine("Tag centered!");
                         }
+                        telemetry.addData("Tag ID", tag.id);
                         telemetry.addData("Tag X", tag.center.x);
-                        telemetry.addData("Center", centerX);
-                    } else {
-                        telemetry.addLine("Tag detected but not ID 20");
+                        telemetry.addData("Distance (Z)", tagZ);
+                        telemetry.addData("Yaw (deg)", tagYaw);
+                        telemetry.addData("Turn Power", turnPower);
+                        telemetry.addData("Right Bias (base+angle)", adjustedRightBias);
+                        telemetry.addData("Angle Bias Adjustment", angleBiasAdjustment);
                     }
-                } else {
-                    telemetry.addLine("No tags detected");
                 }
             }
             dashboard.sendTelemetryPacket(packet);

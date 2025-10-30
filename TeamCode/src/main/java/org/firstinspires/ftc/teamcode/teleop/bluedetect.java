@@ -177,7 +177,7 @@ public class bluedetect extends LinearOpMode {
                 }
             }
             if(gamepad1.dpad_down){
-                robot.intake.setPower(-0.3);
+                robot.intake.setPower(-0.6);
                 targetRPM=-1000;
                 double targetTicksPerSec = targetRPM / 60.0 * ticksPerRev;
                 robot.launcher.setVelocity(targetTicksPerSec);
@@ -189,7 +189,7 @@ public class bluedetect extends LinearOpMode {
                 // Only reset timer when B is first pressed
                 if (!bWasPressed) {
                     buttonTimer.reset();
-                    robot.intake.setPower(0.3);
+                    robot.intake.setPower(0.5);
                     robot.intakeServo.setPower(0.6);
                     bWasPressed = true;
                 }
