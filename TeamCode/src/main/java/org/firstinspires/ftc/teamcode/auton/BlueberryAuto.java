@@ -182,12 +182,12 @@ public class BlueberryAuto extends OpMode {
 
                         follower.followPath(intakePickup1, true);
                         actionTimer.resetTimer();
-                        setPathState(21);  // temporary sub-state for intake monitoring
+                        setPathState(67);  // temporary sub-state for intake monitoring
                     }
                 }
                 break;
 
-            case 21: // after intake finishes, do reverse launcher pulse
+            case 67: // after intake finishes, do reverse launcher pulse
                 if (!follower.isBusy()) {
                     // short reverse pulse (~100 ms)
                     if (actionTimer.getElapsedTimeSeconds() < 0.25) {
