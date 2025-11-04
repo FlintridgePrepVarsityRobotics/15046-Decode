@@ -4,13 +4,14 @@ import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.config.Config;
 
+import android.graphics.Color;
 import android.util.Size;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -19,8 +20,8 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "bluedetect2")
-public class bluedetect2 extends LinearOpMode {
+@TeleOp(name = "blue")
+public class blueTele extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
@@ -84,8 +85,22 @@ public class bluedetect2 extends LinearOpMode {
         // Ensure launcher has encoder mode set if you want velocity feedback
         robot.launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ColorSensor sensor1;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
+        sensor1 = hardwareMap.get(ColorSensor.class, "sensor1");
+
+        // get a reference to the distance sensor that shares the same name
+
+        // hsvValues is an array that will hold the hue, saturation, and value information.
+        float hsvValues[] = {0F, 0F, 0F};
+
+        // values is a reference to the hsvValues array.
+        final float values[] = hsvValues;
+
+        // sometimes it helps to multiply the raw RGB values with a scale factor
+        // to amplify/attentuate the measured values.
+        final double SCALE_FACTOR = 255;
 
         waitForStart();
 
@@ -170,19 +185,38 @@ public class bluedetect2 extends LinearOpMode {
             }
 
             // --- Intake Toggle (A button) with rising-edge detection ---
+//            boolean aNow = gamepad1.a;
+//            if (aNow && !lastAState) {
+//                // just pressed
+//                isMotorRunning = !isMotorRunning;
+//                if (isMotorRunning) {
+//                    robot.intake.setPower(0.5);
+//                    robot.intakeServo.setPower(0.8);
+//                } else {
+//                    robot.intake.setPower(0);
+//                    robot.intakeServo.setPower(0);
+//                }
+//            }
+//            lastAState = aNow;
+            boolean IntakeOn;
+            boolean Fullintake;
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState) {
-                // just pressed
-                isMotorRunning = !isMotorRunning;
-                if (isMotorRunning) {
-                    robot.intake.setPower(0.5);
-                    robot.intakeServo.setPower(0.8);
-                } else {
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+               robot.intake.setPower(.5);
+               robot.intakeServo.setPower(1);
+               IntakeOn = true;
+                if(){
+                    Fullintake = true;
+                }else{
+                    Fullintake = false;
+                }
+                if(Fullintake && IntakeOn){
+                    robot.intake.setPower(-.2);
+                    robot.intakeServo.setPower(1);
+                    Thread.sleep(1000);
                 }
             }
-            lastAState = aNow;
+
 
             // --- B button: timed intake pu lse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
@@ -213,6 +247,13 @@ public class bluedetect2 extends LinearOpMode {
             packet.put("PID Output", pidOutput);
             telemetry.addData("Combined (power)", "%.4f", combinedOutput);
             packet.put("Combined (power)", combinedOutput);
+
+            telemetry.addData("Clear", sensor1.alpha());
+            telemetry.addData("Red  ", sensor1.red());
+            telemetry.addData("Green", sensor1.green());
+            telemetry.addData("Blue ", sensor1.blue());
+            telemetry.addData("Hue", hsvValues[0]);
+
 
             // --- AprilTag Centering (Y button) ---
             if (gamepad1.y) {

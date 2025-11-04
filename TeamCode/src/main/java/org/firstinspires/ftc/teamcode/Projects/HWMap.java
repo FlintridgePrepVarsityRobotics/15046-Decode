@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 //kjnlkjn
 
@@ -13,12 +14,12 @@ public class HWMap {
     public DcMotor fRightWheel = null; //control hub port0
     public DcMotor bLeftWheel = null; //expansion hub port1
     public DcMotor bRightWheel = null; //control hub port1
+    public ColorSensor sensor1 = null;
+    public ColorSensor sensor2 = null;
 //    public DcMotor outtake = null;
     public DcMotor intake = null;
     public WebcamName camera = null; //usb 3 port
-//    public DcMotor leftencoder = null;// ch port 0
-//    public DcMotor rightencoder = null;// ch port 1
-//    public DcMotor backencoder = null;//ch port 2
+
     public CRServo intakeServo = null;
     public DcMotorEx launcher = null; //control hub 2
     public void init(HardwareMap hwMap) {
@@ -26,6 +27,8 @@ public class HWMap {
         fRightWheel = hwMap.dcMotor.get("FR");
         bLeftWheel = hwMap.dcMotor.get("BL");
         bRightWheel = hwMap.dcMotor.get("BR");
+        sensor1 = hwMap.colorSensor.get("sensor1");
+        sensor2 = hwMap.colorSensor.get("sensor2");
         intake = hwMap.dcMotor.get("intake");
         intakeServo = hwMap.crservo.get("intakeServo");
         launcher = hwMap.get(DcMotorEx.class, "launcher");
@@ -41,9 +44,7 @@ public class HWMap {
         bLeftWheel.setDirection(DcMotor.Direction.FORWARD);
         intake.setDirection(DcMotor.Direction.FORWARD);
 
-//        leftencoder.setDirection(DcMotor.Direction.FORWARD);
-//        rightencoder.setDirection(DcMotor.Direction.FORWARD);
-//        backencoder.setDirection(DcMotor.Direction.FORWARD);
+
 //
 //        //set direction
         fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -56,13 +57,6 @@ public class HWMap {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 //<<<<<<< HEAD
-//        leftencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        rightencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        backencoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-////
-//        leftencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        rightencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        backencoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //
         fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
