@@ -186,10 +186,41 @@ public class redTele extends LinearOpMode {
             // --- B button: timed intake pu lse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
-                    buttonTimer.reset();
-                    robot.intake.setPower(0.6);
-                    robot.intakeServo.setPower(1);
-                    bWasPressed = true;
+                    if (!tagProcessor.getDetections().isEmpty()) {
+                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
+                        if (tag.id == 24) {
+                            double tagX = tag.center.x;
+                            if (tagX < centerX - tolerance) {
+                                robot.fRightWheel.setPower(0.4);
+                                robot.bRightWheel.setPower(0.4);
+                                robot.fLeftWheel.setPower(-0.4);
+                                robot.bLeftWheel.setPower(-0.4);
+                                telemetry.addLine("Turning left to center tag");
+                            } else if (tagX > centerX + tolerance) {
+                                robot.fRightWheel.setPower(-0.4);
+                                robot.bRightWheel.setPower(-0.4);
+                                robot.fLeftWheel.setPower(0.4);
+                                robot.bLeftWheel.setPower(0.4);
+                                telemetry.addLine("Turning right to center tag");
+                            } else {
+                                robot.fRightWheel.setPower(0);
+                                robot.bRightWheel.setPower(0);
+                                robot.fLeftWheel.setPower(0);
+                                robot.bLeftWheel.setPower(0);
+                                telemetry.addLine("Tag centered!");
+                                buttonTimer.reset();
+                                robot.intake.setPower(0.6);
+                                robot.intakeServo.setPower(1);
+                                bWasPressed = true;
+                            }
+                            telemetry.addData("Tag X", tag.center.x);
+                            telemetry.addData("Center", centerX);
+                        } else {
+                            telemetry.addLine("Tag detected but not ID 20");
+                        }
+                    } else {
+                        telemetry.addLine("No tags detected");
+                    }
                 }
                 if (buttonTimer.milliseconds() >= 150) {
                     robot.intake.setPower(0);
