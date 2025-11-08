@@ -198,24 +198,24 @@ public class blueTele extends LinearOpMode {
 //                }
 //            }
 //            lastAState = aNow;
-            boolean IntakeOn;
-            boolean Fullintake;
-            boolean aNow = gamepad1.a;
-            if (aNow && !lastAState) {
-               robot.intake.setPower(.5);
-               robot.intakeServo.setPower(1);
-               IntakeOn = true;
-                if(){
-                    Fullintake = true;
-                }else{
-                    Fullintake = false;
-                }
-                if(Fullintake && IntakeOn){
-                    robot.intake.setPower(-.2);
-                    robot.intakeServo.setPower(1);
-                    Thread.sleep(1000);
-                }
-            }
+//            boolean IntakeOn;
+//            boolean Fullintake;
+//            boolean aNow = gamepad1.a;
+//            if (aNow && !lastAState) {
+//               robot.intake.setPower(.5);
+//               robot.intakeServo.setPower(1);
+//               IntakeOn = true;
+//                if(IntakeOn){
+//                    Fullintake = true;
+//                }else{
+//                    Fullintake = false;
+//                }
+//                if(Fullintake && IntakeOn){
+//                    robot.intake.setPower(-.2);
+//                    robot.intakeServo.setPower(1);
+//                    Thread.sleep(1000);
+//                }
+//            }
 
 
             // --- B button: timed intake pu lse ---
