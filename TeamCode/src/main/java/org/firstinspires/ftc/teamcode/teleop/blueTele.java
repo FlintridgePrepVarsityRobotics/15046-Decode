@@ -25,13 +25,19 @@ public class blueTele extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
+    public ElapsedTime colorTimer = new ElapsedTime();
+    ElapsedTime reverseTimer = new ElapsedTime();
+    boolean reversingLauncher = false;
+
+
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public static double kP = 0.0003;
+    public static double kP = 0.001;
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;
+
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
@@ -74,6 +80,13 @@ public class blueTele extends LinearOpMode {
         boolean bWasPressed = false;
         boolean isMotorRunning = false;
 
+        boolean intakeFull = false;
+
+
+        boolean color1 = false;
+        boolean color2 = false;
+
+
 
         // For A-button toggle
         boolean lastAState = false;
@@ -93,10 +106,10 @@ public class blueTele extends LinearOpMode {
         // get a reference to the distance sensor that shares the same name
 
         // hsvValues is an array that will hold the hue, saturation, and value information.
-        float hsvValues[] = {0F, 0F, 0F};
+        float hsv1[] = {0F, 0F, 0F};
+        float hsv2[] = {0F, 0F, 0F};
 
         // values is a reference to the hsvValues array.
-        final float values[] = hsvValues;
 
         // sometimes it helps to multiply the raw RGB values with a scale factor
         // to amplify/attentuate the measured values.
@@ -109,6 +122,100 @@ public class blueTele extends LinearOpMode {
             TelemetryPacket packet = new TelemetryPacket();
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+            // color scale factor init
+            Color.RGBToHSV(
+                    (int) (robot.sensor1.red() * SCALE_FACTOR),
+                    (int) (robot.sensor1.green() * SCALE_FACTOR),
+                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
+                    hsv1
+            );
+
+            Color.RGBToHSV(
+                    (int) (robot.sensor2.red() * SCALE_FACTOR),
+                    (int) (robot.sensor2.green() * SCALE_FACTOR),
+                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
+                    hsv2
+            );
+            telemetry.addData("Red", robot.sensor1.red());
+            telemetry.addData("Green", robot.sensor1.green());
+            telemetry.addData("Blue", robot.sensor1.blue());
+            telemetry.addData("Hue1", hsv1[0]);
+            telemetry.addData("Hue2", hsv2[0]);
+            float hue1 = hsv1[0];
+            float hue2 = hsv2[0];
+
+            if(hue1 < 30){
+                telemetry.addData("Color", "Red");
+                color1 = false;
+            }
+
+            else if (hue1 < 60) {
+                telemetry.addData("Color", "Orange");
+                color1 = false;
+            }
+
+            else if (hue1 < 140){
+                telemetry.addData("Color", "Yellow");
+                color1 = false;
+
+            }
+
+            else if (hue1 < 250){ //green --> 160
+                telemetry.addData("Color", "Green");
+                color1 = true;
+            }
+
+            else if (hue1 < 260){
+                telemetry.addData("Color", "Blue");
+                color1 = false;
+
+            }
+
+            else if (hue1 < 270){ //purple --> 230-250
+                telemetry.addData("Color", "Purple");
+                color1 = true;
+            }
+
+            else{
+                telemetry.addData("Color", "Red");
+                color1 = false;
+            }
+
+            if(hue2 < 30){
+                telemetry.addData("Color2", "Red");
+                color2 = false;
+            }
+
+            else if (hue2 < 60) {
+                telemetry.addData("Color2", "Orange");
+                color2 = false;
+            }
+
+            else if (hue2 < 140){
+                telemetry.addData("Color2", "Yellow");
+                color2 = false;
+            }
+
+            else if (hue2 < 180){ //green --> 160
+                telemetry.addData("Color2", "Green");
+                color2 = true;
+            }
+
+            else if (hue2 < 200){
+                telemetry.addData("Color2", "Blue");
+                color2 = false;
+            }
+
+            else if (hue2 < 250){ //purple --> 230-250
+                telemetry.addData("Color2", "Purple");
+                color2 = true;
+            }
+
+            else{
+                telemetry.addData("Color2", "Red");
+                color2 = false;
+            }
 
             // --- Driver control ---
             double y = -gamepad1.left_stick_y;
@@ -158,6 +265,29 @@ public class blueTele extends LinearOpMode {
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
+            if (color1 && color2){
+                if (colorTimer.milliseconds() > 500 && !intakeFull){
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
+                    intakeFull = true;
+                    reversingLauncher = true;
+                    reverseTimer.reset();
+                }
+            }
+            else{
+                colorTimer.reset();
+                intakeFull = false;
+            }
+
+            if (reversingLauncher) {
+
+                robot.launcher.setPower(-0.5);
+
+                if (reverseTimer.milliseconds() >= 500) {
+                    reversingLauncher = false;
+                }
+            }
+
             // --- X button logic (reverse slowly) ---
 //            if (gamepad1.x) {
 //                // reverse at low speed: -100 RPM example
@@ -198,25 +328,20 @@ public class blueTele extends LinearOpMode {
 //                }
 //            }
 //            lastAState = aNow;
-            boolean IntakeOn;
-            boolean Fullintake;
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState) {
-               robot.intake.setPower(.5);
-               robot.intakeServo.setPower(1);
-               IntakeOn = true;
-                if(){
-                    Fullintake = true;
-                }else{
-                    Fullintake = false;
+            if (aNow && !lastAState && !intakeFull) {
+                // just pressed
+                    isMotorRunning = !isMotorRunning;
+                    if (isMotorRunning) {
+                        robot.intake.setPower(0.65);
+                        robot.intakeServo.setPower(1);
+                        buttonTimer.reset();
+                    } else {
+                        robot.intake.setPower(0);
+                        robot.intakeServo.setPower(0);
+                    }
                 }
-                if(Fullintake && IntakeOn){
-                    robot.intake.setPower(-.2);
-                    robot.intakeServo.setPower(1);
-                    Thread.sleep(1000);
-                }
-            }
-
+            lastAState = aNow;
 
             // --- B button: timed intake pu lse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
@@ -283,7 +408,9 @@ public class blueTele extends LinearOpMode {
             telemetry.addData("Red  ", sensor1.red());
             telemetry.addData("Green", sensor1.green());
             telemetry.addData("Blue ", sensor1.blue());
-            telemetry.addData("Hue", hsvValues[0]);
+            telemetry.addData("Hue1", hsv1[0]);
+            telemetry.addData("Hue2", hsv2[0]);
+
 
 
             // --- AprilTag Centering (Y button) ---
