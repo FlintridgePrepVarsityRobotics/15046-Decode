@@ -29,7 +29,7 @@ public class Constants {
 //        .centripetalScaling(0.003);
 
 
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, .7, .7);
+    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, .7, 1);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)

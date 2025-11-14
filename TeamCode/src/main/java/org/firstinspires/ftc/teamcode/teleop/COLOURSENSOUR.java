@@ -20,7 +20,8 @@ public class COLOURSENSOUR extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
 
-        float hsvValues[] = {0F, 0F, 0F};
+        float hsv1[] = {0F, 0F, 0F};
+        float hsv2[] = {0F, 0F, 0F};
         final double SCALE_FACTOR = 255;
 
         waitForStart();
@@ -32,54 +33,105 @@ public class COLOURSENSOUR extends LinearOpMode {
                     (int) (robot.sensor1.red() * SCALE_FACTOR),
                     (int) (robot.sensor1.green() * SCALE_FACTOR),
                     (int) (robot.sensor1.blue() * SCALE_FACTOR),
-                    hsvValues
+                    hsv1
+            );
+
+            Color.RGBToHSV(
+                    (int) (robot.sensor2.red() * SCALE_FACTOR),
+                    (int) (robot.sensor2.green() * SCALE_FACTOR),
+                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
+                    hsv2
             );
 
             telemetry.addData("Red", robot.sensor1.red());
             telemetry.addData("Green", robot.sensor1.green());
             telemetry.addData("Blue", robot.sensor1.blue());
-            telemetry.addData("Hue", hsvValues[0]);
+            telemetry.addData("Hue1", hsv1[0]);
+            telemetry.addData("Hue2", hsv2[0]);
             telemetry.update();
-            float hue = hsvValues[0];
-            if(hue < 30){
+            float hue1 = hsv1[0];
+            float hue2 = hsv2[0];
+            if(hue1 < 30){
 
-                telemetry.addData("Color", "Red");
-
-            }
-
-            else if (hue < 60) {
-
-                telemetry.addData("Color", "Orange");
+                telemetry.addData("Color1", "Red");
 
             }
 
-            else if (hue < 140){
+            else if (hue1 < 60) {
 
-                telemetry.addData("Color", "Yellow");
-
-            }
-
-            else if (hue < 180){ //green --> 160
-
-                telemetry.addData("Color", "Green");
+                telemetry.addData("Color1", "Orange");
 
             }
 
-            else if (hue < 220){
+            else if (hue1 < 140){
 
-                telemetry.addData("Color", "Blue");
+                telemetry.addData("Color1", "Yellow");
 
             }
 
-            else if (hue < 270){ //purple --> 230-250
+            else if (hue1 < 180){ //green --> 160
 
-                telemetry.addData("Color", "Purple");
+                telemetry.addData("Color1", "Green");
+
+            }
+
+            else if (hue1 < 220){
+
+                telemetry.addData("Color1", "Blue");
+
+            }
+
+            else if (hue1 < 270){ //purple --> 230-250
+
+                telemetry.addData("Color1", "Purple");
 
             }
 
             else{
 
-                telemetry.addData("Color", "Red");
+                telemetry.addData("Color1", "Red");
+
+            }
+
+            if(hue2 < 30){
+
+                telemetry.addData("Color2", "Red");
+
+            }
+
+            else if (hue2 < 60) {
+
+                telemetry.addData("Color2", "Orange");
+
+            }
+
+            else if (hue2 < 140){
+
+                telemetry.addData("Color2", "Yellow");
+
+            }
+
+            else if (hue2 < 180){ //green --> 160
+
+                telemetry.addData("Color2", "Green");
+
+            }
+
+            else if (hue2 < 220){
+
+                telemetry.addData("Color2", "Blue");
+
+            }
+
+            else if (hue2 < 270){ //purple --> 230-250
+
+                telemetry.addData("Color2", "Purple");
+
+            }
+
+            else{
+
+                telemetry.addData("Color2", "Red");
 
             }
 
