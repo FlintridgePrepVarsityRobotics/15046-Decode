@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
 @Autonomous(name = "RottenBlueberryAuto", group = "fruitauto")
-public class BlueberryAuto extends OpMode {
+public class BlueberryAutoFar extends OpMode {
 
     public HWMap robot = new HWMap();
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
@@ -36,7 +36,7 @@ public class BlueberryAuto extends OpMode {
     private boolean returningToScore = false;
 
     private PathChain grabPickup1, intakePickup1, scorePickup1, scorePickup2, grabPickup3, scorePickup3;
-    public static double kP = 0.001;
+    public static double kP = 0.0003;
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;
@@ -182,12 +182,12 @@ public class BlueberryAuto extends OpMode {
 
                         follower.followPath(intakePickup1, true);
                         actionTimer.resetTimer();
-                        setPathState(67);  // temporary sub-state for intake monitoring
+                        setPathState(21);  // temporary sub-state for intake monitoring
                     }
                 }
                 break;
 
-            case 67: // after intake finishes, do reverse launcher pulse
+            case 21: // after intake finishes, do reverse launcher pulse
                 if (!follower.isBusy()) {
                     // short reverse pulse (~100 ms)
                     if (actionTimer.getElapsedTimeSeconds() < 0.25) {

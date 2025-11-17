@@ -4,12 +4,14 @@ import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.config.Config;
 
+import android.graphics.Color;
 import android.util.Size;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -23,13 +25,19 @@ public class redTele extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
+    public ElapsedTime colorTimer = new ElapsedTime();
+    ElapsedTime reverseTimer = new ElapsedTime();
+    boolean reversingLauncher = false;
+
+
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public static double kP = 0.0003;
+    public static double kP = 0.001;
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;
+
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
@@ -62,7 +70,7 @@ public class redTele extends LinearOpMode {
 
         int frameWidth = 640;
         int centerX = frameWidth / 2;
-        int tolerance = 30; // pixels within which the tag is centered
+        int tolerance = 50; // pixels within which the tag is centered
 
         double speed = 1;
         boolean lastUp = false;
@@ -71,6 +79,14 @@ public class redTele extends LinearOpMode {
         boolean lastX = false;
         boolean bWasPressed = false;
         boolean isMotorRunning = false;
+
+        boolean intakeFull = false;
+
+
+
+        boolean color1 = false;
+        boolean color2 = false;
+
 
 
         // For A-button toggle
@@ -83,8 +99,22 @@ public class redTele extends LinearOpMode {
         // Ensure launcher has encoder mode set if you want velocity feedback
         robot.launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        ColorSensor sensor1;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
+        sensor1 = hardwareMap.get(ColorSensor.class, "sensor1");
+
+        // get a reference to the distance sensor that shares the same name
+
+        // hsvValues is an array that will hold the hue, saturation, and value information.
+        float hsv1[] = {0F, 0F, 0F};
+        float hsv2[] = {0F, 0F, 0F};
+
+        // values is a reference to the hsvValues array.
+
+        // sometimes it helps to multiply the raw RGB values with a scale factor
+        // to amplify/attentuate the measured values.
+        final double SCALE_FACTOR = 255;
 
         waitForStart();
 
@@ -93,6 +123,102 @@ public class redTele extends LinearOpMode {
             TelemetryPacket packet = new TelemetryPacket();
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+            // color scale factor init
+            Color.RGBToHSV(
+                    (int) (robot.sensor1.red() * SCALE_FACTOR),
+                    (int) (robot.sensor1.green() * SCALE_FACTOR),
+                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
+                    hsv1
+            );
+
+            Color.RGBToHSV(
+                    (int) (robot.sensor2.red() * SCALE_FACTOR),
+                    (int) (robot.sensor2.green() * SCALE_FACTOR),
+                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
+                    hsv2
+            );
+            telemetry.addData("Red", robot.sensor1.red());
+            telemetry.addData("Green", robot.sensor1.green());
+            telemetry.addData("Blue", robot.sensor1.blue());
+            telemetry.addData("Hue1", hsv1[0]);
+            telemetry.addData("Hue2", hsv2[0]);
+            float hue1 = hsv1[0];
+            float hue2 = hsv2[0];
+
+            boolean tagCentered = false;
+
+            if(hue1 < 30){
+                telemetry.addData("Color", "Red");
+                color1 = false;
+            }
+
+            else if (hue1 < 60) {
+                telemetry.addData("Color", "Orange");
+                color1 = false;
+            }
+
+            else if (hue1 < 140){
+                telemetry.addData("Color", "Yellow");
+                color1 = false;
+
+            }
+
+            else if (hue1 < 250){ //green --> 160
+                telemetry.addData("Color", "Green");
+                color1 = true;
+            }
+
+            else if (hue1 < 260){
+                telemetry.addData("Color", "Blue");
+                color1 = false;
+
+            }
+
+            else if (hue1 < 270){ //purple --> 230-250
+                telemetry.addData("Color", "Purple");
+                color1 = true;
+            }
+
+            else{
+                telemetry.addData("Color", "Red");
+                color1 = false;
+            }
+
+            if(hue2 < 30){
+                telemetry.addData("Color2", "Red");
+                color2 = false;
+            }
+
+            else if (hue2 < 60) {
+                telemetry.addData("Color2", "Orange");
+                color2 = false;
+            }
+
+            else if (hue2 < 140){
+                telemetry.addData("Color2", "Yellow");
+                color2 = false;
+            }
+
+            else if (hue2 < 180){ //green --> 160
+                telemetry.addData("Color2", "Green");
+                color2 = true;
+            }
+
+            else if (hue2 < 200){
+                telemetry.addData("Color2", "Blue");
+                color2 = false;
+            }
+
+            else if (hue2 < 250){ //purple --> 230-250
+                telemetry.addData("Color2", "Purple");
+                color2 = true;
+            }
+
+            else{
+                telemetry.addData("Color2", "Red");
+                color2 = false;
+            }
 
             // --- Driver control ---
             double y = -gamepad1.left_stick_y;
@@ -142,6 +268,29 @@ public class redTele extends LinearOpMode {
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
+            if (color1 && color2){
+                if (colorTimer.milliseconds() > 500 && !intakeFull){
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
+                    intakeFull = true;
+                    reversingLauncher = true;
+                    reverseTimer.reset();
+                }
+            }
+            else{
+                colorTimer.reset();
+                intakeFull = false;
+            }
+
+            if (reversingLauncher) {
+
+                robot.launcher.setPower(-0.5);
+
+                if (reverseTimer.milliseconds() >= 500) {
+                    reversingLauncher = false;
+                }
+            }
+
             // --- X button logic (reverse slowly) ---
 //            if (gamepad1.x) {
 //                // reverse at low speed: -100 RPM example
@@ -169,13 +318,27 @@ public class redTele extends LinearOpMode {
             }
 
             // --- Intake Toggle (A button) with rising-edge detection ---
+//            boolean aNow = gamepad1.a;
+//            if (aNow && !lastAState) {
+//                // just pressed
+//                isMotorRunning = !isMotorRunning;
+//                if (isMotorRunning) {
+//                    robot.intake.setPower(0.5);
+//                    robot.intakeServo.setPower(0.8);
+//                } else {
+//                    robot.intake.setPower(0);
+//                    robot.intakeServo.setPower(0);
+//                }
+//            }
+//            lastAState = aNow;
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState) {
+            if (aNow && !lastAState && !intakeFull) {
                 // just pressed
                 isMotorRunning = !isMotorRunning;
                 if (isMotorRunning) {
-                    robot.intake.setPower(0.5);
-                    robot.intakeServo.setPower(0.8);
+                    robot.intake.setPower(0.3);
+                    robot.intakeServo.setPower(1);
+                    buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
@@ -186,43 +349,12 @@ public class redTele extends LinearOpMode {
             // --- B button: timed intake pu lse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
-                    if (!tagProcessor.getDetections().isEmpty()) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        if (tag.id == 24) {
-                            double tagX = tag.center.x;
-                            if (tagX < centerX - tolerance) {
-                                robot.fRightWheel.setPower(0.4);
-                                robot.bRightWheel.setPower(0.4);
-                                robot.fLeftWheel.setPower(-0.4);
-                                robot.bLeftWheel.setPower(-0.4);
-                                telemetry.addLine("Turning left to center tag");
-                            } else if (tagX > centerX + tolerance) {
-                                robot.fRightWheel.setPower(-0.4);
-                                robot.bRightWheel.setPower(-0.4);
-                                robot.fLeftWheel.setPower(0.4);
-                                robot.bLeftWheel.setPower(0.4);
-                                telemetry.addLine("Turning right to center tag");
-                            } else {
-                                robot.fRightWheel.setPower(0);
-                                robot.bRightWheel.setPower(0);
-                                robot.fLeftWheel.setPower(0);
-                                robot.bLeftWheel.setPower(0);
-                                telemetry.addLine("Tag centered!");
-                                buttonTimer.reset();
-                                robot.intake.setPower(0.6);
-                                robot.intakeServo.setPower(1);
-                                bWasPressed = true;
-                            }
-                            telemetry.addData("Tag X", tag.center.x);
-                            telemetry.addData("Center", centerX);
-                        } else {
-                            telemetry.addLine("Tag detected but not ID 20");
-                        }
-                    } else {
-                        telemetry.addLine("No tags detected");
-                    }
+                    buttonTimer.reset();
+                    robot.intake.setPower(0.75);
+                    robot.intakeServo.setPower(1);
+                    bWasPressed = true;
                 }
-                if (buttonTimer.milliseconds() >= 150) {
+                if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
@@ -244,6 +376,15 @@ public class redTele extends LinearOpMode {
             telemetry.addData("Combined (power)", "%.4f", combinedOutput);
             packet.put("Combined (power)", combinedOutput);
 
+            telemetry.addData("Clear", sensor1.alpha());
+            telemetry.addData("Red  ", sensor1.red());
+            telemetry.addData("Green", sensor1.green());
+            telemetry.addData("Blue ", sensor1.blue());
+            telemetry.addData("Hue1", hsv1[0]);
+            telemetry.addData("Hue2", hsv2[0]);
+
+
+
             // --- AprilTag Centering (Y button) ---
             if (gamepad1.y) {
                 if (!tagProcessor.getDetections().isEmpty()) {
@@ -251,16 +392,16 @@ public class redTele extends LinearOpMode {
                     if (tag.id == 24) {
                         double tagX = tag.center.x;
                         if (tagX < centerX - tolerance) {
-                            robot.fRightWheel.setPower(0.4);
-                            robot.bRightWheel.setPower(0.4);
-                            robot.fLeftWheel.setPower(-0.4);
-                            robot.bLeftWheel.setPower(-0.4);
+                            robot.fRightWheel.setPower(0.2);
+                            robot.bRightWheel.setPower(0.2);
+                            robot.fLeftWheel.setPower(-0.2);
+                            robot.bLeftWheel.setPower(-0.2);
                             telemetry.addLine("Turning left to center tag");
                         } else if (tagX > centerX + tolerance) {
-                            robot.fRightWheel.setPower(-0.4);
-                            robot.bRightWheel.setPower(-0.4);
-                            robot.fLeftWheel.setPower(0.4);
-                            robot.bLeftWheel.setPower(0.4);
+                            robot.fRightWheel.setPower(-0.2);
+                            robot.bRightWheel.setPower(-0.2);
+                            robot.fLeftWheel.setPower(0.2);
+                            robot.bLeftWheel.setPower(0.2);
                             telemetry.addLine("Turning right to center tag");
                         } else {
                             robot.fRightWheel.setPower(0);
@@ -268,16 +409,24 @@ public class redTele extends LinearOpMode {
                             robot.fLeftWheel.setPower(0);
                             robot.bLeftWheel.setPower(0);
                             telemetry.addLine("Tag centered!");
+                            tagCentered = true;
                         }
                         telemetry.addData("Tag X", tag.center.x);
                         telemetry.addData("Center", centerX);
                     } else {
-                        telemetry.addLine("Tag detected but not ID 20");
+                        telemetry.addLine("Tag detected but not ID 24");
                     }
                 } else {
                     telemetry.addLine("No tags detected");
                 }
             }
+
+            if (tagCentered && isMotorRunning) {
+                isMotorRunning = false;
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(0);
+            }
+
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 

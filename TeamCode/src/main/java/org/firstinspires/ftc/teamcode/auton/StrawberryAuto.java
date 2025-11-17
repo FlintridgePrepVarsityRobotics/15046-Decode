@@ -35,7 +35,7 @@ public class StrawberryAuto extends OpMode {
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1;
-    public static double kP = 0.0003;
+    public static double kP = 0.001;
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;

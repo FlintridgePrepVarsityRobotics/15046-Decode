@@ -83,6 +83,7 @@ public class blueTele extends LinearOpMode {
         boolean intakeFull = false;
 
 
+
         boolean color1 = false;
         boolean color2 = false;
 
@@ -144,6 +145,8 @@ public class blueTele extends LinearOpMode {
             telemetry.addData("Hue2", hsv2[0]);
             float hue1 = hsv1[0];
             float hue2 = hsv2[0];
+
+            boolean tagCentered = false;
 
             if(hue1 < 30){
                 telemetry.addData("Color", "Red");
@@ -331,58 +334,27 @@ public class blueTele extends LinearOpMode {
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState && !intakeFull) {
                 // just pressed
-                    isMotorRunning = !isMotorRunning;
-                    if (isMotorRunning) {
-                        robot.intake.setPower(0.65);
-                        robot.intakeServo.setPower(1);
-                        buttonTimer.reset();
-                    } else {
-                        robot.intake.setPower(0);
-                        robot.intakeServo.setPower(0);
-                    }
+                isMotorRunning = !isMotorRunning;
+                if (isMotorRunning) {
+                    robot.intake.setPower(0.3);
+                    robot.intakeServo.setPower(1);
+                    buttonTimer.reset();
+                } else {
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
                 }
+            }
             lastAState = aNow;
 
             // --- B button: timed intake pu lse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
-                    if (!tagProcessor.getDetections().isEmpty()) {
-                        AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                        if (tag.id == 20) {
-                            double tagX = tag.center.x;
-                            if (tagX < centerX - tolerance) {
-                                robot.fRightWheel.setPower(0.4);
-                                robot.bRightWheel.setPower(0.4);
-                                robot.fLeftWheel.setPower(-0.4);
-                                robot.bLeftWheel.setPower(-0.4);
-                                telemetry.addLine("Turning left to center tag");
-                            } else if (tagX > centerX + tolerance) {
-                                robot.fRightWheel.setPower(-0.4);
-                                robot.bRightWheel.setPower(-0.4);
-                                robot.fLeftWheel.setPower(0.4);
-                                robot.bLeftWheel.setPower(0.4);
-                                telemetry.addLine("Turning right to center tag");
-                            } else {
-                                robot.fRightWheel.setPower(0);
-                                robot.bRightWheel.setPower(0);
-                                robot.fLeftWheel.setPower(0);
-                                robot.bLeftWheel.setPower(0);
-                                telemetry.addLine("Tag centered!");
-                                buttonTimer.reset();
-                                robot.intake.setPower(0.6);
-                                robot.intakeServo.setPower(1);
-                                bWasPressed = true;
-                            }
-                            telemetry.addData("Tag X", tag.center.x);
-                            telemetry.addData("Center", centerX);
-                        } else {
-                            telemetry.addLine("Tag detected but not ID 20");
-                        }
-                    } else {
-                        telemetry.addLine("No tags detected");
-                    }
+                    buttonTimer.reset();
+                    robot.intake.setPower(0.75);
+                    robot.intakeServo.setPower(1);
+                    bWasPressed = true;
                 }
-                if (buttonTimer.milliseconds() >= 150) {
+                if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
@@ -420,16 +392,16 @@ public class blueTele extends LinearOpMode {
                     if (tag.id == 20) {
                         double tagX = tag.center.x;
                         if (tagX < centerX - tolerance) {
-                            robot.fRightWheel.setPower(0.4);
-                            robot.bRightWheel.setPower(0.4);
-                            robot.fLeftWheel.setPower(-0.4);
-                            robot.bLeftWheel.setPower(-0.4);
+                            robot.fRightWheel.setPower(0.2);
+                            robot.bRightWheel.setPower(0.2);
+                            robot.fLeftWheel.setPower(-0.2);
+                            robot.bLeftWheel.setPower(-0.2);
                             telemetry.addLine("Turning left to center tag");
                         } else if (tagX > centerX + tolerance) {
-                            robot.fRightWheel.setPower(-0.4);
-                            robot.bRightWheel.setPower(-0.4);
-                            robot.fLeftWheel.setPower(0.4);
-                            robot.bLeftWheel.setPower(0.4);
+                            robot.fRightWheel.setPower(-0.2);
+                            robot.bRightWheel.setPower(-0.2);
+                            robot.fLeftWheel.setPower(0.2);
+                            robot.bLeftWheel.setPower(0.2);
                             telemetry.addLine("Turning right to center tag");
                         } else {
                             robot.fRightWheel.setPower(0);
@@ -437,6 +409,7 @@ public class blueTele extends LinearOpMode {
                             robot.fLeftWheel.setPower(0);
                             robot.bLeftWheel.setPower(0);
                             telemetry.addLine("Tag centered!");
+                            tagCentered = true;
                         }
                         telemetry.addData("Tag X", tag.center.x);
                         telemetry.addData("Center", centerX);
@@ -447,6 +420,13 @@ public class blueTele extends LinearOpMode {
                     telemetry.addLine("No tags detected");
                 }
             }
+
+            if (tagCentered && isMotorRunning) {
+                isMotorRunning = false;
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(0);
+            }
+
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 
