@@ -29,15 +29,12 @@ public class blueTele extends LinearOpMode {
     ElapsedTime reverseTimer = new ElapsedTime();
     boolean reversingLauncher = false;
 
-
-
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
     public static double kP = 0.001;
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;
-
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
@@ -46,10 +43,8 @@ public class blueTele extends LinearOpMode {
     public static double kV = 0.00042;
     public static double kA = 0.0;
 
-
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -70,7 +65,7 @@ public class blueTele extends LinearOpMode {
 
         int frameWidth = 640;
         int centerX = frameWidth / 2;
-        int tolerance = 30; // pixels within which the tag is centered
+        int tolerance = 50; // pixels within which the tag is centered
 
         double speed = 1;
         boolean lastUp = false;
@@ -78,16 +73,12 @@ public class blueTele extends LinearOpMode {
         boolean lastDown = false;
         boolean lastX = false;
         boolean bWasPressed = false;
-        boolean isMotorRunning = false;
+        boolean isIntakeRunning = false;
 
         boolean intakeFull = false;
 
-
-
         boolean color1 = false;
         boolean color2 = false;
-
-
 
         // For A-button toggle
         boolean lastAState = false;
@@ -291,22 +282,6 @@ public class blueTele extends LinearOpMode {
                 }
             }
 
-            // --- X button logic (reverse slowly) ---
-//            if (gamepad1.x) {
-//                // reverse at low speed: -100 RPM example
-//                targetRPM = -100;
-//                double targetTicksPerSecX = targetRPM / 60.0 * ticksPerRev;
-//                // convert to a power using feedforward (and clamp)
-//                double revPower = feedforward.calculate(targetTicksPerSecX);
-//                revPower = Math.max(-1.0, Math.min(1.0, revPower));
-//                robot.launcher.setPower(revPower);
-//
-//                double currentRPM = robot.launcher.getVelocity() / ticksPerRev * 60.0;
-//                telemetry.addData("Reverse Mode", "Active");
-//                telemetry.addData("TargetRPM (X)", targetRPM);
-//                telemetry.addData("CurrentRPM", currentRPM);
-//            }
-
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
                 robot.intake.setPower(-0.3);
@@ -316,26 +291,12 @@ public class blueTele extends LinearOpMode {
                 downPower = Math.max(-1.0, Math.min(1.0, downPower));
                 robot.launcher.setPower(downPower);
             }
-
-            // --- Intake Toggle (A button) with rising-edge detection ---
-//            boolean aNow = gamepad1.a;
-//            if (aNow && !lastAState) {
-//                // just pressed
-//                isMotorRunning = !isMotorRunning;
-//                if (isMotorRunning) {
-//                    robot.intake.setPower(0.5);
-//                    robot.intakeServo.setPower(0.8);
-//                } else {
-//                    robot.intake.setPower(0);
-//                    robot.intakeServo.setPower(0);
-//                }
-//            }
-//            lastAState = aNow;
+            // --- A Button -- toggle intake and shuts off when full
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState && !intakeFull) {
                 // just pressed
-                isMotorRunning = !isMotorRunning;
-                if (isMotorRunning) {
+                isIntakeRunning = !isIntakeRunning;
+                if (isIntakeRunning) {
                     robot.intake.setPower(0.3);
                     robot.intakeServo.setPower(1);
                     buttonTimer.reset();
@@ -358,7 +319,7 @@ public class blueTele extends LinearOpMode {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
-            } else if (!isMotorRunning) {
+            } else if (!isIntakeRunning) {
                 bWasPressed = false;
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
@@ -382,8 +343,6 @@ public class blueTele extends LinearOpMode {
             telemetry.addData("Blue ", sensor1.blue());
             telemetry.addData("Hue1", hsv1[0]);
             telemetry.addData("Hue2", hsv2[0]);
-
-
 
             // --- AprilTag Centering (Y button) ---
             if (gamepad1.y) {
@@ -414,15 +373,15 @@ public class blueTele extends LinearOpMode {
                         telemetry.addData("Tag X", tag.center.x);
                         telemetry.addData("Center", centerX);
                     } else {
-                        telemetry.addLine("Tag detected but not ID 20");
+                        telemetry.addLine("Tag detected but not ID 24");
                     }
                 } else {
                     telemetry.addLine("No tags detected");
                 }
             }
-
-            if (tagCentered && isMotorRunning) {
-                isMotorRunning = false;
+// While the robot is looking at the tag once, it will toggle intake off
+            if (tagCentered && isIntakeRunning) {
+                isIntakeRunning = false;
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             }
