@@ -16,7 +16,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "FarFlungFeijoaAuto", group = "fruitauto")
+@Autonomous(name = "FarFlungFeijoaAutoROTTEN", group = "fruitauto")
 public class FarFlungFeijoaAutoROTTEN extends OpMode {
 
     public HWMap robot = new HWMap();
