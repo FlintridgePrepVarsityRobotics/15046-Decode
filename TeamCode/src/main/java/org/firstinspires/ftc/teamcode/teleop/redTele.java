@@ -311,11 +311,11 @@ public class redTele extends LinearOpMode {
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
-                    robot.intake.setPower(0.75);
+                    robot.intake.setPower(0.65);
                     robot.intakeServo.setPower(1);
                     bWasPressed = true;
                 }
-                if (buttonTimer.milliseconds() >= 170) {
+                if (buttonTimer.milliseconds() >= 150) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }

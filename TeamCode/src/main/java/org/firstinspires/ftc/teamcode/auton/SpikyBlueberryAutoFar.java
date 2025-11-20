@@ -16,8 +16,8 @@ import com.bylazar.telemetry.TelemetryManager;
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "BlueberryAuto", group = "fruitauto")
-public class BlueberryAuto extends OpMode {
+@Autonomous(name = "SpikyBlueberryAutoFar", group = "fruitauto")
+public class SpikyBlueberryAutoFar extends OpMode {
 
     public HWMap robot = new HWMap();
     private TelemetryManager panelsTelemetry;
@@ -29,15 +29,16 @@ public class BlueberryAuto extends OpMode {
     private int nextState = -1;
 
 
-    private final Pose startPose          = new Pose(18.159947984395316, 122.46553966189856, Math.toRadians(143));
-    private final Pose scorePose          = new Pose(36.88556566970091,  102.24187256176852, Math.toRadians(135));
-    private final Pose pickup1Pose        = new Pose(41.941482444733424, 83.32899869960988, Math.toRadians(180));
-    private final Pose pickup1intakePose  = new Pose(14.040312093628089, 83.32899869960980, Math.toRadians(180));
-    private final Pose pickup2Pose        = new Pose(41.941482444733424, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup2intakePose  = new Pose(10.040312093628103, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup3Pose        = new Pose(41.941482444733424, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose  = new Pose(10.040312093628103, 35.39141742522757, Math.toRadians(180));
 
+    private final Pose startPose  = new Pose(62.72691807542263,  8.801040312093622, Math.toRadians(90));
+    private final Pose scorePose  = new Pose(58.23276983094928, 18.725617685305593, Math.toRadians(116));
+    private final Pose pickup1Pose      = new Pose(41.941482444733424, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup1intakePose= new Pose(10.040312093628103, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup2Pose      = new Pose(41.941482444733424, 59.17295188556567, Math.toRadians(180));
+    private final Pose pickup2intakePose= new Pose(10.040312093628103, 59.17295188556567, Math.toRadians(180));
+    private final Pose pickup3Pose = new Pose(41.94148244473342, 35.39141742522757, Math.toRadians(180));
+
+    private final Pose pickup3intakePose = new Pose(10.04031209362809, 35.39141742522757, Math.toRadians(180));
 
 
 
@@ -56,7 +57,7 @@ public class BlueberryAuto extends OpMode {
     private boolean shooting = false;
     private int shootStage = 0;
     private int shotsFired = 0;
-    private double targetRPM = 2125;
+    private double targetRPM = 2900;
     private final int ticksPerRevLauncher = 28;
 
     public void startShooting3() {
@@ -281,7 +282,6 @@ public class BlueberryAuto extends OpMode {
         telemetry.addData("shotsFired", shotsFired);
         telemetry.addData("shootStage", shootStage);
         telemetry.addData("shooting", shooting);
-
         telemetry.update();
     }
 
