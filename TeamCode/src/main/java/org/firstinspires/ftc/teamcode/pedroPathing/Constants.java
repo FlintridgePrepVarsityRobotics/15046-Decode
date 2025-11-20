@@ -17,17 +17,8 @@ import org.firstinspires.ftc.teamcode.Projects.HWMap;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
         .mass(9.8)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.009, 0.03))
-            .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.02, 0.03))
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025,0,0.0001,0.3,0.008))
-            .centripetalScaling(0.01)
-    .forwardZeroPowerAcceleration(-46.596194)
-    .lateralZeroPowerAcceleration(-73.617);
+            ;
 
-//        .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.007, .03))
-//        .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.06, 0.02))
-//        .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025,0.0,0.00001,0.3,0.01))
-//        .centripetalScaling(0.003);
 
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, .567, .9);
@@ -42,23 +33,15 @@ public class Constants {
     }
     public static MecanumConstants driveConstants = new MecanumConstants()
             .maxPower(1)//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------//60.0469213
-            .xVelocity(60.0952777777)
-            .yVelocity(69.248)
-            .rightFrontMotorName("FR")
-            .rightRearMotorName("BR")
-            .leftRearMotorName("BL")
-            .leftFrontMotorName("FL")
+
             .leftFrontMotorDirection(DcMotor.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
-            .turnTicksToInches(.002565)
-            .forwardTicksToInches(.0021106)
-            .strafeTicksToInches(.0030509)
-            .leftPodY(4)
-            .rightPodY(-4)
-            .strafePodX(-8)
+            .leftPodY(4.5)
+            .rightPodY(-4.5)
+            .strafePodX(-7.5)
             .leftEncoder_HardwareMapName("FL")
             .rightEncoder_HardwareMapName("FR")
             .strafeEncoder_HardwareMapName("BR")
