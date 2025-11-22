@@ -28,6 +28,7 @@ public class redTele extends LinearOpMode {
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();
     boolean reversingLauncher = false;
+    boolean reversedBefore = false;
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
@@ -76,6 +77,7 @@ public class redTele extends LinearOpMode {
         boolean isIntakeRunning = false;
 
         boolean intakeFull = false;
+        double tagDist = 0;
 
         boolean color1 = false;
         boolean color2 = false;
@@ -265,6 +267,7 @@ public class redTele extends LinearOpMode {
                     robot.intakeServo.setPower(0);
                     intakeFull = true;
                     reversingLauncher = true;
+                    reversedBefore = false;
                     reverseTimer.reset();
                 }
             }
@@ -273,12 +276,13 @@ public class redTele extends LinearOpMode {
                 intakeFull = false;
             }
 
-            if (reversingLauncher) {
-
+            if (reversingLauncher && !reversedBefore) {
                 robot.launcher.setPower(-0.5);
-
+                robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
+                    robot.intakeServo.setPower(0);
+                    reversedBefore = true;
                 }
             }
 
@@ -297,7 +301,7 @@ public class redTele extends LinearOpMode {
                 // just pressed
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setPower(0.3);
+                    robot.intake.setPower(0.25);
                     robot.intakeServo.setPower(1);
                     buttonTimer.reset();
                 } else {
@@ -308,14 +312,14 @@ public class redTele extends LinearOpMode {
             lastAState = aNow;
 
             // --- B button: timed intake pu lse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 25) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
-                    robot.intake.setPower(0.65);
+                    robot.intake.setPower(0.75);
                     robot.intakeServo.setPower(1);
                     bWasPressed = true;
                 }
-                if (buttonTimer.milliseconds() >= 150) {
+                if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
@@ -350,6 +354,10 @@ public class redTele extends LinearOpMode {
                     AprilTagDetection tag = tagProcessor.getDetections().get(0);
                     if (tag.id == 24) {
                         double tagX = tag.center.x;
+                        tagDist = tag.ftcPose.range;
+                        telemetry.addData("Distance from Tag", "%.1f", tagDist);
+                        centerX = frameWidth / 2;
+                        if (tagDist > 100){centerX -= 50;}
                         if (tagX < centerX - tolerance) {
                             robot.fRightWheel.setPower(0.2);
                             robot.bRightWheel.setPower(0.2);
@@ -385,7 +393,6 @@ public class redTele extends LinearOpMode {
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             }
-
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 

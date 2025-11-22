@@ -24,6 +24,8 @@ public class BlueberryAuto extends OpMode {
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;
     private boolean returningToScore = false;
+    private boolean slowingForIntake = false;
+    private double oldMaxPower = 1.0;
 
     private int pathState;
     private int nextState = -1;
@@ -31,17 +33,16 @@ public class BlueberryAuto extends OpMode {
 
     private final Pose startPose          = new Pose(18.159947984395316, 122.46553966189856, Math.toRadians(143));
     private final Pose scorePose          = new Pose(36.88556566970091,  102.24187256176852, Math.toRadians(135));
-    private final Pose pickup1Pose        = new Pose(41.941482444733424, 83.32899869960988, Math.toRadians(180));
-    private final Pose pickup1intakePose  = new Pose(14.040312093628089, 83.32899869960980, Math.toRadians(180));
-    private final Pose pickup2Pose        = new Pose(41.941482444733424, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup2intakePose  = new Pose(10.040312093628103, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup3Pose        = new Pose(41.941482444733424, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose  = new Pose(10.040312093628103, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup1Pose        = new Pose(45.8777633289987, 83.32899869960988, Math.toRadians(180));
+    private final Pose pickup1intakePose  = new Pose(21.534460338101432, 83.32899869960980, Math.toRadians(180));
+    private final Pose pickup2Pose        = new Pose(45.8777633289987, 59.17295188556567, Math.toRadians(180));
+    private final Pose pickup2intakePose  = new Pose(21.534460338101432, 59.17295188556567, Math.toRadians(180));
+    private final Pose pickup3Pose        = new Pose(45.8777633289987, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup3intakePose  = new Pose(21.534460338101432, 35.39141742522757, Math.toRadians(180));
 
 
 
-
-    private Path scorePreload;
+private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2;
     public static double kP = 0.001;
     public static double kI = 0.0006;
@@ -87,9 +88,9 @@ public class BlueberryAuto extends OpMode {
                 break;
 
             case 1:
-                robot.intake.setPower(0.6);
+                robot.intake.setPower(0.67);
                 robot.intakeServo.setPower(1);
-                if (actionTimer.getElapsedTimeSeconds() > 0.25) {
+                if (actionTimer.getElapsedTimeSeconds() > 0.15) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                     shootStage = 2;
@@ -130,10 +131,7 @@ public class BlueberryAuto extends OpMode {
         intakePickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(pickup1Pose, pickup1intakePose))
                 .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1intakePose.getHeading())
-                .setTranslationalConstraint(0.3)
-                .setHeadingConstraint(0.5)
                 .build();
-
         scorePickup1 = follower.pathBuilder()
                 .addPath(new BezierLine(pickup1intakePose, scorePose))
                 .setLinearHeadingInterpolation(pickup1intakePose.getHeading(), scorePose.getHeading())
@@ -158,7 +156,7 @@ public class BlueberryAuto extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                follower.followPath(scorePreload);
+                follower.followPath(scorePreload,true);
                 setPathState(1);
                 break;
 
@@ -173,23 +171,27 @@ public class BlueberryAuto extends OpMode {
 
                     if (!shooting && shotsFired >= 3) {
                         targetRPM = 0;
-                        follower.followPath(grabPickup1, true);
+                        shotsFired = 0;
+                        follower.followPath(grabPickup1, 0.7,true);
                         setPathState(2);
                     }
                 }
                 break;
 
             case 2:
-                if (!follower.isBusy()) {
-                    double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
-                    if (currentRPM <= 100) {
-                        robot.intake.setPower(0.65);
-                        robot.intakeServo.setPower(1);
-                        follower.followPath(intakePickup1, true);
-                        actionTimer.resetTimer();
-                        nextState = 3;
-                        setPathState(21);
+                if (!slowingForIntake) {
+                    if (!follower.isBusy()) {
+                        double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
+                        if (currentRPM <= 100) {
+                            robot.intake.setPower(0.65);
+                            robot.intakeServo.setPower(1);
+                            follower.followPath(intakePickup1,0.5,true);
+                            actionTimer.resetTimer();
+                            nextState = 3;
+                        }
                     }
+                } else if (!follower.isBusy()) {
+                    setPathState(21);
                 }
                 break;
 
@@ -208,58 +210,64 @@ public class BlueberryAuto extends OpMode {
 
             case 3:
                 if (!returningToScore) {
-                    follower.followPath(scorePickup1, true);
+                    follower.followPath(scorePickup1, 0.7,true);
                     returningToScore = true;
                 }
-
                 if (!follower.isBusy()) {
                     double currentHeading = follower.getPose().getHeading();
                     double headingError = Math.abs(currentHeading - scorePose.getHeading());
-
-                    if (!shooting && shotsFired >= 3) shotsFired = 0;
                     if (!shooting && shotsFired == 0 && headingError < Math.toRadians(5)) {
                         targetRPM = 2125;
                         startShooting3();
                     }
                     if (!shooting && shotsFired >= 3) {
                         returningToScore = false;
-                        follower.followPath(grabPickup2);
+                        shotsFired = 0;
+                        follower.followPath(grabPickup2,0.7,true);
                         setPathState(4);
                     }
                 }
                 break;
+
             case 4:
-                if (!follower.isBusy()){
-                    double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
-                    if (currentRPM <= 100) {
-                        robot.intake.setPower(0.65);
-                        robot.intakeServo.setPower(1);
-                        follower.followPath(intakePickup2, true);
-                        actionTimer.resetTimer();
-                        nextState = 5;
+                if (!slowingForIntake) {
+                    if (!follower.isBusy()) {
+                        double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
+                        if (currentRPM <= 100) {
+                            robot.intake.setPower(0.65);
+                            robot.intakeServo.setPower(1);
+                            follower.followPath(intakePickup2, 0.5, true);
+                            actionTimer.resetTimer();
+                            nextState = 5;
+                        }
+                    }
+                } else {
+                    if (!follower.isBusy()) {
                         setPathState(21);
                     }
                 }
                 break;
+
             case 5:
-                if (!returningToScore){
-                    follower.followPath(scorePickup2, true);
+                if (!returningToScore) {
+                    follower.followPath(scorePickup2, 0.7,true);
                     returningToScore = true;
                 }
                 if (!follower.isBusy()) {
                     double currentHeading = follower.getPose().getHeading();
                     double headingError = Math.abs(currentHeading - scorePose.getHeading());
 
-                    if (!shooting && shotsFired >= 3) shotsFired = 0;
                     if (!shooting && shotsFired == 0 && headingError < Math.toRadians(5)) {
                         targetRPM = 2125;
                         startShooting3();
                     }
                     if (!shooting && shotsFired >= 3) {
                         returningToScore = false;
+                        shotsFired = 0;
                         setPathState(-1);
                     }
                 }
+                break;
         }
     }
 

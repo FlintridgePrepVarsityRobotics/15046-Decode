@@ -28,6 +28,7 @@ public class blueTele extends LinearOpMode {
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();
     boolean reversingLauncher = false;
+    boolean reversedBefore = false;
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
@@ -76,6 +77,7 @@ public class blueTele extends LinearOpMode {
         boolean isIntakeRunning = false;
 
         boolean intakeFull = false;
+        double tagDist = 0;
 
         boolean color1 = false;
         boolean color2 = false;
@@ -259,70 +261,71 @@ public class blueTele extends LinearOpMode {
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
-            if (color1 && color2){
-                if (colorTimer.milliseconds() > 500 && !intakeFull){
+            if (color1 && color2) {
+                if (colorTimer.milliseconds() > 500 && !intakeFull) {
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                     intakeFull = true;
                     reversingLauncher = true;
                     reverseTimer.reset();
                 }
-            }
-            else{
-                colorTimer.reset();
-                intakeFull = false;
+            } else {
+                if (colorTimer.milliseconds() > 700) {
+                    intakeFull = false;
+                    reversedBefore = false;
+                }
             }
 
-            if (reversingLauncher) {
-
+            if (reversingLauncher && !reversedBefore) {
                 robot.launcher.setPower(-0.5);
-
+                robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
+                    robot.intakeServo.setPower(0);
+                    reversedBefore = true;
                 }
             }
 
-            // --- Dpad down: reverse intake & launcher negative (manual) ---
-            if (gamepad1.dpad_down) {
-                robot.intake.setPower(-0.3);
-                targetRPM = -1000;
-                double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
-                double downPower = feedforward.calculate(targetTicksPerSecDown);
-                downPower = Math.max(-1.0, Math.min(1.0, downPower));
-                robot.launcher.setPower(downPower);
-            }
-            // --- A Button -- toggle intake and shuts off when full
-            boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull) {
-                // just pressed
-                isIntakeRunning = !isIntakeRunning;
-                if (isIntakeRunning) {
-                    robot.intake.setPower(0.3);
-                    robot.intakeServo.setPower(1);
-                    buttonTimer.reset();
-                } else {
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+            if (!reversingLauncher) {
+                if (gamepad1.dpad_down) {
+                    robot.intake.setPower(-0.3);
+                    targetRPM = -1000;
+                    double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
+                    double downPower = feedforward.calculate(targetTicksPerSecDown);
+                    downPower = Math.max(-1.0, Math.min(1.0, downPower));
+                    robot.launcher.setPower(downPower);
                 }
-            }
-            lastAState = aNow;
 
-            // --- B button: timed intake pu lse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
-                if (!bWasPressed) {
-                    buttonTimer.reset();
-                    robot.intake.setPower(0.75);
-                    robot.intakeServo.setPower(1);
-                    bWasPressed = true;
+                boolean aNow = gamepad1.a;
+                if (aNow && !lastAState && !intakeFull) {
+                    isIntakeRunning = !isIntakeRunning;
+                    if (isIntakeRunning) {
+                        robot.intake.setPower(0.25);
+                        robot.intakeServo.setPower(1);
+                        buttonTimer.reset();
+                    } else {
+                        robot.intake.setPower(0);
+                        robot.intakeServo.setPower(0);
+                    }
                 }
-                if (buttonTimer.milliseconds() >= 170) {
+                lastAState = aNow;
+
+                if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 25) {
+                    if (!bWasPressed) {
+                        buttonTimer.reset();
+                        robot.intake.setPower(0.75);
+                        robot.intakeServo.setPower(1);
+                        bWasPressed = true;
+                    }
+                    if (buttonTimer.milliseconds() >= 170) {
+                        robot.intake.setPower(0);
+                        robot.intakeServo.setPower(0);
+                    }
+                } else if (!isIntakeRunning) {
+                    bWasPressed = false;
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                 }
-            } else if (!isIntakeRunning) {
-                bWasPressed = false;
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
             }
 
             // --- Telemetry for tuning ---
@@ -350,6 +353,10 @@ public class blueTele extends LinearOpMode {
                     AprilTagDetection tag = tagProcessor.getDetections().get(0);
                     if (tag.id == 20) {
                         double tagX = tag.center.x;
+                        tagDist = tag.ftcPose.range;
+                        telemetry.addData("Distance from Tag", "%.1f", tagDist);
+                        centerX = frameWidth / 2;
+                        if (tagDist > 100){centerX += 50;}
                         if (tagX < centerX - tolerance) {
                             robot.fRightWheel.setPower(0.2);
                             robot.bRightWheel.setPower(0.2);
@@ -373,7 +380,7 @@ public class blueTele extends LinearOpMode {
                         telemetry.addData("Tag X", tag.center.x);
                         telemetry.addData("Center", centerX);
                     } else {
-                        telemetry.addLine("Tag detected but not ID 24");
+                        telemetry.addLine("Tag detected but not ID 20");
                     }
                 } else {
                     telemetry.addLine("No tags detected");
@@ -385,7 +392,6 @@ public class blueTele extends LinearOpMode {
                 robot.intake.setPower(0);
                 robot.intakeServo.setPower(0);
             }
-
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
 
