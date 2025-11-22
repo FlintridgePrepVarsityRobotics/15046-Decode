@@ -289,7 +289,7 @@ public class redTele extends LinearOpMode {
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
                 robot.intake.setPower(-0.3);
-                targetRPM = -1000;
+                setpointRPM = -1000;
                 double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
                 double downPower = feedforward.calculate(targetTicksPerSecDown);
                 downPower = Math.max(-1.0, Math.min(1.0, downPower));
@@ -321,12 +321,12 @@ public class redTele extends LinearOpMode {
                 }
                 if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
             } else if (!isIntakeRunning) {
                 bWasPressed = false;
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                robot.intakeServo.setPower(1);
             }
 
             // --- Telemetry for tuning ---
