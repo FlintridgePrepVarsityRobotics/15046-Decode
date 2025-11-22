@@ -262,7 +262,7 @@ public class blueTele extends LinearOpMode {
             robot.launcher.setPower(combinedOutput);
 
             if (color1 && color2) {
-                if (colorTimer.milliseconds() > 500 && !intakeFull) {
+                if (colorTimer.milliseconds() > 800 && !intakeFull) { //500
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                     intakeFull = true;
