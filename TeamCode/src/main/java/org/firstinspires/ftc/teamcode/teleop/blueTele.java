@@ -312,7 +312,7 @@ public class blueTele extends LinearOpMode {
             lastAState = aNow;
 
             // --- B button: timed intake pu lse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 25) {
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 75) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
                     robot.intake.setPower(0.75);
