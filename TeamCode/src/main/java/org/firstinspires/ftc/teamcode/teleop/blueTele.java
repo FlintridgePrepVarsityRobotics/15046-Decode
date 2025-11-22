@@ -261,19 +261,18 @@ public class blueTele extends LinearOpMode {
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
-            if (color1 && color2) {
-                if (colorTimer.milliseconds() > 800 && !intakeFull) { //500
+            if (color1 && color2){
+                if (colorTimer.milliseconds() > 700 && !intakeFull){
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(0);
                     intakeFull = true;
                     reversingLauncher = true;
                     reverseTimer.reset();
                 }
-            } else {
-                if (colorTimer.milliseconds() > 700) {
-                    intakeFull = false;
-                    reversedBefore = false;
-                }
+            }
+            else{
+                colorTimer.reset();
+                intakeFull = false;
             }
 
             if (reversingLauncher && !reversedBefore) {
@@ -288,8 +287,8 @@ public class blueTele extends LinearOpMode {
 
             if (!reversingLauncher) {
                 if (gamepad1.dpad_down) {
-                    robot.intake.setPower(-0.3);
-                    targetRPM = -1000;
+                    robot.intake.setPower(-0.2);
+                    setpointRPM = -1000;
                     double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
                     double downPower = feedforward.calculate(targetTicksPerSecDown);
                     downPower = Math.max(-1.0, Math.min(1.0, downPower));
