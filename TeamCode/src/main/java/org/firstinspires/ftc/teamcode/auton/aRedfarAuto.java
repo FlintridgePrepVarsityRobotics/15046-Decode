@@ -31,15 +31,15 @@ public class aRedfarAuto extends OpMode {
     private int nextState = -1;
 
     private final Pose startPose  = new Pose(97.2730819246,  8.801040312093622, Math.toRadians(90));
-    private final Pose scorePose  = new Pose(101.767230169, 18.725617685305593, Math.toRadians(114)); //116
-    private final Pose pickup1Pose      = new Pose(118.058517555, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup1intakePose= new Pose(149.959687906, 35.39141742522757, Math.toRadians(180));
-    private final Pose parkPose      = new Pose(124.050490884, 8.280504908835908, Math.toRadians(180));
+    private final Pose scorePose  = new Pose(101.767230169, 18.725617685305593, Math.toRadians(66)); //116
+    private final Pose pickup1Pose      = new Pose(118.058517555, 35.39141742522757, Math.toRadians(0));
+    private final Pose pickup1intakePose= new Pose(149.959687906, 35.39141742522757, Math.toRadians(0));
+    private final Pose parkPose      = new Pose(124.050490884, 8.280504908835908, Math.toRadians(0));
 
     //    private final Pose pickup2Pose      = new Pose(41.941482444733424, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup2intakePose= new Pose(149.959687906, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup3Pose = new Pose(118.058517555, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose = new Pose(149.959687906, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup2intakePose= new Pose(149.959687906, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup3Pose = new Pose(118.058517555, 35.39141742522757, Math.toRadians(0));
+    private final Pose pickup3intakePose = new Pose(149.959687906, 35.39141742522757, Math.toRadians(0));
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1, parkPath, grabPickup2, intakePickup2, scorePickup2;

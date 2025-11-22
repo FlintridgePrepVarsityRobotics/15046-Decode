@@ -358,14 +358,14 @@ public class aRedAuto extends OpMode {
     private int pathState;
     private int nextState = -1;
 
-    private final Pose startPose          = new Pose(141.840052016, 122.46553966189856, Math.toRadians(143));
-    private final Pose scorePose          = new Pose(123.11443433,  102.24187256176852, Math.toRadians(135));
-    private final Pose pickup1Pose        = new Pose(114.122236671, 83.32899869960988, Math.toRadians(180));
-    private final Pose pickup1intakePose  = new Pose(139.5, 83.32899869960980, Math.toRadians(180));
-    private final Pose pickup2Pose        = new Pose(114.122236671, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup2intakePose  = new Pose(139.465539662, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup3Pose        = new Pose(114.1222366717, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose  = new Pose(138.465539662, 35.39141742522757, Math.toRadians(180));
+    private final Pose startPose          = new Pose(141.840052016, 122.46553966189856, Math.toRadians(37));
+    private final Pose scorePose          = new Pose(123.11443433,  102.24187256176852, Math.toRadians(45));
+    private final Pose pickup1Pose        = new Pose(114.122236671, 83.32899869960988, Math.toRadians(0));
+    private final Pose pickup1intakePose  = new Pose(139.5, 83.32899869960980, Math.toRadians(0));
+    private final Pose pickup2Pose        = new Pose(114.122236671, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup2intakePose  = new Pose(139.465539662, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup3Pose        = new Pose(114.1222366717, 35.39141742522757, Math.toRadians(0));
+    private final Pose pickup3intakePose  = new Pose(138.465539662, 35.39141742522757, Math.toRadians(0));
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2;
