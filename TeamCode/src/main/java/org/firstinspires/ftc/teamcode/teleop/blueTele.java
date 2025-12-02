@@ -262,11 +262,12 @@ public class blueTele extends LinearOpMode {
             robot.launcher.setPower(combinedOutput);
 
             if (color1 && color2){
-                if (colorTimer.milliseconds() > 700 && !intakeFull){
+                if (colorTimer.milliseconds() > 500 && !intakeFull){
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                     intakeFull = true;
                     reversingLauncher = true;
+                    reversedBefore = false;
                     reverseTimer.reset();
                 }
             }
@@ -280,51 +281,52 @@ public class blueTele extends LinearOpMode {
                 robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                     reversedBefore = true;
                 }
             }
 
-            if (!reversingLauncher) {
-                if (gamepad1.dpad_down) {
-                    robot.intake.setPower(-0.2);
-                    setpointRPM = -1000;
-                    double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
-                    double downPower = feedforward.calculate(targetTicksPerSecDown);
-                    downPower = Math.max(-1.0, Math.min(1.0, downPower));
-                    robot.launcher.setPower(downPower);
-                }
-
-                boolean aNow = gamepad1.a;
-                if (aNow && !lastAState && !intakeFull) {
-                    isIntakeRunning = !isIntakeRunning;
-                    if (isIntakeRunning) {
-                        robot.intake.setPower(0.25);
-                        robot.intakeServo.setPower(1);
-                        buttonTimer.reset();
-                    } else {
-                        robot.intake.setPower(0);
-                        robot.intakeServo.setPower(0);
-                    }
-                }
-                lastAState = aNow;
-
-                if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 25) {
-                    if (!bWasPressed) {
-                        buttonTimer.reset();
-                        robot.intake.setPower(0.75);
-                        robot.intakeServo.setPower(1);
-                        bWasPressed = true;
-                    }
-                    if (buttonTimer.milliseconds() >= 170) {
-                        robot.intake.setPower(0);
-                        robot.intakeServo.setPower(0);
-                    }
-                } else if (!isIntakeRunning) {
-                    bWasPressed = false;
+            // --- Dpad down: reverse intake & launcher negative (manual) ---
+            if (gamepad1.dpad_down) {
+                robot.intake.setPower(-0.3);
+                setpointRPM = -1000;
+                double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
+                double downPower = feedforward.calculate(targetTicksPerSecDown);
+                downPower = Math.max(-1.0, Math.min(1.0, downPower));
+                robot.launcher.setPower(downPower);
+            }
+            // --- A Button -- toggle intake and shuts off when full
+            boolean aNow = gamepad1.a;
+            if (aNow && !lastAState && !intakeFull) {
+                // just pressed
+                isIntakeRunning = !isIntakeRunning;
+                if (isIntakeRunning) {
+                    robot.intake.setPower(0.25);
+                    robot.intakeServo.setPower(1);
+                    buttonTimer.reset();
+                } else {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
+            }
+            lastAState = aNow;
+
+            // --- B button: timed intake pulse ---
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
+                if (!bWasPressed) {
+                    buttonTimer.reset();
+                    robot.intake.setPower(0.75);
+                    robot.intakeServo.setPower(1);
+                    bWasPressed = true;
+                }
+                if (buttonTimer.milliseconds() >= 170) {
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(1);
+                }
+            } else if (!isIntakeRunning) {
+                bWasPressed = false;
+                robot.intake.setPower(0);
+                robot.intakeServo.setPower(1);
             }
 
             // --- Telemetry for tuning ---
@@ -379,7 +381,7 @@ public class blueTele extends LinearOpMode {
                         telemetry.addData("Tag X", tag.center.x);
                         telemetry.addData("Center", centerX);
                     } else {
-                        telemetry.addLine("Tag detected but not ID 20");
+                        telemetry.addLine("Tag detected but not ID 24");
                     }
                 } else {
                     telemetry.addLine("No tags detected");

@@ -344,8 +344,8 @@ import com.bylazar.telemetry.TelemetryManager;
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "BlueberryAuto", group = "fruitauto")
-public class BlueberryAuto extends OpMode {
+@Autonomous(name = "RedCloseAuto", group = "fruitauto")
+public class RedCloseAuto extends OpMode {
 
     public HWMap robot = new HWMap();
     private TelemetryManager panelsTelemetry;
@@ -358,14 +358,14 @@ public class BlueberryAuto extends OpMode {
     private int pathState;
     private int nextState = -1;
 
-    private final Pose startPose          = new Pose(18.159947984395316, 122.46553966189856, Math.toRadians(143));
-    private final Pose scorePose          = new Pose(36.88556566970091,  102.24187256176852, Math.toRadians(135));
-    private final Pose pickup1Pose        = new Pose(45.8777633289987, 83.32899869960988, Math.toRadians(180));
-    private final Pose pickup1intakePose  = new Pose(20.5, 83.32899869960980, Math.toRadians(180));
-    private final Pose pickup2Pose        = new Pose(45.8777633289987, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup2intakePose  = new Pose(20.534460338101432, 59.17295188556567, Math.toRadians(180));
-    private final Pose pickup3Pose        = new Pose(45.8777633289987, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose  = new Pose(21.534460338101432, 35.39141742522757, Math.toRadians(180));
+    private final Pose startPose          = new Pose(144-18.159947984395316, 122.46553966189856, Math.toRadians(180-143));
+    private final Pose scorePose          = new Pose(144-36.88556566970091,  102.24187256176852, Math.toRadians(180-135));
+    private final Pose pickup1Pose        = new Pose(144-45.8777633289987, 83.32899869960988, Math.toRadians(0));
+    private final Pose pickup1intakePose  = new Pose(144-20.5, 83.32899869960980, Math.toRadians(0));
+    private final Pose pickup2Pose        = new Pose(144-45.8777633289987, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup2intakePose  = new Pose(144-20.534460338101432, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup3Pose        = new Pose(144-45.8777633289987, 35.39141742522757, Math.toRadians(0));
+    private final Pose pickup3intakePose  = new Pose(144-21.534460338101432, 35.39141742522757, Math.toRadians(0));
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2;
@@ -422,12 +422,12 @@ public class BlueberryAuto extends OpMode {
 
                 if (measuredRPM >= targetRPM - allowedError) {
                     if (actionTimer.getElapsedTimeSeconds() >= 0.07) {
-                        robot.intake.setPower(0.75);
+                        robot.intake.setPower(0.85);
                         robot.intakeServo.setPower(1);
                     }
                     if (actionTimer.getElapsedTimeSeconds() >= 0.22) {//0.17
                         robot.intake.setPower(0);
-                        robot.intakeServo.setPower(0);
+                        robot.intakeServo.setPower(1);
                         shotsFired++;
                         actionTimer.resetTimer();
 
@@ -592,7 +592,7 @@ public class BlueberryAuto extends OpMode {
 //                }
 //                break;
 
-            // RETURN + SHOOT PICKUP 1
+                // RETURN + SHOOT PICKUP 1
             case 3:
                 if (!returningToScore) {
                     follower.followPath(scorePickup1, 0.7, true);

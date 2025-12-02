@@ -264,7 +264,7 @@ public class redTele extends LinearOpMode {
             if (color1 && color2){
                 if (colorTimer.milliseconds() > 700 && !intakeFull){
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                     intakeFull = true;
                     reversingLauncher = true;
                     reverseTimer.reset();
@@ -280,7 +280,7 @@ public class redTele extends LinearOpMode {
                 robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                     reversedBefore = true;
                 }
             }
@@ -305,13 +305,13 @@ public class redTele extends LinearOpMode {
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
             }
             lastAState = aNow;
 
-            // --- B button: timed intake pu lse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 25) {
+            // --- B button: timed intake pulse ---
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
                     robot.intake.setPower(0.75);
@@ -320,12 +320,12 @@ public class redTele extends LinearOpMode {
                 }
                 if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
             } else if (!isIntakeRunning) {
                 bWasPressed = false;
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                robot.intakeServo.setPower(1);
             }
 
             // --- Telemetry for tuning ---
@@ -356,7 +356,7 @@ public class redTele extends LinearOpMode {
                         tagDist = tag.ftcPose.range;
                         telemetry.addData("Distance from Tag", "%.1f", tagDist);
                         centerX = frameWidth / 2;
-                        if (tagDist > 100){centerX -= 50;}
+                        if (tagDist > 100){centerX += 50;}
                         if (tagX < centerX - tolerance) {
                             robot.fRightWheel.setPower(0.2);
                             robot.bRightWheel.setPower(0.2);
