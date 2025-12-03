@@ -96,7 +96,7 @@ public class FarBlueAuto extends OpMode {
 
                 if (measuredRPM >= targetRPM - allowedError) {
                     if (actionTimer.getElapsedTimeSeconds() >= 0.2) {//0.07
-                        robot.intake.setPower(0.75);
+                        robot.intake.setPower(0.85);
                         robot.intakeServo.setPower(1);
                     }
                     if (actionTimer.getElapsedTimeSeconds() >= 0.35) {//0.17 0.22

@@ -262,7 +262,7 @@ public class redTele extends LinearOpMode {
             robot.launcher.setPower(combinedOutput);
 
             if (color1 && color2){
-                if (colorTimer.milliseconds() > 700 && !intakeFull){
+                if (colorTimer.milliseconds() > 1000 && !intakeFull){
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(1);
                     intakeFull = true;
@@ -287,7 +287,7 @@ public class redTele extends LinearOpMode {
 
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
-                robot.intake.setPower(-0.3);
+                robot.intake.setPower(-0.2);
                 setpointRPM = -1000;
                 double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
                 double downPower = feedforward.calculate(targetTicksPerSecDown);
@@ -300,8 +300,9 @@ public class redTele extends LinearOpMode {
                 // just pressed
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setPower(0.25);
+                    robot.intake.setPower(0.2);
                     robot.intakeServo.setPower(1);
+                    reversingLauncher=true;
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);

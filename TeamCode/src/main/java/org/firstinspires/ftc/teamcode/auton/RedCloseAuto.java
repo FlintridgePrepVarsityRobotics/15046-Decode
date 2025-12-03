@@ -384,7 +384,7 @@ public class RedCloseAuto extends OpMode {
     private boolean shooting = false;
     private int shootStage = 0;
     private int shotsFired = 0;
-    private double targetRPM = 2030; //2100
+    private double targetRPM=2000; //2100
     private final int ticksPerRevLauncher = 28;
 
     public void startShooting3() {
@@ -532,7 +532,7 @@ public class RedCloseAuto extends OpMode {
                         double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
 
                         if (currentRPM <= 100) { //100
-                            robot.intake.setPower(0.23); //0.65
+                            robot.intake.setPower(0.3); //0.65
                             robot.intakeServo.setPower(1);
 
                             follower.followPath(intakePickup1, 0.5, true);
@@ -603,7 +603,7 @@ public class RedCloseAuto extends OpMode {
                     double headingError = Math.abs(follower.getPose().getHeading() - scorePose.getHeading());
 
                     if (!shooting && shotsFired == 0 && headingError < Math.toRadians(5)) {
-                        targetRPM = 2100; //2125
+                        targetRPM = 2000; //2125
                         startShooting3();
                     }
 
@@ -626,7 +626,7 @@ public class RedCloseAuto extends OpMode {
                         double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
 
                         if (currentRPM <= 100) {
-                            robot.intake.setPower(0.23);
+                            robot.intake.setPower(0.3);
                             robot.intakeServo.setPower(1);
 
                             follower.followPath(intakePickup2, 0.5, true);
@@ -656,7 +656,7 @@ public class RedCloseAuto extends OpMode {
                     double headingError = Math.abs(follower.getPose().getHeading() - scorePose.getHeading());
 
                     if (!shooting && shotsFired == 0 && headingError < Math.toRadians(5)) {
-                        targetRPM = 2100; //2125
+                        targetRPM = 2000; //2125
                         startShooting3();
                     }
 

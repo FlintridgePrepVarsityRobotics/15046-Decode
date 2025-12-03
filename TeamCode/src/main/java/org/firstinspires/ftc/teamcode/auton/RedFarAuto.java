@@ -58,7 +58,7 @@ public class RedFarAuto extends OpMode {
     private boolean shooting = false;
     private int shootStage = 0;
     private int shotsFired = 0;
-    private double targetRPM = 3000; //2100 close
+    private double targetRPM = 2867; //2100 close
     private final int ticksPerRevLauncher = 28;
 
     public void startShooting3() {
