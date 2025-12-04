@@ -361,11 +361,11 @@ public class RedCloseAuto extends OpMode {
     private final Pose startPose          = new Pose(144-18.159947984395316, 122.46553966189856, Math.toRadians(180-143));
     private final Pose scorePose          = new Pose(144-36.88556566970091,  102.24187256176852, Math.toRadians(180-135));
     private final Pose pickup1Pose        = new Pose(144-45.8777633289987, 83.32899869960988, Math.toRadians(0));
-    private final Pose pickup1intakePose  = new Pose(144-20.5, 83.32899869960980, Math.toRadians(0));
+    private final Pose pickup1intakePose  = new Pose(144-15.5, 83.32899869960980, Math.toRadians(0));
     private final Pose pickup2Pose        = new Pose(144-45.8777633289987, 59.17295188556567, Math.toRadians(0));
-    private final Pose pickup2intakePose  = new Pose(144-20.534460338101432, 59.17295188556567, Math.toRadians(0));
+    private final Pose pickup2intakePose  = new Pose(144-15.534460338101432, 59.17295188556567, Math.toRadians(0));
     private final Pose pickup3Pose        = new Pose(144-45.8777633289987, 35.39141742522757, Math.toRadians(0));
-    private final Pose pickup3intakePose  = new Pose(144-21.534460338101432, 35.39141742522757, Math.toRadians(0));
+    private final Pose pickup3intakePose  = new Pose(144-16.534460338101432, 35.39141742522757, Math.toRadians(0));
 
     private Path scorePreload;
     private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2;
@@ -374,12 +374,21 @@ public class RedCloseAuto extends OpMode {
     public static double kI = 0.0006;
     public static double kD = 0.0;
     public static double kF = 0.0;
-
     public static double kS = 0.0;
     public static double kV = 0.00042;
     public static double kA = 0.0;
+    public static double kP2 = 0;
+    public static double kI2 = 0;
+    public static double kD2 = 0;
+    public static double kF2 = 0;
+    public static double kS2 = 0;
+    public static double kV2 = 0;
+    public static double kA2 = 0;
+
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    PIDFController pidfintake = new PIDFController(kP2, kI2, kD2, kF2);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+    SimpleMotorFeedforward feedforward2 = new SimpleMotorFeedforward(kS2, kV2, kA2);
 
     private boolean shooting = false;
     private int shootStage = 0;
@@ -425,7 +434,7 @@ public class RedCloseAuto extends OpMode {
                         robot.intake.setPower(0.85);
                         robot.intakeServo.setPower(1);
                     }
-                    if (actionTimer.getElapsedTimeSeconds() >= 0.22) {//0.17
+                    if (actionTimer.getElapsedTimeSeconds() >= 0.255) {//0.17
                         robot.intake.setPower(0);
                         robot.intakeServo.setPower(1);
                         shotsFired++;
@@ -531,7 +540,7 @@ public class RedCloseAuto extends OpMode {
 
                         double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
 
-                        if (currentRPM <= 100) { //100
+                        if (currentRPM <= 300) { //300
                             robot.intake.setPower(0.3); //0.65
                             robot.intakeServo.setPower(1);
 
@@ -612,6 +621,7 @@ public class RedCloseAuto extends OpMode {
                         shotsFired = 0;
 
                         follower.followPath(grabPickup2, 0.5, true); //0.7
+                        nextState=5;
                         setPathState(4);
                     }
                 }
@@ -631,7 +641,6 @@ public class RedCloseAuto extends OpMode {
 
                             follower.followPath(intakePickup2, 0.5, true);
                             actionTimer.resetTimer();
-                            nextState = 5;
 
                             slowingForIntake = true;   // <<< FIX
                         }

@@ -17,7 +17,7 @@ public class HWMap {
     public ColorSensor sensor1 = null;
     public ColorSensor sensor2 = null;
 //    public DcMotor outtake = null;
-    public DcMotor intake = null;
+    public DcMotorEx intake = null;
     public WebcamName camera = null; //usb 3 port
 
     public CRServo intakeServo = null;
@@ -29,7 +29,7 @@ public class HWMap {
         bRightWheel = hwMap.dcMotor.get("BR");
         sensor1 = hwMap.colorSensor.get("sensor1");
         sensor2 = hwMap.colorSensor.get("sensor2");
-        intake = hwMap.dcMotor.get("intake");
+        intake = hwMap.get(DcMotorEx.class, "intake");
         intakeServo = hwMap.crservo.get("intakeServo");
         launcher = hwMap.get(DcMotorEx.class, "launcher");
 //        leftencoder = hwMap.dcMotor.get("leftencoder");
@@ -51,10 +51,11 @@ public class HWMap {
         fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        launcher.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcher.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        launcher.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
 //<<<<<<< HEAD
 //
@@ -64,7 +65,7 @@ public class HWMap {
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         launcher.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         camera = hwMap.get(WebcamName.class, "webcam");
 
         // Get motors from hardware map

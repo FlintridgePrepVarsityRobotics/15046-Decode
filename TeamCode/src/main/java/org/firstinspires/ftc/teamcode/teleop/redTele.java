@@ -20,7 +20,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "red")
+@TeleOp(name = "redTele")
 public class redTele extends LinearOpMode {
 
     public HWMap robot = new HWMap();
@@ -276,7 +276,7 @@ public class redTele extends LinearOpMode {
             }
 
             if (reversingLauncher && !reversedBefore) {
-                robot.launcher.setPower(-0.5);
+                robot.launcher.setPower(-0.75);
                 robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;

@@ -20,8 +20,8 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "blueTele")
-public class blueTele extends LinearOpMode {
+@TeleOp(name = "intakePIDTUNE")
+public class intakePIDTune extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
@@ -40,12 +40,27 @@ public class blueTele extends LinearOpMode {
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
+    public static double kS2 = 0.0;
+    public static double kV2 = 0.0;
+    public static double kA2 = 0.0;
+
+    public static double kP2 = 0.0;
+    public static double kI2 = 0.0;
+    public static double kD2 = 0.0;
+    public static double kF2 = 0.0;
+
+    // Feedforward: kS (static), kV (velocity), kA (acceleration)
+    // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
+
     public static double kS = 0.0;
     public static double kV = 0.00042;
     public static double kA = 0.0;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+    PIDFController pidfintake = new PIDFController(kP2, kI2, kD2, kF2);
+    SimpleMotorFeedforward feedforwardintake = new SimpleMotorFeedforward(kS2, kV2, kA2);
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -86,12 +101,18 @@ public class blueTele extends LinearOpMode {
         boolean lastAState = false;
 
         int ticksPerRev = 28;
+        double ticksIntakePerRev = 235.2;
         double setpointRPM = 0;
         double targetRPM = 0;
+        double setpointintakeRPM = 0;
+        double targetintakeRPM=0;
 
         // Ensure launcher has encoder mode set if you want velocity feedback
         robot.launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        robot.intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         ColorSensor sensor1;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
@@ -115,7 +136,9 @@ public class blueTele extends LinearOpMode {
             // Creating obj for PID Tuning
             TelemetryPacket packet = new TelemetryPacket();
             pidf.setPIDF(kP, kI, kD, kF);
+            pidfintake.setPIDF(kP2, kI2, kD2, kF2);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+            feedforwardintake = new SimpleMotorFeedforward(kS2, kV2, kA2);
 
             // color scale factor init
             Color.RGBToHSV(
@@ -250,6 +273,7 @@ public class blueTele extends LinearOpMode {
             // we've chosen gains so this approximates motor power)
             double ffOutput = feedforward.calculate(targetTicksPerSec);
 
+
             // PIDF returns correction. Give it the measurement and target (also ticks/sec).
             double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
 
@@ -262,12 +286,11 @@ public class blueTele extends LinearOpMode {
             robot.launcher.setPower(combinedOutput);
 
             if (color1 && color2){
-                if (colorTimer.milliseconds() > 500 && !intakeFull){
+                if (colorTimer.milliseconds() > 1000 && !intakeFull){
                     robot.intake.setPower(0);
                     robot.intakeServo.setPower(1);
                     intakeFull = true;
                     reversingLauncher = true;
-                    reversedBefore = false;
                     reverseTimer.reset();
                 }
             }
@@ -277,7 +300,7 @@ public class blueTele extends LinearOpMode {
             }
 
             if (reversingLauncher && !reversedBefore) {
-                robot.launcher.setPower(-0.5);
+                robot.launcher.setPower(-0.75);
                 robot.intakeServo.setPower(1);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
@@ -286,23 +309,42 @@ public class blueTele extends LinearOpMode {
                 }
             }
 
-            // --- Dpad down: reverse intake & launcher negative (manual) ---
+            // reverse intake & launcher negative
             if (gamepad1.dpad_down) {
-                robot.intake.setPower(-0.3);
+                robot.intake.setPower(-0.2);
                 setpointRPM = -1000;
                 double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
                 double downPower = feedforward.calculate(targetTicksPerSecDown);
                 downPower = Math.max(-1.0, Math.min(1.0, downPower));
                 robot.launcher.setPower(downPower);
             }
-            // --- A Button -- toggle intake and shuts off when full
+            // toggle intake and shuts off when full
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState && !intakeFull) {
                 // just pressed
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setPower(0.25);
+                    setpointintakeRPM = 500;
+                    double measuredintakeTicksPerSec = robot.intake.getVelocity();
+                    double targetintakeTicksPerSec = setpointintakeRPM / 60 * ticksIntakePerRev;
+                    double measuredintakeRPM = measuredintakeTicksPerSec / ticksIntakePerRev * 60.0;
+                    double intakeffOutput = feedforwardintake.calculate(targetintakeTicksPerSec);
+                    double intakepidOutput = pidfintake.calculate(measuredintakeTicksPerSec, targetintakeTicksPerSec);
+                    double combinedintakeOutput = intakeffOutput + intakepidOutput;
+                    combinedintakeOutput = Math.max(-1.0, Math.min(1.0, combinedintakeOutput));
+                    robot.intake.setPower(1);
+                    telemetry.addData("Intake Setpoint RPM", setpointintakeRPM);
+                    packet.put("Intake Setpoint RPM", setpointintakeRPM);
+                    telemetry.addData("Intake Measured RPM", "%.1f", measuredintakeRPM);
+                    packet.put("Intake Measured RPM", measuredintakeRPM);
+                    telemetry.addData("Intake FF Output", "%.4f", intakeffOutput);
+                    packet.put("Intake FF Output", intakeffOutput);
+                    telemetry.addData("Intake PID Output", "%.4f", intakepidOutput);
+                    packet.put("Intake PID Output", intakepidOutput);
+                    telemetry.addData("Intake Combined (power)", "%.4f", combinedintakeOutput);
+                    packet.put("Intake Combined (power)", combinedintakeOutput);
                     robot.intakeServo.setPower(1);
+                    reversingLauncher=true;
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
@@ -311,11 +353,17 @@ public class blueTele extends LinearOpMode {
             }
             lastAState = aNow;
 
-            // --- B button: timed intake pulse ---
+            //timed intake pulse
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
+                    double measuredintakeTicksPerSec = robot.intake.getVelocity();
+                    double targetintakeTicksPerSec = setpointintakeRPM / 60 * ticksIntakePerRev;
+                    double measuredintakeRPM = measuredintakeTicksPerSec / ticksIntakePerRev * 60.0;
+                    double intakeffOutput = feedforwardintake.calculate(targetintakeTicksPerSec);
+                    double intakepidOutput = pidfintake.calculate(measuredintakeTicksPerSec, targetintakeTicksPerSec);
+                    double combinedintakeOutput = intakeffOutput + intakepidOutput;
                     buttonTimer.reset();
-                    robot.intake.setPower(0.75);
+                    robot.intake.setPower(combinedintakeOutput);
                     robot.intakeServo.setPower(1);
                     bWasPressed = true;
                 }
@@ -341,6 +389,7 @@ public class blueTele extends LinearOpMode {
             telemetry.addData("Combined (power)", "%.4f", combinedOutput);
             packet.put("Combined (power)", combinedOutput);
 
+
             telemetry.addData("Clear", sensor1.alpha());
             telemetry.addData("Red  ", sensor1.red());
             telemetry.addData("Green", sensor1.green());
@@ -352,7 +401,7 @@ public class blueTele extends LinearOpMode {
             if (gamepad1.y) {
                 if (!tagProcessor.getDetections().isEmpty()) {
                     AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                    if (tag.id == 20) {
+                    if (tag.id == 24) {
                         double tagX = tag.center.x;
                         tagDist = tag.ftcPose.range;
                         telemetry.addData("Distance from Tag", "%.1f", tagDist);
