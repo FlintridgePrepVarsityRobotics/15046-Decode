@@ -331,6 +331,7 @@ package org.firstinspires.ftc.teamcode.auton;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
@@ -499,7 +500,7 @@ public class RedCloseAuto extends OpMode {
                 .build();
 
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup2intakePose, scorePose))
+                .addPath(new BezierCurve(pickup2intakePose,  new Pose(115.200, 12.147), scorePose))
                 .setLinearHeadingInterpolation(pickup2intakePose.getHeading(), scorePose.getHeading())
                 .build();
     }
@@ -657,7 +658,7 @@ public class RedCloseAuto extends OpMode {
             case 5:
                 if (!returningToScore) {
                     follower.followPath(scorePickup2, 0.7, true);
-                    returningToScore = true;
+                    returningToScore = false;
                 }
 
                 if (!follower.isBusy()) {

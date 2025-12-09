@@ -12,8 +12,8 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
  * PID-related functions of the DcMotorEx class.
  */
 
-@Autonomous(name="Concept: Change PID", group = "Concept")
-public class PIDTUning extends LinearOpMode {
+@Autonomous(name="Concept: Change PID Launcher", group = "Concept")
+public class PIDTUningLauncher extends LinearOpMode {
 
     // our DC motor.
 
