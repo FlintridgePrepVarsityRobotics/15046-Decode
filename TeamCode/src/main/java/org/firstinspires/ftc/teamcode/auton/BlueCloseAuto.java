@@ -45,7 +45,7 @@ public class BlueCloseAuto extends OpMode {
     private final Pose pickup1intakePose  = new Pose(15.5, 83.32899869960980, Math.toRadians(180));
     private final Pose pickup2Pose        = new Pose(45.8777633289987, 59.17295188556567, Math.toRadians(180));
     private final Pose pickup2intakePose  = new Pose(15.534460338101432, 59.17295188556567, Math.toRadians(180));
-    private final Pose park  = new Pose(12.848979591836734, 74.05714285714285, Math.toRadians(90));
+    private final Pose park  = new Pose(12.848979591836734, 102.66122448979593, Math.toRadians(90));
     private final Pose pickup3Pose        = new Pose(45.8777633289987, 35.39141742522757, Math.toRadians(180));
     private final Pose pickup3intakePose  = new Pose(12.534460338101432, 35.39141742522757, Math.toRadians(180));
 

@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
         private final Pose pickup1intakePose  = new Pose(144-15.5, 83.32899869960980, Math.toRadians(0));
         private final Pose pickup2Pose        = new Pose(144-45.8777633289987, 59.17295188556567, Math.toRadians(0));
         private final Pose pickup2intakePose  = new Pose(144-15.534460338101432, 59.17295188556567, Math.toRadians(0));
-        private final Pose park  = new Pose(144-12.848979591836734, 74.05714285714285, Math.toRadians(90));
+        private final Pose park  = new Pose(144-12.848979591836734, 102.66122448979593, Math.toRadians(90));
         private final Pose pickup3Pose        = new Pose(144-45.8777633289987, 35.39141742522757, Math.toRadians(0));
         private final Pose pickup3intakePose  = new Pose(144-16.534460338101432, 35.39141742522757, Math.toRadians(0));
 
