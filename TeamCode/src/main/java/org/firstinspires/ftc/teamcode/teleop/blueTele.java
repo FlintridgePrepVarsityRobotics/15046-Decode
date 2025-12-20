@@ -214,9 +214,9 @@ public class blueTele extends LinearOpMode {
             }
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y*.8;
-            double x = gamepad1.left_stick_x * -1.1*.8;
-            double rx = gamepad1.right_stick_x*.8;
+            double y = -gamepad1.left_stick_y*.7;
+            double x = gamepad1.left_stick_x * -1.1*.7;
+            double rx = gamepad1.right_stick_x*.7;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -322,7 +322,8 @@ public class blueTele extends LinearOpMode {
 
             if (reversingLauncher && flywheelon == false) {
                 robot.launcher.setPower(-0.7);
-                robot.intakeServo.setPower(0);
+                robot.intakeServo.setPower(1);
+                robot.intake.setPower(-.05);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
                     robot.intakeServo.setPower(0);

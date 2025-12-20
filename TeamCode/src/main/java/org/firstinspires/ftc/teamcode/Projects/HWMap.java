@@ -51,7 +51,8 @@ public class HWMap {
         fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        intake.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         launcher.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
