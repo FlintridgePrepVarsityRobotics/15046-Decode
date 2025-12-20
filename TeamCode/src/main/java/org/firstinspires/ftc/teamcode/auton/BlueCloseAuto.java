@@ -422,10 +422,10 @@ public class BlueCloseAuto extends OpMode {
 
                 if (measuredRPM >= targetRPM - allowedError) {
                     if (actionTimer.getElapsedTimeSeconds() >= 0.07) {
-                        robot.intake.setPower(0.85);
+                        robot.intake.setPower(1);
                         robot.intakeServo.setPower(1);
                     }
-                    if (actionTimer.getElapsedTimeSeconds() >= 0.22) {//0.17
+                    if (actionTimer.getElapsedTimeSeconds() >= 0.30) {//0.17
                         robot.intake.setPower(0);
                         robot.intakeServo.setPower(1);
                         shotsFired++;

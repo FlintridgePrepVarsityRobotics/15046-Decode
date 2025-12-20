@@ -342,6 +342,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 
+
 import org.firstinspires.ftc.teamcode.Projects.HWMap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -432,10 +433,10 @@ public class RedCloseAuto extends OpMode {
 
                 if (measuredRPM >= targetRPM - allowedError) {
                     if (actionTimer.getElapsedTimeSeconds() >= 0.07) {
-                        robot.intake.setPower(0.85);
+                        robot.intake.setPower(1);
                         robot.intakeServo.setPower(1);
                     }
-                    if (actionTimer.getElapsedTimeSeconds() >= 0.255) {//0.17
+                    if (actionTimer.getElapsedTimeSeconds() >= 0.3) {//0.17
                         robot.intake.setPower(0);
                         robot.intakeServo.setPower(1);
                         shotsFired++;
@@ -500,7 +501,7 @@ public class RedCloseAuto extends OpMode {
                 .build();
 
         scorePickup2 = follower.pathBuilder()
-                .addPath(new BezierCurve(pickup2intakePose,  new Pose(115.200, 12.147), scorePose))
+                .addPath(new BezierCurve(pickup2intakePose,  new Pose(86, 45), scorePose))
                 .setLinearHeadingInterpolation(pickup2intakePose.getHeading(), scorePose.getHeading())
                 .build();
     }

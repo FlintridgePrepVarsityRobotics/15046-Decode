@@ -1,4 +1,5 @@
 repositories {
+
     mavenCentral()
     google() // Needed for androidx
     maven { url = 'https://maven.pedropathing.com' }
@@ -7,7 +8,7 @@ repositories {
 }
 
 dependencies {
-
+    implementation 'com.acmerobotics.dashboard:dashboard:0.5.1'
     implementation 'com.pedropathing:ftc:2.0.1' //pedropathing
     implementation 'com.pedropathing:telemetry:0.0.6' //pedropathing
     implementation 'com.bylazar:fullpanels:1.0.7' //pedropathing

@@ -20,14 +20,15 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "redTele")
-public class redTele extends LinearOpMode {
+@TeleOp(name = "redteleforscrim")
+public class Redteleopforscrim extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();
     boolean reversingLauncher = false;
+    boolean reversedBefore = false;
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
@@ -42,10 +43,23 @@ public class redTele extends LinearOpMode {
     public static double kS = 0.0;
     public static double kV = 0.00042;
     public static double kA = 0.0;
+    //INTAKE
+    public static double IkP = 0.001;
+    public static double IkI = 0.0006;
+    public static double IkD = 0.0;
+    public static double IkF = 0.0;
+
+    // Feedforward: kS (static), kV (velocity), kA (acceleration)
+    // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
+
+    public static double IkS = 0.0;
+    public static double IkV = 0.00042;
+    public static double IkA = 0.0;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    PIDFController pidfIntake = new PIDFController(IkP, IkI, IkD, IkF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-
+    SimpleMotorFeedforward feedforwardIntake = new SimpleMotorFeedforward(IkS, IkV, IkA);
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
@@ -66,7 +80,7 @@ public class redTele extends LinearOpMode {
         int frameWidth = 640;
         int centerX = frameWidth / 2;
         int tolerance = 50; // pixels within which the tag is centered
-        boolean flywheelon = false;
+
         double speed = 1;
         boolean lastUp = false;
         boolean lastMid = false;
@@ -94,6 +108,10 @@ public class redTele extends LinearOpMode {
         ColorSensor sensor1;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         dashboard.setTelemetryTransmissionInterval(25);
+
+        robot.intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         sensor1 = hardwareMap.get(ColorSensor.class, "sensor1");
 
         // get a reference to the distance sensor that shares the same name
@@ -115,6 +133,10 @@ public class redTele extends LinearOpMode {
             TelemetryPacket packet = new TelemetryPacket();
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+            TelemetryPacket packetIntake = new TelemetryPacket();
+            pidfIntake.setPIDF(IkP, IkI, IkD, IkF);
+            feedforward = new SimpleMotorFeedforward(IkS, IkV, IkA);
 
             // color scale factor init
             Color.RGBToHSV(
@@ -213,10 +235,9 @@ public class redTele extends LinearOpMode {
             }
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y*.8;
-            double x = gamepad1.left_stick_x * -1.1*.8;
-            double rx = gamepad1.right_stick_x*.8;
-
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x * -1.1;
+            double rx = gamepad1.right_stick_x;
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -236,28 +257,19 @@ public class redTele extends LinearOpMode {
 
             // Update setpoint only when a D-pad button is newly pressed (rising edge),
             // so you don't keep re-setting it each loop.
-            if (highSpeed && !lastUp){
-                setpointRPM = 3200;
-                flywheelon = true;
-            }
-            if (midSpeed && !lastMid){
-                setpointRPM = 2600;
-                flywheelon = true;
-            }
-            if (lowSpeed && !lastDown){
-                setpointRPM = 2400;
-                flywheelon = true;
-            }
-            if (gamepad1.x && !lastX){
-                setpointRPM = 0;
-                flywheelon = false;
-            }
+            if (highSpeed && !lastUp) setpointRPM = 3200;
+            if (midSpeed && !lastMid) setpointRPM = 2600;
+            if (lowSpeed && !lastDown) setpointRPM = 2400;
+            if (gamepad1.x && !lastX) setpointRPM = 0;
 
             // Measurements in ticks/sec
             double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
             double measuredTicksPerSec = robot.launcher.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
 
+            double ItargetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
+            double ImeasuredTicksPerSec = robot.intake.getVelocity();
+            double ImeasuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
             // Feedforward baseline (returns value in same "command" units as gains —
             // we've chosen gains so this approximates motor power)
             double ffOutput = feedforward.calculate(targetTicksPerSec);
@@ -265,15 +277,42 @@ public class redTele extends LinearOpMode {
             // PIDF returns correction. Give it the measurement and target (also ticks/sec).
             double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
 
+            double IntakepidOutput = pidfIntake.calculate(measuredTicksPerSec, targetTicksPerSec);
             // Combine and clamp to motor power range [-1, 1]
             double combinedOutput = ffOutput + pidOutput;
             combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
+
+            double IcombinedOutput = ffOutput + IntakepidOutput;
+            IcombinedOutput = Math.max(-1.0, Math.min(1.0, IcombinedOutput));
 
             // If the driver pressed D-pad (we want launcher behavior), apply combined power.
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
+            if (color1 && color2){
+                if (colorTimer.milliseconds() > 500 && !intakeFull){
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(1);
+                    intakeFull = true;
+                    reversingLauncher = true;
+                    reversedBefore = false;
+                    reverseTimer.reset();
+                }
+            }
+            else{
+                colorTimer.reset();
+                intakeFull = false;
+            }
 
+            if (reversingLauncher && !reversedBefore) {
+                robot.launcher.setPower(-0.5);
+                robot.intakeServo.setPower(1);
+                if (reverseTimer.milliseconds() >= 500) {
+                    reversingLauncher = false;
+                    robot.intakeServo.setPower(1);
+                    reversedBefore = true;
+                }
+            }
 
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
@@ -295,44 +334,13 @@ public class redTele extends LinearOpMode {
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
             }
-
-
             lastAState = aNow;
 
-
-
-            if (color1 && color2){
-                if (colorTimer.milliseconds() > 500 && !intakeFull){
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
-                    intakeFull = true;
-                    reversingLauncher = true;
-
-                    reverseTimer.reset();
-                }
-            }
-            else{
-                colorTimer.reset();
-                intakeFull = false;
-            }
-
-            if (reversingLauncher && flywheelon == false) {
-                robot.launcher.setPower(-0.7);
-                robot.intakeServo.setPower(0);
-                if (reverseTimer.milliseconds() >= 500) {
-                    reversingLauncher = false;
-                    robot.intakeServo.setPower(0);
-
-                }
-            }
-            telemetry.addData("reverseingLauncher", reversingLauncher);
-            telemetry.addData("flywheelon", flywheelon);
-            telemetry.update();
             // --- B button: timed intake pulse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
+            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 150) {
                 if (!bWasPressed) {
                     buttonTimer.reset();
                     robot.intake.setPower(0.75);
@@ -341,12 +349,12 @@ public class redTele extends LinearOpMode {
                 }
                 if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+                    robot.intakeServo.setPower(1);
                 }
             } else if (!isIntakeRunning) {
                 bWasPressed = false;
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                robot.intakeServo.setPower(1);
             }
 
             // --- Telemetry for tuning ---
@@ -415,7 +423,6 @@ public class redTele extends LinearOpMode {
             }
             dashboard.sendTelemetryPacket(packet);
             telemetry.update();
-
             // store previous D-pad states
             lastUp = highSpeed;
             lastMid = midSpeed;
@@ -423,7 +430,3 @@ public class redTele extends LinearOpMode {
         }
     }
 }
-
-
-
-

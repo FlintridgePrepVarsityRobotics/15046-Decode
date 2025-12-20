@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.arcrobotics.ftclib.controller.PIDFController;
@@ -28,7 +29,6 @@ public class blueTele extends LinearOpMode {
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();
     boolean reversingLauncher = false;
-    boolean reversedBefore = false;
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
@@ -67,7 +67,7 @@ public class blueTele extends LinearOpMode {
         int frameWidth = 640;
         int centerX = frameWidth / 2;
         int tolerance = 50; // pixels within which the tag is centered
-
+        boolean flywheelon = false;
         double speed = 1;
         boolean lastUp = false;
         boolean lastMid = false;
@@ -214,9 +214,10 @@ public class blueTele extends LinearOpMode {
             }
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x * -1.1;
-            double rx = gamepad1.right_stick_x;
+            double y = -gamepad1.left_stick_y*.8;
+            double x = gamepad1.left_stick_x * -1.1*.8;
+            double rx = gamepad1.right_stick_x*.8;
+
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -236,10 +237,22 @@ public class blueTele extends LinearOpMode {
 
             // Update setpoint only when a D-pad button is newly pressed (rising edge),
             // so you don't keep re-setting it each loop.
-            if (highSpeed && !lastUp) setpointRPM = 3200;
-            if (midSpeed && !lastMid) setpointRPM = 2600;
-            if (lowSpeed && !lastDown) setpointRPM = 2400;
-            if (gamepad1.x && !lastX) setpointRPM = 0;
+            if (highSpeed && !lastUp){
+                setpointRPM = 3200;
+                flywheelon = true;
+            }
+            if (midSpeed && !lastMid){
+                setpointRPM = 2600;
+                flywheelon = true;
+            }
+            if (lowSpeed && !lastDown){
+                setpointRPM = 2400;
+                flywheelon = true;
+            }
+            if (gamepad1.x && !lastX){
+                setpointRPM = 0;
+                flywheelon = false;
+            }
 
             // Measurements in ticks/sec
             double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
@@ -261,30 +274,7 @@ public class blueTele extends LinearOpMode {
             // If the player pressed 'x' or dpad_down, those override below.
             robot.launcher.setPower(combinedOutput);
 
-            if (color1 && color2){
-                if (colorTimer.milliseconds() > 500 && !intakeFull){
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
-                    intakeFull = true;
-                    reversingLauncher = true;
-                    reversedBefore = false;
-                    reverseTimer.reset();
-                }
-            }
-            else{
-                colorTimer.reset();
-                intakeFull = false;
-            }
 
-            if (reversingLauncher && !reversedBefore) {
-                robot.launcher.setPower(-0.5);
-                robot.intakeServo.setPower(1);
-                if (reverseTimer.milliseconds() >= 500) {
-                    reversingLauncher = false;
-                    robot.intakeServo.setPower(1);
-                    reversedBefore = true;
-                }
-            }
 
             // --- Dpad down: reverse intake & launcher negative (manual) ---
             if (gamepad1.dpad_down) {
@@ -306,11 +296,42 @@ public class blueTele extends LinearOpMode {
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
+                    robot.intakeServo.setPower(0);
                 }
             }
+
+
             lastAState = aNow;
 
+
+
+            if (color1 && color2){
+                if (colorTimer.milliseconds() > 500 && !intakeFull){
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(0);
+                    intakeFull = true;
+                    reversingLauncher = true;
+
+                    reverseTimer.reset();
+                }
+            }
+            else{
+                colorTimer.reset();
+                intakeFull = false;
+            }
+
+            if (reversingLauncher && flywheelon == false) {
+                robot.launcher.setPower(-0.7);
+                robot.intakeServo.setPower(0);
+                if (reverseTimer.milliseconds() >= 500) {
+                    reversingLauncher = false;
+                    robot.intakeServo.setPower(0);
+
+                }
+            }
+            telemetry.addData("reverseingLauncher", reversingLauncher);
+            telemetry.addData("flywheelon", flywheelon);
+            telemetry.update();
             // --- B button: timed intake pulse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
@@ -321,12 +342,12 @@ public class blueTele extends LinearOpMode {
                 }
                 if (buttonTimer.milliseconds() >= 170) {
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
+                    robot.intakeServo.setPower(0);
                 }
             } else if (!isIntakeRunning) {
                 bWasPressed = false;
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(1);
+                robot.intakeServo.setPower(0);
             }
 
             // --- Telemetry for tuning ---
