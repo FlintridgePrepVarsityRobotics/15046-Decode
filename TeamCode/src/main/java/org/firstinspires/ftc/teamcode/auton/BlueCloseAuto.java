@@ -25,7 +25,14 @@ public class BlueCloseAuto extends OpMode {
     private Follower follower;
 
     private Timer pathTimer, actionTimer, opmodeTimer;
+    private boolean finishedShooting = false;
+//Eversons very good stuff
+    private boolean intakeServoRunning = false;
+    private double intakeServoStartTime = 0.0;
 
+    private static final double INTAKE_SERVO_RUN_TIME = 1.0;
+
+    //Eversons very good stuff
     private boolean returningToScore = false;
     private boolean slowingForIntake = false;
 
@@ -38,11 +45,12 @@ public class BlueCloseAuto extends OpMode {
     private final Pose pickup1intakePose  = new Pose(15.5, 83.32899869960980, Math.toRadians(180));
     private final Pose pickup2Pose        = new Pose(45.8777633289987, 59.17295188556567, Math.toRadians(180));
     private final Pose pickup2intakePose  = new Pose(15.534460338101432, 59.17295188556567, Math.toRadians(180));
+    private final Pose park  = new Pose(12.848979591836734, 102.66122448979593, Math.toRadians(90));
     private final Pose pickup3Pose        = new Pose(45.8777633289987, 35.39141742522757, Math.toRadians(180));
-    private final Pose pickup3intakePose  = new Pose(16.534460338101432, 35.39141742522757, Math.toRadians(180));
+    private final Pose pickup3intakePose  = new Pose(12.534460338101432, 35.39141742522757, Math.toRadians(180));
 
     private Path scorePreload;
-    private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2;
+    private PathChain grabPickup1, intakePickup1, scorePickup1, grabPickup2, intakePickup2, scorePickup2, parking;
 
     public static double kP = 0.001;
     public static double kI = 0.0006;
@@ -71,12 +79,12 @@ public class BlueCloseAuto extends OpMode {
     private boolean shooting = false;
     private int shotsFired = 0;
 
-    private static final double FLYWHEEL_TARGET_RPM = 2000;
-    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 50;
-    private static final double INTAKE_TARGET_RPM = 300;
+    private static final double FLYWHEEL_TARGET_RPM = 2200;
+    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 100;
+    private static final double INTAKE_TARGET_RPM = 500;
 
-    private static final double FEED_TIME_SEC = 0.22;
-    private static final double BETWEEN_SHOTS_MIN_SEC = 0.10;
+    private static final double FEED_TIME_SEC = 0.2;
+    private static final double BETWEEN_SHOTS_MIN_SEC = 0;
 
     private boolean feeding = false;
     private double feedStartTime = 0.0;
@@ -84,23 +92,39 @@ public class BlueCloseAuto extends OpMode {
 
     private final int ticksPerRevLauncher = 28;
     private final int ticksPerRevIntake = 224;
+    //Eversons very good stuff
+    public void runIntakeServoOneSecond() {
+        intakeServoRunning = true;
+        intakeServoStartTime = opmodeTimer.getElapsedTimeSeconds();
+        robot.intakeServo.setPower(1.0);
+    }
+    //Everson very good stuff
+    public void updateIntakeServo() {
+        if (!intakeServoRunning) return;
+
+        double now = opmodeTimer.getElapsedTimeSeconds();
+        if (now - intakeServoStartTime >= INTAKE_SERVO_RUN_TIME) {
+            robot.intakeServo.setPower(0.0);
+            intakeServoRunning = false;
+        }
+    }
 
     public void startShooting3() {
         shooting = true;
+        finishedShooting = false;
         shotsFired = 0;
         feeding = false;
         lastFeedEndTime = -999.0;
         actionTimer.resetTimer();
     }
 
+
     public void updateShooting() {
         if (!shooting) {
-            robot.launcher.setPower(0);
-            robot.intake.setPower(0);
-            robot.intakeServo.setPower(0);
             feeding = false;
             return;
         }
+
 
         double targetTicksPerSec = FLYWHEEL_TARGET_RPM / 60.0 * ticksPerRevLauncher;
         double measuredTicksPerSec = robot.launcher.getVelocity();
@@ -124,8 +148,10 @@ public class BlueCloseAuto extends OpMode {
             robot.intakeServo.setPower(0);
             shooting = false;
             feeding = false;
+            finishedShooting = true;
             return;
         }
+
 
         if (!flywheelReady) {
             robot.intake.setPower(0);
@@ -183,7 +209,7 @@ public class BlueCloseAuto extends OpMode {
                 .build();
 
         scorePickup1 = follower.pathBuilder()
-                .addPath(new BezierLine(pickup1intakePose, scorePose))
+                .addPath(new BezierCurve(pickup1intakePose, new Pose(46,80), scorePose))
                 .setLinearHeadingInterpolation(pickup1intakePose.getHeading(), scorePose.getHeading())
                 .build();
 
@@ -200,6 +226,10 @@ public class BlueCloseAuto extends OpMode {
         scorePickup2 = follower.pathBuilder()
                 .addPath(new BezierCurve(pickup2intakePose, new Pose(58, 45), scorePose))
                 .setLinearHeadingInterpolation(pickup2intakePose.getHeading(), scorePose.getHeading())
+                .build();
+        parking = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, park))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), park.getHeading())
                 .build();
     }
 
@@ -218,20 +248,33 @@ public class BlueCloseAuto extends OpMode {
                     }
                     if (!shooting && shotsFired >= 3) {
                         shotsFired = 0;
-                        follower.followPath(grabPickup1, 0.5, true);
+                        finishedShooting = false;
+                        follower.followPath(grabPickup1, 0.8, true);
                         setPathState(2);
                     }
                 }
                 break;
-
+            case 21:
+                if (actionTimer.getElapsedTimeSeconds() < 0.5) {
+                    robot.launcher.setPower(-1);
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(1);
+                } else {
+                    robot.launcher.setPower(0);
+                    robot.intake.setPower(0);
+                    robot.intakeServo.setPower(1);
+                    slowingForIntake = false;
+                    setPathState(nextState);
+                }
+                break;
             case 2:
                 if (!slowingForIntake) {
                     if (!follower.isBusy()) {
                         double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
-                        if (currentRPM <= 300) {
-                            robot.intake.setPower(0.3);
+                        if (currentRPM <= 1000) {
+                            robot.intake.setPower(0.5);
                             robot.intakeServo.setPower(1);
-                            follower.followPath(intakePickup1, 0.5, true);
+                            follower.followPath(intakePickup1, 0.7, true);
                             actionTimer.resetTimer();
                             nextState = 3;
                             slowingForIntake = true;
@@ -245,23 +288,11 @@ public class BlueCloseAuto extends OpMode {
                 }
                 break;
 
-            case 21:
-                if (actionTimer.getElapsedTimeSeconds() < 0.5) {
-                    robot.launcher.setPower(-0.55);
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
-                } else {
-                    robot.launcher.setPower(0);
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
-                    slowingForIntake = false;
-                    setPathState(nextState);
-                }
-                break;
 
             case 3:
                 if (!returningToScore) {
-                    follower.followPath(scorePickup1, 0.7, true);
+                    runIntakeServoOneSecond();
+                    follower.followPath(scorePickup1, 0.8, true);
                     returningToScore = true;
                 }
                 if (!follower.isBusy()) {
@@ -272,7 +303,7 @@ public class BlueCloseAuto extends OpMode {
                     if (!shooting && shotsFired >= 3) {
                         returningToScore = false;
                         shotsFired = 0;
-                        follower.followPath(grabPickup2, 0.5, true);
+                        follower.followPath(grabPickup2, 0.8, true);
                         nextState = 5;
                         setPathState(4);
                     }
@@ -283,10 +314,10 @@ public class BlueCloseAuto extends OpMode {
                 if (!slowingForIntake) {
                     if (!follower.isBusy()) {
                         double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
-                        if (currentRPM <= 100) {
-                            robot.intake.setPower(0.3);
+                        if (currentRPM <= 1000) {
+                            robot.intake.setPower(0.5);
                             robot.intakeServo.setPower(1);
-                            follower.followPath(intakePickup2, 0.5, true);
+                            follower.followPath(intakePickup2, 0.7, true);
                             actionTimer.resetTimer();
                             slowingForIntake = true;
                         }
@@ -301,7 +332,8 @@ public class BlueCloseAuto extends OpMode {
 
             case 5:
                 if (!returningToScore) {
-                    follower.followPath(scorePickup2, 0.7, true);
+                    runIntakeServoOneSecond();
+                    follower.followPath(scorePickup2, 0.8, true);
                     returningToScore = true;
                 }
                 if (!follower.isBusy()) {
@@ -312,9 +344,14 @@ public class BlueCloseAuto extends OpMode {
                     if (!shooting && shotsFired >= 3) {
                         returningToScore = false;
                         shotsFired = 0;
-                        setPathState(-1);
+                        setPathState(6);
                     }
                 }
+                break;
+
+            case 6:
+                follower.followPath(parking, .5, true);
+                setPathState(-1);
                 break;
         }
     }
@@ -328,7 +365,10 @@ public class BlueCloseAuto extends OpMode {
     public void loop() {
         follower.update();
         autonomousPathUpdate();
-        updateShooting();
+        if (shooting) {
+            updateShooting();
+        }
+        updateIntakeServo();
         telemetry.addData("path state", pathState);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
@@ -363,3 +403,4 @@ public class BlueCloseAuto extends OpMode {
     @Override public void start() { opmodeTimer.resetTimer(); setPathState(0); }
     @Override public void stop() {}
 }
+

@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.arcrobotics.ftclib.controller.PIDFController;
@@ -20,8 +21,8 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @Config
-@TeleOp(name = "redTele")
-public class redTele extends LinearOpMode {
+@TeleOp(name = "blueTeleilt")
+public class blueteleILT extends LinearOpMode {
 
     public HWMap robot = new HWMap();
     public ElapsedTime buttonTimer = new ElapsedTime();
@@ -213,9 +214,9 @@ public class redTele extends LinearOpMode {
             }
 
             // --- Driver control ---
-            double y = -gamepad1.left_stick_y*.7;
-            double x = gamepad1.left_stick_x * -1.1*.7;
-            double rx = gamepad1.right_stick_x*.7;
+            double y = -gamepad1.left_stick_y*.8;
+            double x = gamepad1.left_stick_x * -1.1*.8;
+            double rx = gamepad1.right_stick_x*.8;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -321,11 +322,11 @@ public class redTele extends LinearOpMode {
 
             if (reversingLauncher && flywheelon == false) {
                 robot.launcher.setPower(-0.7);
-                robot.intakeServo.setPower(1);
-                robot.intake.setPower(-.05);
+                robot.intakeServo.setPower(0);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
                     robot.intakeServo.setPower(0);
+
                 }
             }
             telemetry.addData("reverseingLauncher", reversingLauncher);
@@ -372,7 +373,7 @@ public class redTele extends LinearOpMode {
             if (gamepad1.y) {
                 if (!tagProcessor.getDetections().isEmpty()) {
                     AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                    if (tag.id == 24) {
+                    if (tag.id == 20) {
                         double tagX = tag.center.x;
                         tagDist = tag.ftcPose.range;
                         telemetry.addData("Distance from Tag", "%.1f", tagDist);
@@ -425,5 +426,11 @@ public class redTele extends LinearOpMode {
 }
 
 
-
+//turret 180 degrees 90 left 90 right, you need to make the turret track the april tag but track the angle
+    //via the motor encoder that is driving the turret
+    //when it rotates 90 degrees to the left or right, it stops until it can track the opposite way (software stop that prevents it
+    //rotating more than 90 degrees either way)
+    //make a button that resets it to the middle (0 degrees) (right is 90 degrees, left is -90 degrees)
+    //also make it track the distance and estimate currently the flywheel rpm so it adjusts the rpm when the flywheel is on
+    //and the flywheel should only have a button on and off, the on will be shooting
 
