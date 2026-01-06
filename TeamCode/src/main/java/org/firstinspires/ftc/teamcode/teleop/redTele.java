@@ -322,10 +322,11 @@ public class redTele extends LinearOpMode {
             if (reversingLauncher && flywheelon == false) {
                 robot.launcher.setPower(-0.7);
                 robot.intakeServo.setPower(1);
-                robot.intake.setPower(-.05);
+                robot.intake.setPower(-.025);
                 if (reverseTimer.milliseconds() >= 500) {
                     reversingLauncher = false;
                     robot.intakeServo.setPower(0);
+                    robot.intake.setPower(0);
                 }
             }
             telemetry.addData("reverseingLauncher", reversingLauncher);
