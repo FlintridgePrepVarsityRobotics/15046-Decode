@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.Projects;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -14,6 +15,8 @@ public class HWMap {
     public DcMotor fRightWheel = null; //control hub port0
     public DcMotor bLeftWheel = null; //expansion hub port1
     public DcMotor bRightWheel = null; //control hub port1
+
+    public Limelight3A limelight = null;
     public ColorSensor sensor1 = null;
     public ColorSensor sensor2 = null;
 //    public DcMotor outtake = null;
@@ -32,6 +35,7 @@ public class HWMap {
         intake = hwMap.get(DcMotorEx.class, "intake");
         intakeServo = hwMap.crservo.get("intakeServo");
         launcher = hwMap.get(DcMotorEx.class, "launcher");
+        limelight = hwMap.get(Limelight3A.class, "limelight");
 //        leftencoder = hwMap.dcMotor.get("leftencoder");
 //        rightencoder = hwMap.dcMotor.get("rightencoder");
 //        backencoder = hwMap.dcMotor.get("backencoder");
