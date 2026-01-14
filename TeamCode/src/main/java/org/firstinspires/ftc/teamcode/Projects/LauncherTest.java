@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name = "LauncherTest")
 
 public class LauncherTest extends LinearOpMode {
-    public HWMap robot = new HWMap();
+    public HWMapOld robot = new HWMapOld();
     public ElapsedTime buttonTimer = new ElapsedTime();
 
     @Override

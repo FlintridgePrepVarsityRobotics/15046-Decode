@@ -1,9 +1,6 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
-import android.graphics.Color;
-import android.util.Size;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -11,22 +8,15 @@ import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Projects.HWMap;
-import org.firstinspires.ftc.teamcode.Projects.turretHWMap;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 
 @Config
 @TeleOp(name = "turretPIDTune")
 public class turretPIDTune extends LinearOpMode {
 
-    public turretHWMap robot = new turretHWMap();
+    public newHWmap robot = new newHWmap();
 
 
     // PIDF + Feedforward constants (starting values — tune these)

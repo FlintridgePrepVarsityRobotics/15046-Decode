@@ -2,14 +2,12 @@ package org.firstinspires.ftc.teamcode.Projects;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 //kjnlkjn
 
-public class HWMap {
+public class HWMapOld {
     public DcMotor fLeftWheel = null;  //expansion hub port0
     public DcMotor fRightWheel = null; //control hub port0
     public DcMotor bLeftWheel = null; //expansion hub port1

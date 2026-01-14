@@ -16,7 +16,7 @@ import android.graphics.Color;
 import android.util.Size;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Projects.HWMap;
+import org.firstinspires.ftc.teamcode.Projects.HWMapOld;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -24,7 +24,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 @TeleOp(name = "blueTeleilt")
 public class blueteleILT extends LinearOpMode {
 
-    public HWMap robot = new HWMap();
+    public HWMapOld robot = new HWMapOld();
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();

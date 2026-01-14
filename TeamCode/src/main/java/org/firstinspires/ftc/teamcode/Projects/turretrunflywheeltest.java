@@ -2,11 +2,10 @@ package org.firstinspires.ftc.teamcode.Projects;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name = "flywheel_turret_tracker")
 public class turretrunflywheeltest extends LinearOpMode {
-    public turretHWMap robot = new turretHWMap();
+    public newHWmap robot = new newHWmap();
 
     @Override
     public void runOpMode() throws InterruptedException {

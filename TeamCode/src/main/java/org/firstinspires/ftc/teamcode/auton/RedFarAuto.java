@@ -13,13 +13,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 
-import org.firstinspires.ftc.teamcode.Projects.HWMap;
+import org.firstinspires.ftc.teamcode.Projects.HWMapOld;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "RedFarAuto", group = "fruitauto")
 public class RedFarAuto extends OpMode {
 
-    public HWMap robot = new HWMap();
+    public HWMapOld robot = new HWMapOld();
     private TelemetryManager panelsTelemetry;
     private Follower follower;
     private Timer pathTimer, actionTimer, opmodeTimer;

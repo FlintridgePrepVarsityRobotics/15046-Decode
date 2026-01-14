@@ -20,7 +20,7 @@ public class PIDTUningLauncher extends LinearOpMode {
     public static final double NEW_P = 2.5;
     public static final double NEW_I = 0.1;
     public static final double NEW_D = 0.2;
-    public HWMap robot = new HWMap ();
+    public HWMapOld robot = new HWMapOld();
 
     public void runOpMode() {
         // get reference to DC motor.
