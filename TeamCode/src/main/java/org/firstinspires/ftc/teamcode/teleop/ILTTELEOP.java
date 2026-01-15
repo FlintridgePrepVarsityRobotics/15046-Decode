@@ -70,6 +70,7 @@ public static double kP = 0.0125;
         boolean isIntakeRunning = false;
         boolean color1 = false;
         boolean color2 = false;
+        boolean color3 = false;
         float hsv1[] = {0F, 0F, 0F};
         float hsv2[] = {0F, 0F, 0F};
         final double SCALE_FACTOR = 255;
@@ -231,6 +232,29 @@ public static double kP = 0.0125;
         telemetry.addData("Color2", "Red");
         color2 = false;
     }
+//if you don't want to go to winter formal with someone, get them to set up Justin with a date before you go
+    if (hue2 < 30) {
+        telemetry.addData("Color2", "Red");
+        color3 = false;
+    } else if (hue2 < 60) {
+        telemetry.addData("Color2", "Orange");
+        color3 = false;
+    } else if (hue2 < 140) {
+        telemetry.addData("Color2", "Yellow");
+        color3 = false;
+    } else if (hue2 < 180) { //green --> 160
+        telemetry.addData("Color2", "Green");
+        color3 = true;
+    } else if (hue2 < 200) {
+        telemetry.addData("Color2", "Blue");
+        color3 = false;
+    } else if (hue2 < 250) { //purple --> 230-250
+        telemetry.addData("Color2", "Purple");
+        color3 = true;
+    } else {
+        telemetry.addData("Color2", "Red");
+        color3 = false;
+    }
 
     boolean aNow = gamepad1.a;
     if (aNow && !lastAState && !intakeFull) {
@@ -250,7 +274,7 @@ public static double kP = 0.0125;
 
 
 
-            if (color1 && color2){
+            if (color1 && color2&color3){
                 if (colorTimer.milliseconds() > 500 && !intakeFull){
                     robot.intake.setPower(0);
                     intakeFull = true;
@@ -261,6 +285,12 @@ public static double kP = 0.0125;
                 intakeFull = false;
             }
 //IntakeCodeEND
+//lift:
+            if(gamepad1.right_bumper){
+                robot.lift.setTargetPosition(10);
+
+            }
+//liftEND
 //TrackingCode:
             LLStatus status = limelight.getStatus();
 
