@@ -19,7 +19,7 @@ public class newHWmap {
     public ColorSensor sensor2 = null;
 
     public ColorSensor sensor3 = null;
-    public DcMotor lift = null;
+//    public DcMotor lift = null;
     public DcMotorEx intake = null;
     public DcMotorEx turret = null;
     public DcMotorEx flywheel = null;
@@ -35,7 +35,7 @@ public class newHWmap {
         sensor2 = hwMap.colorSensor.get("sensor2");
         sensor3 = hwMap.colorSensor.get("sensor3");
 
-        lift = hwMap.dcMotor.get("lift");
+//        lift = hwMap.dcMotor.get("lift");
 
         intake = hwMap.get(DcMotorEx.class, "intake");
         flywheel = hwMap.get(DcMotorEx.class, "flywheel");
@@ -52,7 +52,7 @@ public class newHWmap {
 
         intake.setDirection(DcMotor.Direction.FORWARD);
         flywheel.setDirection(DcMotor.Direction.FORWARD);
-        lift.setDirection(DcMotor.Direction.FORWARD);
+//        lift.setDirection(DcMotor.Direction.FORWARD);
 
         turret.setDirection(DcMotor.Direction.REVERSE);
 
@@ -65,8 +65,8 @@ public class newHWmap {
         intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         flywheel.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        lift.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+//        lift.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        lift.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
 
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -76,7 +76,7 @@ public class newHWmap {
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
 
@@ -99,7 +99,7 @@ public class newHWmap {
         bLeftWheel.setPower(0);
         intake.setPower(0);
         flywheel.setPower(0);
-        lift.setPower(0);
+//        lift.setPower(0);
 
     }
 }

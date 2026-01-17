@@ -39,22 +39,22 @@ public class on extends LinearOpMode {
             if (gamepad1.dpad_right) {
                 speed = .5;
 
-                sleep(100);
+                sleep(200);
             }
             if (gamepad1.dpad_up) {
                 speed += .05;
 
-                sleep(100);
+                sleep(200);
             }
             if (gamepad1.dpad_down) {
                 speed -= .05;
 
-                sleep(100);
+                sleep(200);
             }
             if (gamepad1.b) {
                 speed =0;
 robot.spin.setPower(speed);
-                sleep(100);
+                sleep(200);
             }
 
             if (gamepad1.a) {
