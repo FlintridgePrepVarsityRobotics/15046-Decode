@@ -1,41 +1,46 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
-import com.arcrobotics.ftclib.controller.PIDFController;
-import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.dashboard.config.Config;
+import static java.lang.Math.abs;
 
 import android.graphics.Color;
-import android.util.Size;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Projects.HWMapOld;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLStatus;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.Projects.newHWmap;
+
+import java.util.List;
+
+
+
 @Config
-@TeleOp(name = "blueTeleilt")
+@TeleOp(name = "blueILT teleop")
 public class blueteleILT extends LinearOpMode {
+    PIDController turretpid = new PIDController(TP, TI, TD);
+    public static double TP = 0.01;
+    public static double TI = 0.00015;
+    public static double TD = 0.00000005;
+// PIDF + Feedforward constants (starting values — tune these)
+// These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
 
-    public HWMapOld robot = new HWMapOld();
-    public ElapsedTime buttonTimer = new ElapsedTime();
-    public ElapsedTime colorTimer = new ElapsedTime();
-    ElapsedTime reverseTimer = new ElapsedTime();
-    boolean reversingLauncher = false;
+    public static double kP = 0.0125;
 
-    // PIDF + Feedforward constants (starting values — tune these)
-    // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public static double kP = 0.001;
-    public static double kI = 0.0006;
-    public static double kD = 0.0;
-    public static double kF = 0.0;
+    public static double kI = 0.00015;
+    public static double kD = 0.00000005;
+    public static double kF = 0.0004208;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
@@ -46,177 +51,76 @@ public class blueteleILT extends LinearOpMode {
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+    //LauncherPIDEND
+    public ElapsedTime buttonTimer = new ElapsedTime();
+    public ElapsedTime colorTimer = new ElapsedTime();
+
+    private Limelight3A limelight;
+    public newHWmap robot = new newHWmap();
+
+    final double TICKS_PER_REV = 294.0;      // GoBilda 5202/5203
+    final double GEAR_RATIO = 0.3953;        // 34 / 86
+    final double MAX_DEGREES = 70;
+
+    final double MIN_POWER_TO_MOVE = 0.05;
+    final double BEARING_TOLERANCE = 7.5;    // degrees
+    final double TICKS_PER_REV_INTAKE = 146.44;
+
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap);
-        // --- Vision setup ---
-        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
-                .setDrawTagID(true)
-                .setDrawAxes(true)
-                .setDrawCubeProjection(true)
-                .setDrawTagOutline(true)
-                .build();
+    public void runOpMode() throws InterruptedException
+    {
 
-        VisionPortal visionPortal = new VisionPortal.Builder()
-                .addProcessor(tagProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
-                .setCameraResolution(new Size(640, 480))
-                .build();
+//variables:
+        boolean lastAState = false;
+        boolean intakeFull = false;
+        boolean isIntakeRunning = false;
+        boolean color1 = false;
+        boolean color2 = false;
+        boolean color3 = false;
+        float hsv1[] = {0F, 0F, 0F};
+        float hsv2[] = {0F, 0F, 0F};
+        float hsv3[] = {0F, 0F, 0F};
+        final double SCALE_FACTOR = 255;
 
-        int frameWidth = 640;
-        int centerX = frameWidth / 2;
-        int tolerance = 50; // pixels within which the tag is centered
-        boolean flywheelon = false;
-        double speed = 1;
         boolean lastUp = false;
         boolean lastMid = false;
         boolean lastDown = false;
         boolean lastX = false;
-        boolean bWasPressed = false;
-        boolean isIntakeRunning = false;
-
-        boolean intakeFull = false;
-        double tagDist = 0;
-
-        boolean color1 = false;
-        boolean color2 = false;
-
-        // For A-button toggle
-        boolean lastAState = false;
-
-        int ticksPerRev = 28;
         double setpointRPM = 0;
-        double targetRPM = 0;
+        boolean flywheelon = false;
+        int ticksPerRev = 28;
+        boolean filled = false;
 
-        // Ensure launcher has encoder mode set if you want velocity feedback
-        robot.launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.launcher.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        ColorSensor sensor1;
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        dashboard.setTelemetryTransmissionInterval(25);
-        sensor1 = hardwareMap.get(ColorSensor.class, "sensor1");
+        robot.init(hardwareMap);
 
-        // get a reference to the distance sensor that shares the same name
+        robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // hsvValues is an array that will hold the hue, saturation, and value information.
-        float hsv1[] = {0F, 0F, 0F};
-        float hsv2[] = {0F, 0F, 0F};
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
 
-        // values is a reference to the hsvValues array.
+        telemetry.setMsTransmissionInterval(5);
 
-        // sometimes it helps to multiply the raw RGB values with a scale factor
-        // to amplify/attentuate the measured values.
-        final double SCALE_FACTOR = 255;
 
+        limelight.pipelineSwitch(0);
+
+        /*
+         * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
+         */
+        limelight.start();
+
+//        telemetry.addData(">", "Robot Ready.  Press Play.");
+        telemetry.update();
         waitForStart();
 
         while (opModeIsActive()) {
-            // Creating obj for PID Tuning
-            TelemetryPacket packet = new TelemetryPacket();
-            pidf.setPIDF(kP, kI, kD, kF);
-            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
-            // color scale factor init
-            Color.RGBToHSV(
-                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-                    hsv1
-            );
-
-            Color.RGBToHSV(
-                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-                    hsv2
-            );
-            telemetry.addData("Red", robot.sensor1.red());
-            telemetry.addData("Green", robot.sensor1.green());
-            telemetry.addData("Blue", robot.sensor1.blue());
-            telemetry.addData("Hue1", hsv1[0]);
-            telemetry.addData("Hue2", hsv2[0]);
-            float hue1 = hsv1[0];
-            float hue2 = hsv2[0];
-
-            boolean tagCentered = false;
-
-            if(hue1 < 30){
-                telemetry.addData("Color", "Red");
-                color1 = false;
-            }
-
-            else if (hue1 < 60) {
-                telemetry.addData("Color", "Orange");
-                color1 = false;
-            }
-
-            else if (hue1 < 140){
-                telemetry.addData("Color", "Yellow");
-                color1 = false;
-
-            }
-
-            else if (hue1 < 250){ //green --> 160
-                telemetry.addData("Color", "Green");
-                color1 = true;
-            }
-
-            else if (hue1 < 260){
-                telemetry.addData("Color", "Blue");
-                color1 = false;
-
-            }
-
-            else if (hue1 < 270){ //purple --> 230-250
-                telemetry.addData("Color", "Purple");
-                color1 = true;
-            }
-
-            else{
-                telemetry.addData("Color", "Red");
-                color1 = false;
-            }
-
-            if(hue2 < 30){
-                telemetry.addData("Color2", "Red");
-                color2 = false;
-            }
-
-            else if (hue2 < 60) {
-                telemetry.addData("Color2", "Orange");
-                color2 = false;
-            }
-
-            else if (hue2 < 140){
-                telemetry.addData("Color2", "Yellow");
-                color2 = false;
-            }
-
-            else if (hue2 < 180){ //green --> 160
-                telemetry.addData("Color2", "Green");
-                color2 = true;
-            }
-
-            else if (hue2 < 200){
-                telemetry.addData("Color2", "Blue");
-                color2 = false;
-            }
-
-            else if (hue2 < 250){ //purple --> 230-250
-                telemetry.addData("Color2", "Purple");
-                color2 = true;
-            }
-
-            else{
-                telemetry.addData("Color2", "Red");
-                color2 = false;
-            }
-
-            // --- Driver control ---
-            double y = -gamepad1.left_stick_y*.8;
-            double x = gamepad1.left_stick_x * -1.1*.8;
-            double rx = gamepad1.right_stick_x*.8;
+//DriveCode:
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x * -1.1;
+            double rx = gamepad1.right_stick_x;
+            double speed = .7;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -229,208 +133,367 @@ public class blueteleILT extends LinearOpMode {
             robot.bLeftWheel.setPower(backLeftPower * speed);
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
+//DriveCodeEND
 
-            // --- Launcher RPM Control ---
+//FlywheelCode:
+            pidf.setPIDF(kP, kI, kD, kF);
+            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
             boolean highSpeed = gamepad1.dpad_right;
             boolean midSpeed = gamepad1.dpad_up;
             boolean lowSpeed = gamepad1.dpad_left;
 
-            // Update setpoint only when a D-pad button is newly pressed (rising edge),
-            // so you don't keep re-setting it each loop.
+
+
             if (highSpeed && !lastUp){
-                setpointRPM = 3200;
+                setpointRPM = 2400;
                 flywheelon = true;
             }
             if (midSpeed && !lastMid){
-                setpointRPM = 2600;
+                setpointRPM = 2100;
                 flywheelon = true;
             }
             if (lowSpeed && !lastDown){
-                setpointRPM = 2400;
+                setpointRPM = 1800;
                 flywheelon = true;
             }
             if (gamepad1.x && !lastX){
                 setpointRPM = 0;
+                robot.intake.setVelocity(0);
                 flywheelon = false;
             }
 
-            // Measurements in ticks/sec
             double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-            double measuredTicksPerSec = robot.launcher.getVelocity();
+            double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
+            telemetry.addData("setpointRPM", (setpointRPM));
+            telemetry.addData("measuredRPM", measuredRPM);
+            telemetry.update();
 
-            // Feedforward baseline (returns value in same "command" units as gains —
-            // we've chosen gains so this approximates motor power)
             double ffOutput = feedforward.calculate(targetTicksPerSec);
 
-            // PIDF returns correction. Give it the measurement and target (also ticks/sec).
             double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
 
-            // Combine and clamp to motor power range [-1, 1]
             double combinedOutput = ffOutput + pidOutput;
             combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
 
-            // If the driver pressed D-pad (we want launcher behavior), apply combined power.
-            // If the player pressed 'x' or dpad_down, those override below.
-            robot.launcher.setPower(combinedOutput);
+            robot.flywheel.setPower(combinedOutput);
+//LauncherCodeEND
+//IntakeCode:
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor1.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor1.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
+//                    hsv1
+//            );
+//
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor2.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor2.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
+//                    hsv2
+//            );
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor3.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor3.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
+//                    hsv3
+//            );
+//            float hue1 = hsv1[0];
+//            float hue2 = hsv2[0];
+//            float hue3 = hsv3[0];
+//
+//    if (hue1 < 30) {
+////        telemetry.addData("Color", "Red");
+//        color1 = false;
+//    } else if (hue1 < 60) {
+////        telemetry.addData("Color", "Orange");
+//        color1 = false;
+//    } else if (hue1 < 140) {
+////        telemetry.addData("Color", "Yellow");
+//        color1 = false;
+//
+//    } else if (hue1 < 250) { //green --> 160
+////        telemetry.addData("Color", "Green");
+//        color1 = true;
+//    } else if (hue1 < 260) {
+////        telemetry.addData("Color", "Blue");
+//        color1 = false;
+//
+//    } else if (hue1 < 270) { //purple --> 230-250
+////        telemetry.addData("Color", "Purple");
+//        color1 = true;
+//    } else {
+////        telemetry.addData("Color", "Red");
+//        color1 = false;
+//    }
+//
+//    if (hue2 < 30) {
+////        telemetry.addData("Color2", "Red");
+//        color2 = false;
+//    } else if (hue2 < 60) {
+////        telemetry.addData("Color2", "Orange");
+//        color2 = false;
+//    } else if (hue2 < 140) {
+////        telemetry.addData("Color2", "Yellow");
+//        color2 = false;
+//    } else if (hue2 < 180) { //green --> 160
+////        telemetry.addData("Color2", "Green");
+//        color2 = true;
+//    } else if (hue2 < 200) {
+////        telemetry.addData("Color2", "Blue");
+//        color2 = false;
+//    } else if (hue2 < 250) { //purple --> 230-250
+////        telemetry.addData("Color2", "Purple");
+//        color2 = true;
+//    } else {
+////        telemetry.addData("Color2", "Red");
+//        color2 = false;
+//    }
+////if you don't want to go to winter formal with someone, get them to set up Justin with a date before you go
+//    if (hue2 < 30) {
+////        telemetry.addData("Color2", "Red");
+//        color3 = false;
+//    } else if (hue2 < 60) {
+////        telemetry.addData("Color2", "Orange");
+//        color3 = false;
+//    } else if (hue2 < 140) {
+////        telemetry.addData("Color2", "Yellow");
+//        color3 = false;
+//    } else if (hue2 < 180) { //green --> 160
+////        telemetry.addData("Color2", "Green");
+//        color3 = true;
+//    } else if (hue2 < 200) {
+////        telemetry.addData("Color2", "Blue");
+//        color3 = false;
+//    } else if (hue2 < 250) { //purple --> 230-250
+////        telemetry.addData("Color2", "Purple");
+//        color3 = true;
+//    } else {
+////        telemetry.addData("Color2", "Red");
+//        color3 = false;
+//    }
 
+            // ... inside the while(opModeIsActive) loop ...
 
+// --- SENSOR READING ---
+            // ----------------------------------------------------------------------
+// 1. SENSOR & COLOR READING
+            Color.RGBToHSV((int) (robot.sensor1.red() * SCALE_FACTOR), (int) (robot.sensor1.green() * SCALE_FACTOR), (int) (robot.sensor1.blue() * SCALE_FACTOR), hsv1);
+            Color.RGBToHSV((int) (robot.sensor2.red() * SCALE_FACTOR), (int) (robot.sensor2.green() * SCALE_FACTOR), (int) (robot.sensor2.blue() * SCALE_FACTOR), hsv2);
+            Color.RGBToHSV((int) (robot.sensor3.red() * SCALE_FACTOR), (int) (robot.sensor3.green() * SCALE_FACTOR), (int) (robot.sensor3.blue() * SCALE_FACTOR), hsv3);
 
-            // --- Dpad down: reverse intake & launcher negative (manual) ---
-            if (gamepad1.dpad_down) {
-                robot.intake.setPower(-0.3);
-                setpointRPM = -1000;
-                double targetTicksPerSecDown = targetRPM / 60.0 * ticksPerRev;
-                double downPower = feedforward.calculate(targetTicksPerSecDown);
-                downPower = Math.max(-1.0, Math.min(1.0, downPower));
-                robot.launcher.setPower(downPower);
-            }
-            // --- A Button -- toggle intake and shuts off when full
-            boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull) {
-                // just pressed
-                isIntakeRunning = !isIntakeRunning;
-                if (isIntakeRunning) {
-                    robot.intake.setPower(0.25);
-                    robot.intakeServo.setPower(1);
-                    buttonTimer.reset();
-                } else {
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
-                }
-            }
+            String s1 = classifyColor(hsv1);
+            String s2 = classifyColor(hsv2);
+            String s3 = classifyColor(hsv3);
 
+            boolean c1 = !s1.equals("EMPTY") && !s1.equals("UNKNOWN");
+            boolean c2 = !s2.equals("EMPTY") && !s2.equals("UNKNOWN");
+            boolean c3 = !s3.equals("EMPTY") && !s3.equals("UNKNOWN");
 
-            lastAState = aNow;
+            telemetry.addData("Intake", "[%s] [%s] [%s]", s1, s2, s3);
 
-
-
-            if (color1 && color2){
-                if (colorTimer.milliseconds() > 500 && !intakeFull){
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
+            if (c1 && c2 && c3) {
+                if (colorTimer.seconds() > 0.3) {
                     intakeFull = true;
-                    reversingLauncher = true;
-
-                    reverseTimer.reset();
                 }
-            }
-            else{
+            } else {
                 colorTimer.reset();
                 intakeFull = false;
             }
 
-            if (reversingLauncher && flywheelon == false) {
-                robot.launcher.setPower(-0.7);
-                robot.intakeServo.setPower(0);
-                if (reverseTimer.milliseconds() >= 500) {
-                    reversingLauncher = false;
-                    robot.intakeServo.setPower(0);
-
-                }
-            }
-            telemetry.addData("reverseingLauncher", reversingLauncher);
-            telemetry.addData("flywheelon", flywheelon);
-            telemetry.update();
-            // --- B button: timed intake pulse ---
-            if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
-                if (!bWasPressed) {
+// 3. HANDLE DRIVER INPUT (TOGGLE A)
+//            boolean aNow = gamepad1.a;
+//            if (aNow && !lastAState) {
+//                isIntakeRunning = !isIntakeRunning;
+//            }
+//            lastAState = aNow;
+            boolean aNow = gamepad1.a;
+            if (aNow && !lastAState && !intakeFull) {    // 500*ticksperrev is #ofrevolutions we need per min
+                isIntakeRunning = !isIntakeRunning;
+                if (isIntakeRunning) {
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+//            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
+                    robot.shootServo.setPosition(0.5);
                     buttonTimer.reset();
-                    robot.intake.setPower(0.75);
-                    robot.intakeServo.setPower(1);
-                    bWasPressed = true;
-                }
-                if (buttonTimer.milliseconds() >= 170) {
-                    robot.intake.setPower(0);
-                    robot.intakeServo.setPower(0);
-                }
-            } else if (!isIntakeRunning) {
-                bWasPressed = false;
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
-            }
-
-            // --- Telemetry for tuning ---
-            telemetry.addData("Setpoint RPM", setpointRPM);
-            packet.put("Setpoint RPM", setpointRPM);
-            telemetry.addData("Measured RPM", "%.1f", measuredRPM);
-            packet.put("Measured RPM", measuredRPM);
-            telemetry.addData("FF Output", "%.4f", ffOutput);
-            packet.put("FF Output", ffOutput);
-            telemetry.addData("PID Output", "%.4f", pidOutput);
-            packet.put("PID Output", pidOutput);
-            telemetry.addData("Combined (power)", "%.4f", combinedOutput);
-            packet.put("Combined (power)", combinedOutput);
-
-            telemetry.addData("Clear", sensor1.alpha());
-            telemetry.addData("Red  ", sensor1.red());
-            telemetry.addData("Green", sensor1.green());
-            telemetry.addData("Blue ", sensor1.blue());
-            telemetry.addData("Hue1", hsv1[0]);
-            telemetry.addData("Hue2", hsv2[0]);
-
-            // --- AprilTag Centering (Y button) ---
-            if (gamepad1.y) {
-                if (!tagProcessor.getDetections().isEmpty()) {
-                    AprilTagDetection tag = tagProcessor.getDetections().get(0);
-                    if (tag.id == 20) {
-                        double tagX = tag.center.x;
-                        tagDist = tag.ftcPose.range;
-                        telemetry.addData("Distance from Tag", "%.1f", tagDist);
-                        centerX = frameWidth / 2;
-                        if (tagDist > 100){centerX += 50;}
-                        if (tagX < centerX - tolerance) {
-                            robot.fRightWheel.setPower(0.2);
-                            robot.bRightWheel.setPower(0.2);
-                            robot.fLeftWheel.setPower(-0.2);
-                            robot.bLeftWheel.setPower(-0.2);
-                            telemetry.addLine("Turning left to center tag");
-                        } else if (tagX > centerX + tolerance) {
-                            robot.fRightWheel.setPower(-0.2);
-                            robot.bRightWheel.setPower(-0.2);
-                            robot.fLeftWheel.setPower(0.2);
-                            robot.bLeftWheel.setPower(0.2);
-                            telemetry.addLine("Turning right to center tag");
-                        } else {
-                            robot.fRightWheel.setPower(0);
-                            robot.bRightWheel.setPower(0);
-                            robot.fLeftWheel.setPower(0);
-                            robot.bLeftWheel.setPower(0);
-                            telemetry.addLine("Tag centered!");
-                            tagCentered = true;
-                        }
-                        telemetry.addData("Tag X", tag.center.x);
-                        telemetry.addData("Center", centerX);
-                    } else {
-                        telemetry.addLine("Tag detected but not ID 24");
-                    }
                 } else {
-                    telemetry.addLine("No tags detected");
+                    robot.intake.setPower(0);
                 }
             }
-// While the robot is looking at the tag once, it will toggle intake off
-            if (tagCentered && isIntakeRunning) {
-                isIntakeRunning = false;
-                robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
-            }
-            dashboard.sendTelemetryPacket(packet);
-            telemetry.update();
 
-            // store previous D-pad states
-            lastUp = highSpeed;
-            lastMid = midSpeed;
-            lastDown = lowSpeed;
+
+// 4. AUTO-STOP LOGIC
+            if (intakeFull && isIntakeRunning) {
+                isIntakeRunning = false;
+            }
+
+// Priority 1: SHOOTING (Button B)
+            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
+
+            if (isShooting) {
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+
+                filled = false;
+
+            }
+            else if (isIntakeRunning) {
+                robot.shootServo.setPosition(0.5);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+            }
+            else {
+                robot.intake.setPower(0);
+                robot.shootServo.setPosition(0);
+            }
+
+            if (intakeFull) filled = true;
+            telemetry.addData("System Full?", filled);
+//IntakeCodeEND
+//lift:
+//            if(gamepad1.right_bumper){
+//                robot.lift.setTargetPosition(10);
+//
+//            }
+//liftEND
+//TrackingCode:
+            LLStatus status = limelight.getStatus();
+
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                // Access general information
+                Pose3D botpose = result.getBotpose();
+                double distance = getdistance(result.getTa());
+                double tx = result.getTx();
+                double txnc = result.getTxNC();
+                double ty = result.getTy();
+                double tync = result.getTyNC();
+
+                //shootCODE
+
+                if(color1 || color2 || color3){
+                    filled = true;
+
+                }
+
+                telemetry.addData("balls are in?", filled);
+                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100){
+                    robot.shootServo.setPosition(0);
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
+                }
+
+                //shootEND
+
+                telemetry.addData("distance", distance);
+                telemetry.addData("tx", result.getTx());
+//                telemetry.addData("txnc", result.getTxNC());
+//                telemetry.addData("ty", result.getTy());
+//                telemetry.addData("tync", result.getTyNC());
+                telemetry.addData("target area", result.getTa());
+
+                telemetry.addData("Botpose", botpose.toString());
+                // Access fiducial results
+                List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+                for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                    int apriltagID = fr.getFiducialId();
+
+//
+//                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
+                    if(apriltagID == 20) {
+
+                        double targetX = fr.getTargetXDegrees();
+                        double turretpidOutput = turretpid.calculate(0, targetX);
+
+                        double turretfeedforward = 0;
+                        double AngleError = -tx;
+
+
+                        if (Math.abs(turretpidOutput) > 0.01) {
+                            turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
+                        }
+
+                        double motorPower;
+                        if(Math.abs(AngleError) < BEARING_TOLERANCE)
+                            motorPower = 0;
+                        else
+                            motorPower = -(turretpidOutput + turretfeedforward);
+
+                        int encoderTicks = robot.turret.getCurrentPosition();
+                        double turretDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
+
+                        if ((turretDegrees >= MAX_DEGREES && motorPower > 0) ||
+                                (turretDegrees <= -MAX_DEGREES && motorPower < 0)) {
+                            motorPower = 0;
+                        }
+
+                        robot.turret.setPower(motorPower);
+
+                        telemetry.addData("Limelight Target X", targetX);
+                        telemetry.addData("Final Power", motorPower);
+                        telemetry.addData("Angle", turretDegrees);
+                    }
+                }
+            } else if (gamepad1.y) {
+                int encoderTicks = robot.turret.getCurrentPosition();
+                double currentDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
+
+                if (currentDegrees > 2) {
+                    robot.turret.setPower(-0.3);
+                }
+                else if (currentDegrees < -2) {
+                    robot.turret.setPower(0.3);
+                }
+                else {
+                    robot.turret.setPower(0);
+                }
+
+                telemetry.addData("Mode", "Manual Reset");
+                telemetry.addData("Angle", currentDegrees);
+            }
+            else {
+                telemetry.addData("Limelight", "No data available");
+                robot.turret.setPower(0);
+            }
+//TrackingCodeEND
+
+            telemetry.update();
         }
+
+        limelight.stop();
+    }
+    public double getdistance(double ta){
+        double scale = 10;
+        double distance = scale/ta;
+        return(distance);
+    }
+
+    public double getCombinedOutput (double setpointRPM){
+        int ticksPerRev = 28;
+        double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
+        double measuredTicksPerSec = robot.flywheel.getVelocity();
+        double ffOutput = feedforward.calculate(targetTicksPerSec);
+        double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+        double combinedOutput = ffOutput + pidOutput;
+        double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
+        combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
+        return(combinedOutput);
+    }
+    private String classifyColor(float[] hsv) {
+        float hue = hsv[0];
+        float sat = hsv[1];
+        float val = hsv[2];
+
+        if (sat < 0.3 || val < 0.3) {
+            return "EMPTY";
+        }
+
+        if (hue >= 110 && hue <= 170) {
+            return "GREEN";
+        }
+
+        if (hue >= 250 && hue <= 320) {
+            return "PURPLE";
+        }
+
+        return "UNKNOWN";
     }
 }
-
-
-//turret 180 degrees 90 left 90 right, you need to make the turret track the april tag but track the angle
-    //via the motor encoder that is driving the turret
-    //when it rotates 90 degrees to the left or right, it stops until it can track the opposite way (software stop that prevents it
-    //rotating more than 90 degrees either way)
-    //make a button that resets it to the middle (0 degrees) (right is 90 degrees, left is -90 degrees)
-    //also make it track the distance and estimate currently the flywheel rpm so it adjusts the rpm when the flywheel is on
-    //and the flywheel should only have a button on and off, the on will be shooting
-
