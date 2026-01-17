@@ -6,6 +6,7 @@ import static java.lang.Math.abs;
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -28,10 +29,13 @@ import java.util.List;
 @Config
 @TeleOp(name = "redILT teleop")
 public class REDILTTELEOP extends LinearOpMode {
-
-//LauncherPID:
+    PIDController turretpid = new PIDController(TP, TI, TD);
+    public static double TP = 0.01;
+    public static double TI = 0.00015;
+    public static double TD = 0.00000005;
 // PIDF + Feedforward constants (starting values — tune these)
 // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
+
 public static double kP = 0.0125;
     public static double kI = 0.00015;
     public static double kD = 0.00000005;
@@ -345,7 +349,6 @@ public static double kP = 0.0125;
                 telemetry.addData("target area", result.getTa());
 
                 telemetry.addData("Botpose", botpose.toString());
-           //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;.
                 // Access fiducial results
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
@@ -356,26 +359,27 @@ public static double kP = 0.0125;
 
                         int encoderTicks = robot.turret.getCurrentPosition();
                         double turretDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
-
+                        double measured = robot.turret.getVelocity();
                         double angleError = -tx;
-
+                        double target = 0;
                         double motorPower = 0.0;
-
+                        telemetry.addData("turretencoders", robot.turret.getCurrentPosition() );
                         if (Math.abs(angleError) > BEARING_TOLERANCE) {
-                            motorPower = angleError * kP;
+                            target = tx;
 
                             if (Math.abs(motorPower) < MIN_POWER_TO_MOVE) {
-                                motorPower = Math.signum(motorPower) * MIN_POWER_TO_MOVE;
+                                target = Math.signum(motorPower) * MIN_POWER_TO_MOVE;
                             }
                         }
-
+                        double Output = turretpid.calculate(measured, target);
+                        motorPower = Math.max(-1.0, Math.min(1.0, Output));
 
                         if ((turretDegrees <= -MAX_DEGREES && motorPower < 0) ||
                                 (turretDegrees >= MAX_DEGREES && motorPower > 0)) {
                             motorPower = 0;
                         }
 
-                        motorPower = Range.clip(motorPower, -1.0, 1.0);
+//                        motorPower = Range.clip(motorPower, -1.0, 1.0);
                         robot.turret.setPower(motorPower);
 
 //                        telemetry.addData("Turret Angle (deg)", "%.2f", turretDegrees);
