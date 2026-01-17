@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 public class newHWmap {
+    public static final double SHOOTER_PUSH = 0.2;   // Position to push ball into flywheel / block intake
+    public static final double SHOOTER_RESET = 0.0;
 
     public DcMotor fLeftWheel = null;  //expansion hub port0
     public DcMotor fRightWheel = null; //control hub port0
@@ -48,7 +50,9 @@ public class newHWmap {
         bLeftWheel.setDirection(DcMotor.Direction.FORWARD);
 
 
-        shootServo.setPosition((0));
+
+
+        shootServo.setPosition(SHOOTER_RESET);
 
         intake.setDirection(DcMotor.Direction.FORWARD);
         flywheel.setDirection(DcMotor.Direction.FORWARD);
@@ -99,6 +103,7 @@ public class newHWmap {
         bLeftWheel.setPower(0);
         intake.setPower(0);
         flywheel.setPower(0);
+        shootServo.setPosition(0);
 //        lift.setPower(0);
 
     }
