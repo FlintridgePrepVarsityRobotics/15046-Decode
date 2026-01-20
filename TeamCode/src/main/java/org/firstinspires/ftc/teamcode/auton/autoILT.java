@@ -35,7 +35,7 @@ robot.init(hardwareMap);
 // Autonomous code starts here
 
 waitForStart(); //wait for play button to be pressed
-tile(400);
+tile(1600);
 
 }
 

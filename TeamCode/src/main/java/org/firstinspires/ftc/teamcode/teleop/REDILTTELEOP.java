@@ -120,7 +120,7 @@ public static double kP = 0.0125;
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x * -1.1;
             double rx = gamepad1.right_stick_x;
-            double speed = .7;
+            double speed = 1;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -157,10 +157,11 @@ public static double kP = 0.0125;
                 setpointRPM = 1800;
                 flywheelon = true;
             }
-            if (gamepad1.x && !lastX){
+            if (gamepad1.dpad_down){
                 setpointRPM = 0;
+            }
+            if(gamepad1.x){
                 robot.intake.setVelocity(0);
-                flywheelon = false;
             }
 
             double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
