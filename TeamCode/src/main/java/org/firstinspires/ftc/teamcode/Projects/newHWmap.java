@@ -16,6 +16,8 @@ public class newHWmap {
     public DcMotor bLeftWheel = null; //expansion hub port1
     public DcMotor bRightWheel = null; //control hub port1
 
+    public DcMotor lift = null;
+
     public Servo shootServo = null;
     public ColorSensor sensor1 = null;
     public ColorSensor sensor2 = null;
@@ -37,7 +39,7 @@ public class newHWmap {
         sensor2 = hwMap.colorSensor.get("sensor2");
         sensor3 = hwMap.colorSensor.get("sensor3");
 
-//        lift = hwMap.dcMotor.get("lift");
+        lift = hwMap.dcMotor.get("lift");
 
         intake = hwMap.get(DcMotorEx.class, "intake");
         flywheel = hwMap.get(DcMotorEx.class, "flywheel");
@@ -56,7 +58,7 @@ public class newHWmap {
 
         intake.setDirection(DcMotor.Direction.FORWARD);
         flywheel.setDirection(DcMotor.Direction.FORWARD);
-//        lift.setDirection(DcMotor.Direction.FORWARD);
+        lift.setDirection(DcMotor.Direction.REVERSE);
 
         turret.setDirection(DcMotor.Direction.REVERSE);
 
@@ -64,13 +66,13 @@ public class newHWmap {
         fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         intake.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         flywheel.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-//        lift.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-//        lift.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+       lift.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
 
 
         turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -80,7 +82,7 @@ public class newHWmap {
         bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-//        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
 
@@ -104,7 +106,7 @@ public class newHWmap {
         intake.setPower(0);
         flywheel.setPower(0);
         shootServo.setPosition(0);
-//        lift.setPower(0);
+        lift.setPower(0);
 
     }
 }
