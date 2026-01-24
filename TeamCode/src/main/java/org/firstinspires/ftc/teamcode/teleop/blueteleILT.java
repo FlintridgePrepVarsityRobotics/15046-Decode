@@ -36,17 +36,17 @@ public class blueteleILT extends LinearOpMode {
 // PIDF + Feedforward constants (starting values — tune these)
 // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
 
-    public static double kP = 0.0125;
+    public static double kP = 0.002;
 
-    public static double kI = 0.00015;
-    public static double kD = 0.00000005;
-    public static double kF = 0.0004208;
+    public static double kI = 0.0;
+    public static double kD = 0.00025;
+    public static double kF = 0.00042;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
     public static double kS = 0.0;
-    public static double kV = 0.00042;
+    public static double kV = 0.0;
     public static double kA = 0.0;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
@@ -65,6 +65,8 @@ public class blueteleILT extends LinearOpMode {
     final double MIN_POWER_TO_MOVE = 0.05;
     final double BEARING_TOLERANCE = 7.5;    // degrees
     final double TICKS_PER_REV_INTAKE = 146.44;
+
+    double targetTicksPerSec = 0;
 
 
     @Override
@@ -148,47 +150,38 @@ public class blueteleILT extends LinearOpMode {
 //            telemetry.addData("toggle lift:",allowUp);
 //
             if(gamepad1.right_bumper){
-                robot.lift.setTargetPosition(-67);
-                robot.lift.setPower(1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                allowUp = true;
 
             }
             if(gamepad1.left_bumper){
-                robot.lift.setTargetPosition(0);
-                robot.lift.setPower(-1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                allowUp = false;
 
             }
 //FlywheelCode:
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
-            boolean highSpeed = gamepad1.dpad_right;
-            boolean midSpeed = gamepad1.dpad_up;
-            boolean lowSpeed = gamepad1.dpad_left;
+//            boolean highSpeed = gamepad1.dpad_right;
+//            boolean midSpeed = gamepad1.dpad_up;
+//            boolean lowSpeed = gamepad1.dpad_left;
 
 
 
-            if (highSpeed && !lastUp){
-                setpointRPM = 2400;
-                flywheelon = true;
-            }
-            if (midSpeed && !lastMid){
-                setpointRPM = 2100;
-                flywheelon = true;
-            }
-            if (lowSpeed && !lastDown){
+//            if (highSpeed && !lastUp){
+//                setpointRPM = 2400;
+//                flywheelon = true;
+//            }
+
+         /*   if (lowSpeed && !lastDown){
                 setpointRPM = 1800;
                 flywheelon = true;
-            }
+            }*/
             if (gamepad1.dpad_down){
-                setpointRPM = 0;
+
             }
             if(gamepad1.x){
                 robot.intake.setVelocity(0);
             }
-
-            double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
             double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
 //            telemetry.addData("setpointRPM", (setpointRPM));
@@ -254,7 +247,7 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
 }
 //            telemetry.addData("sensor 2", hue2);
 //            telemetry.addData("sensor 3", hue3);
-            telemetry.update();
+
 //
 
 // --- SENSOR READING ---
@@ -291,15 +284,13 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
 //            }
 //            lastAState = aNow;
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull) {    // 500*ticksperrev is #ofrevolutions we need per min
+            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
 //            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
                     robot.shootServo.setPosition(0.5);
                     buttonTimer.reset();
-//
-
                 } else {
                     robot.intake.setPower(0);
 //                    robot.shootServo.setPosition(0);
@@ -318,12 +309,14 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
             if (isShooting) {
                 robot.shootServo.setPosition(0);
                 robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
-//                if(allowUp){
-//                    robot.lift.setTargetPosition(10);
-//                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                    robot.lift.setPower(.3);
+                telemetry.addData("Everson","is the goat 1");
+                if(allowUp) {
+                    telemetry.addData("Everson","is the goat 2 ");
+                    robot.lift.setTargetPosition(-55);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
 //
-//                }
 
                 filled = false;
 
@@ -334,6 +327,9 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
             }
             else {
                 robot.intake.setPower(0);
+                robot.lift.setTargetPosition(1);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
             if (intakeFull) filled = true;
@@ -365,10 +361,29 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
 
                 }
 
+                boolean midSpeed = gamepad1.dpad_up;
+                if (midSpeed){
+                    targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
+                    setpointRPM = (415.2 * Math.log(distance)) + 1173.8;
+                    // flywheelon = true;
+                } else if (gamepad1.dpad_down) {
+                    targetTicksPerSec = 0;
+                }
+
                // telemetry.addData("balls are in?", filled);
-                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100){
+                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
                     robot.shootServo.setPosition(0);
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
+                    if(allowUp) {
+                        telemetry.addData("Everson","is the goat 3 ");
+                        robot.lift.setTargetPosition(-55);
+                        robot.lift.setPower(1);
+                        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    }
+                }else{
+                    robot.lift.setTargetPosition(1);
+                    robot.lift.setPower(-1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
 
                 //shootEND
@@ -459,7 +474,7 @@ if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
 
     public double getCombinedOutput (double setpointRPM){
         int ticksPerRev = 28;
-        double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
+      //  double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
         double measuredTicksPerSec = robot.flywheel.getVelocity();
         double ffOutput = feedforward.calculate(targetTicksPerSec);
         double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
