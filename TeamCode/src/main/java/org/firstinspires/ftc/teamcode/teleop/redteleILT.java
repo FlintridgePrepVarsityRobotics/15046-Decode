@@ -225,21 +225,21 @@ public class redteleILT extends LinearOpMode {
             telemetry.addData("green", robot.sensor3.green() );
             telemetry.addData("blue",robot.sensor3.blue() );
 
-            if(robot.sensor3.green()>63 || robot.sensor3.blue()>67){
+            if(robot.sensor3.green()>64 || robot.sensor3.blue()>68){
                 telemetry.addData("sensor3 is full twin","Everson is the goat");
                 sense3 = true;
             }else{
                 sense3 = false;
             }
 
-            if(robot.sensor2.green()>67 || robot.sensor2.blue()>55){
+            if(robot.sensor2.green()>74 || robot.sensor2.blue()>61){
                 sense2 = true;
                 telemetry.addData("sensor2 is full twin","Everson is the goat");
             }else{
                 sense2 = false;
             }
 
-            if(robot.sensor1.green()>98 || robot.sensor1.blue()>70){
+            if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
                 sense1 = true;
                 telemetry.addData("sensor1 is full twin","Everson is the goat");
             }else{
@@ -293,7 +293,7 @@ public class redteleILT extends LinearOpMode {
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);
-//                    robot.shootServo.setPosition(0);
+                    robot.shootServo.setPosition(.5);
                 }
             }
 
@@ -364,7 +364,7 @@ public class redteleILT extends LinearOpMode {
                 boolean midSpeed = gamepad1.dpad_up;
                 if (midSpeed){
                     targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                    setpointRPM = (415.2 * Math.log(distance)) + 1173.8;
+                    setpointRPM = (415.2 * Math.log(distance)) + 1173.8+25;
                     // flywheelon = true;
                 } else if (gamepad1.dpad_down) {
                     targetTicksPerSec = 0;
@@ -403,7 +403,7 @@ public class redteleILT extends LinearOpMode {
 
 //
 //                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                    if(apriltagID == 20) {
+                    if(apriltagID == 24) {
 
                         double targetX = fr.getTargetXDegrees();
                         double turretpidOutput = turretpid.calculate(0, targetX);
