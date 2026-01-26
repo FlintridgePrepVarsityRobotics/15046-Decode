@@ -1,24 +1,20 @@
 
 package org.firstinspires.ftc.teamcode.teleop;
 
-import static java.lang.Math.abs;
-
-import android.graphics.Color;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
+//import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+//import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 
 import java.util.List;
@@ -73,31 +69,18 @@ public class Ateleop extends LinearOpMode {
     {
 
 //variables:
-        boolean allowShoot = true;
-        boolean centered  = false;
+        boolean allowShoot;
         boolean lastAState = false;
         boolean intakeFull = false;
         boolean isIntakeRunning = false;
         boolean allowUp = true;
-        int poo = 0;
-        boolean color1 = false;
-        boolean color2 = false;
-        boolean color3 = false;
-        float hsv1[] = {0F, 0F, 0F};
-        float hsv2[] = {0F, 0F, 0F};
-        float hsv3[] = {0F, 0F, 0F};
-        final double SCALE_FACTOR = 255;
 
-        boolean sense1 = false;
-        boolean sense2 = false;
-        boolean sense3 = false;
+        boolean sense1;
+        boolean sense2;
+        boolean sense3;
 
-        boolean lastUp = false;
-        boolean lastMid = false;
-        boolean lastDown = false;
-        boolean lastX = false;
+
         double setpointRPM = 0;
-        boolean flywheelon = false;
         int ticksPerRev = 28;
 
         int color = 0;
@@ -191,32 +174,7 @@ telemetry.update();
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
 //IntakeCode:
-            Color.RGBToHSV(
-                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-                    hsv1
-            );
 
-            Color.RGBToHSV(
-                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-                    hsv2
-            );
-            Color.RGBToHSV(
-                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-                    hsv3
-            );
-            float hue1 = hsv1[0];
-            float hue2 = hsv2[0];
-            float hue3 = hsv3[0];
-telemetry.addData("sensor 1", hue1);
-telemetry.addData("red",robot.sensor3.red() );
-telemetry.addData("green", robot.sensor3.green() );
-telemetry.addData("blue",robot.sensor3.blue() );
 
 if(robot.sensor3.green()>64 || robot.sensor3.blue()>68){
     telemetry.addData("sensor3 is full twin","Everson is the goat");
@@ -311,17 +269,16 @@ if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
 
 //IntakeCodeEND
 //TrackingCode:
-            LLStatus status = limelight.getStatus();
-
+            //LLStatus status = limelight.getStatus();
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
                 // Access general information
-                Pose3D botpose = result.getBotpose();
+                //Pose3D botpose = result.getBotpose();
                 double distance = getdistance(result.getTa());
                 double tx = result.getTx();
-                double txnc = result.getTxNC();
-                double ty = result.getTy();
-                double tync = result.getTyNC();
+//                double txnc = result.getTxNC();
+//                double ty = result.getTy();
+//                double tync = result.getTyNC();
 
                 //shootCODE
 
@@ -432,17 +389,7 @@ if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
         return(distance);
     }
 
-    public double getCombinedOutput (double setpointRPM){
-        int ticksPerRev = 28;
-      //  double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-        double measuredTicksPerSec = robot.flywheel.getVelocity();
-        double ffOutput = feedforward.calculate(targetTicksPerSec);
-        double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
-        double combinedOutput = ffOutput + pidOutput;
-        double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-        combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
-        return(combinedOutput);
-    }
+
     private String classifyColor(float[] hsv) {
         float hue = hsv[0];
         float sat = hsv[1];
