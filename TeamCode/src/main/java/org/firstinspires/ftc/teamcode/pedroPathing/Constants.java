@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-        .mass(9.8)
+        .mass(27.06)
             ;
 
 //
@@ -41,14 +41,18 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
+            .forwardTicksToInches(-.0028744978068)
+            .strafeTicksToInches(.00779661145)
+            .turnTicksToInches(.002347893277)
             .leftPodY(4.5)
             .rightPodY(-4.5)
             .strafePodX(-7.5)
             .leftEncoder_HardwareMapName("FL")
-            .rightEncoder_HardwareMapName("FR")
-            .strafeEncoder_HardwareMapName("BR")
-            .leftEncoderDirection(Encoder.FORWARD)
-            .rightEncoderDirection(Encoder.REVERSE)
+            .rightEncoder_HardwareMapName("BR")
+            .strafeEncoder_HardwareMapName("FR")
+            .leftEncoderDirection(Encoder.REVERSE)
+            .rightEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.REVERSE);
+            ;
 }
 //Everson was here

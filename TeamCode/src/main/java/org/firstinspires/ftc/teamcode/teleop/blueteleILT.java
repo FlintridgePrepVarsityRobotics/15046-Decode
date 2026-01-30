@@ -15,9 +15,14 @@ import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 
@@ -28,6 +33,12 @@ import java.util.List;
 @Config
 @TeleOp(name = "blueILT teleop")
 public class blueteleILT extends LinearOpMode {
+
+
+
+    private NormalizedColorSensor test_color;
+    private NormalizedColorSensor test_color2;
+    private NormalizedColorSensor test_color3;
     PIDController turretpid = new PIDController(TP, TI, TD);
     public static double TP = 0.0067;
     public static double TI = 0;
@@ -79,13 +90,24 @@ public class blueteleILT extends LinearOpMode {
         boolean isIntakeRunning = false;
         boolean allowUp = true;
         int poo = 0;
-        boolean color1 = false;
-        boolean color2 = false;
-        boolean color3 = false;
-        float hsv1[] = {0F, 0F, 0F};
-        float hsv2[] = {0F, 0F, 0F};
-        float hsv3[] = {0F, 0F, 0F};
+//        float hsv1[] = {0F, 0F, 0F};
+//        float hsv2[] = {0F, 0F, 0F};
+//        float hsv3[] = {0F, 0F, 0F};
+
+        test_color = hardwareMap.get(NormalizedColorSensor.class, "sensor1");
+        test_color.setGain(20);
+        test_color2 = hardwareMap.get(NormalizedColorSensor.class, "sensor2");
+        test_color2.setGain(20);
+        test_color3 = hardwareMap.get(NormalizedColorSensor.class, "sensor3");
+        test_color3.setGain(20);
+//        color1 = hardwareMap.get(NormalizedColorSensor.class, "sensor1");
+//        color2 = hardwareMap.get(NormalizedColorSensor.class, "sensor2");
+//        color3 = hardwareMap.get(NormalizedColorSensor.class, "sensor3");
         final double SCALE_FACTOR = 255;
+
+        int hsvcolor1 = 0;
+        int hsvcolor2 = 0;
+        int hsvcolor3 = 0;
 
         boolean sense1 = false;
         boolean sense2 = false;
@@ -197,60 +219,102 @@ public class blueteleILT extends LinearOpMode {
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
 //IntakeCode:
-            Color.RGBToHSV(
-                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-                    hsv1
-            );
 
-            Color.RGBToHSV(
-                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-                    hsv2
-            );
-            Color.RGBToHSV(
-                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-                    hsv3
-            );
-            float hue1 = hsv1[0];
-            float hue2 = hsv2[0];
-            float hue3 = hsv3[0];
+//            NormalizedRGBA normColor1 = color1.getNormalizedColors();
+//            NormalizedRGBA normColor2 = color2.getNormalizedColors();
+//            NormalizedRGBA normColor3 = color3.getNormalizedColors();
 
-            telemetry.addData("red3",robot.sensor3.red() );
-            telemetry.addData("green3", robot.sensor3.green() );
-            telemetry.addData("blue3",robot.sensor3.blue() );
+//            telemetry.addData("Hue", JavaUtil.colorToHue(normColor1.toColor()));
+//            telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(normColor1.toColor()));
+//            telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(normColor1.toColor()));
+//            telemetry.addData("Alpha", "%.3f", normColor1.alpha);
+//
+//            telemetry.addData("Hue2", JavaUtil.colorToHue(normColor2.toColor()));
+//            telemetry.addData("Saturation2", "%.3f", JavaUtil.colorToSaturation(normColor2.toColor()));
+//            telemetry.addData("Value2", "%.3f", JavaUtil.colorToValue(normColor2.toColor()));
+//            telemetry.addData("Alpha2", "%.3f", normColor2.alpha);
+//
+//            telemetry.addData("Hue3", JavaUtil.colorToHue(normColor3.toColor()));
+//            telemetry.addData("Saturation3", "%.3f", JavaUtil.colorToSaturation(normColor3.toColor()));
+//            telemetry.addData("Value3", "%.3f", JavaUtil.colorToValue(normColor3.toColor()));
+//            telemetry.addData("Alpha3", "%.3f", normColor3.alpha);
 
-            telemetry.addData("red2",robot.sensor2.red() );
-            telemetry.addData("green2", robot.sensor2.green() );
-            telemetry.addData("blue2",robot.sensor2.blue() );
+//            telemetry.addData("normal color 1",normColor1);
+//            telemetry.addData("normal color 2",normColor2);
+//            telemetry.addData("normal color 3",normColor3);
 
-            telemetry.addData("red1",robot.sensor1.red() );
-            telemetry.addData("green1", robot.sensor1.green() );
-            telemetry.addData("blue1",robot.sensor1.blue() );
 
-            if(robot.sensor3.green()>72 || robot.sensor3.blue()>75){
-                telemetry.addData("sensor3 is full twin","Everson is the goat");
-                sense3 = true;
+
+            NormalizedRGBA colors = test_color.getNormalizedColors();
+            telemetry.addData("Light Detected1", ((OpticalDistanceSensor) test_color).getLightDetected());
+            telemetry.addData("Red", "%.3f", colors.red);
+            telemetry.addData("Green", "%.3f", colors.green);
+            telemetry.addData("Blue", "%.3f", colors.blue);
+            telemetry.addData("Hue", JavaUtil.colorToHue(colors.toColor()));
+            telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(colors.toColor()));
+            telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(colors.toColor()));
+
+            NormalizedRGBA colors2 = test_color2.getNormalizedColors();
+            telemetry.addData("Light Detected2", ((OpticalDistanceSensor) test_color2).getLightDetected());
+            telemetry.addData("Red", "%.3f", colors2.red);
+            telemetry.addData("Green", "%.3f", colors2.green);
+            telemetry.addData("Blue", "%.3f", colors2.blue);
+            telemetry.addData("Hue", JavaUtil.colorToHue(colors2.toColor()));
+            telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(colors2.toColor()));
+            telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(colors2.toColor()));
+
+            NormalizedRGBA colors3 = test_color2.getNormalizedColors();
+            telemetry.addData("Light Detected3", ((OpticalDistanceSensor) test_color3).getLightDetected());
+            telemetry.addData("Red", "%.3f", colors3.red);
+            telemetry.addData("Green", "%.3f", colors3.green);
+            telemetry.addData("Blue", "%.3f", colors3.blue);
+            telemetry.addData("Hue", JavaUtil.colorToHue(colors3.toColor()));
+            telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(colors3.toColor()));
+            telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(colors3.toColor()));
+//            int red1 = robot.sensor1.red();
+//            int green1 = robot.sensor1.green();
+//            int blue1 = robot.sensor1.blue();
+//
+//            int red2 = robot.sensor2.red();
+//            int green2 = robot.sensor2.green();
+//            int blue2 = robot.sensor2.blue();
+//
+//            int red3 = robot.sensor3.red();
+//            int green3 = robot.sensor3.green();
+//            int blue3 = robot.sensor3.blue();
+//
+//
+//            telemetry.addData("red3",robot.sensor3.red() );
+//            telemetry.addData("green3", robot.sensor3.green() );
+//            telemetry.addData("blue3",robot.sensor3.blue() );
+//
+//            telemetry.addData("red2",robot.sensor2.red() );
+//            telemetry.addData("green2", robot.sensor2.green() );
+//            telemetry.addData("blue2",robot.sensor2.blue() );
+//
+//            telemetry.addData("red1",robot.sensor1.red() );
+//            telemetry.addData("green1", robot.sensor1.green() );
+//            telemetry.addData("blue1",robot.sensor1.blue() );
+//
+            if(((OpticalDistanceSensor) test_color).getLightDetected()>.05){
+                telemetry.addData("sensor1 is full twin","Everson is the goat");
+                sense1 = true;
             }else{
-                sense3 = false;
+                sense1 = false;
             }
 
-            if(robot.sensor2.green()>76 || robot.sensor2.blue()>70){
-                sense2 = true;
+            if(((OpticalDistanceSensor) test_color2).getLightDetected()>.06){
                 telemetry.addData("sensor2 is full twin","Everson is the goat");
+                sense2 = true;
             }else{
                 sense2 = false;
             }
 
-            if(robot.sensor1.green()>105 || robot.sensor1.blue()>99){
-                sense1 = true;
-                telemetry.addData("sensor1 is full twin","Everson is the goat");
+            if(((OpticalDistanceSensor) test_color3).getLightDetected()>.06){
+                telemetry.addData("sensor3 is full twin","Everson is the goat");
+                sense3 = true;
             }else{
-                sense1 = false;
+                sense3 = false;
             }
 //            telemetry.addData("sensor 2", hue2);
 //            telemetry.addData("sensor 3", hue3);
@@ -368,10 +432,7 @@ public class blueteleILT extends LinearOpMode {
 
                 //shootCODE
 
-                if(color1 || color2 || color3){
-                    filled = true;
 
-                }
 
                 boolean midSpeed = gamepad1.dpad_up;
                 if (midSpeed){

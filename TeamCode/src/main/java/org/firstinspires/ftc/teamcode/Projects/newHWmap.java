@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
@@ -19,10 +20,10 @@ public class newHWmap {
     public DcMotor lift = null;
 
     public Servo shootServo = null;
-    public ColorSensor sensor1 = null;
-    public ColorSensor sensor2 = null;
-
-    public ColorSensor sensor3 = null;
+//    public ColorSensor sensor1 = null;
+//    public ColorSensor sensor2 = null;
+//
+//    public ColorSensor sensor3 = null;
 //    public DcMotor lift = null;
     public DcMotorEx intake = null;
     public DcMotorEx turret = null;
@@ -35,9 +36,9 @@ public class newHWmap {
 
         shootServo = hwMap.servo.get("Servo");
 
-        sensor1 = hwMap.colorSensor.get("sensor1");
-        sensor2 = hwMap.colorSensor.get("sensor2");
-        sensor3 = hwMap.colorSensor.get("sensor3");
+//        sensor1 = hwMap.colorSensor.get("sensor1");
+//        sensor2 = hwMap.colorSensor.get("sensor2");
+//        sensor3 = hwMap.colorSensor.get("sensor3");
 
         lift = hwMap.dcMotor.get("lift");
 

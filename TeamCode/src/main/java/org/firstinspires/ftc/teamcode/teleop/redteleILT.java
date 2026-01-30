@@ -16,6 +16,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -198,53 +199,53 @@ public class redteleILT extends LinearOpMode {
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
 //IntakeCode:
-            Color.RGBToHSV(
-                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-                    hsv1
-            );
-
-            Color.RGBToHSV(
-                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-                    hsv2
-            );
-            Color.RGBToHSV(
-                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-                    hsv3
-            );
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor1.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor1.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
+//                    hsv1
+//            );
+//
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor2.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor2.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
+//                    hsv2
+//            );
+//            Color.RGBToHSV(
+//                    (int) (robot.sensor3.red() * SCALE_FACTOR),
+//                    (int) (robot.sensor3.green() * SCALE_FACTOR),
+//                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
+//                    hsv3
+//            );
             float hue1 = hsv1[0];
             float hue2 = hsv2[0];
             float hue3 = hsv3[0];
-            telemetry.addData("sensor 1", hue1);
-            telemetry.addData("red",robot.sensor3.red() );
-            telemetry.addData("green", robot.sensor3.green() );
-            telemetry.addData("blue",robot.sensor3.blue() );
-
-            if(robot.sensor3.green()>64 || robot.sensor3.blue()>68){
-                telemetry.addData("sensor3 is full twin","Everson is the goat");
-                sense3 = true;
-            }else{
-                sense3 = false;
-            }
-
-            if(robot.sensor2.green()>74 || robot.sensor2.blue()>61){
-                sense2 = true;
-                telemetry.addData("sensor2 is full twin","Everson is the goat");
-            }else{
-                sense2 = false;
-            }
-
-            if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
-                sense1 = true;
-                telemetry.addData("sensor1 is full twin","Everson is the goat");
-            }else{
-                sense1 = false;
-            }
+//            telemetry.addData("sensor 1", hue1);
+//            telemetry.addData("red",robot.sensor3.red() );
+//            telemetry.addData("green", robot.sensor3.green() );
+//            telemetry.addData("blue",robot.sensor3.blue() );
+//
+//            if(robot.sensor3.green()>64 || robot.sensor3.blue()>68){
+//                telemetry.addData("sensor3 is full twin","Everson is the goat");
+//                sense3 = true;
+//            }else{
+//                sense3 = false;
+//            }
+//
+//            if(robot.sensor2.green()>74 || robot.sensor2.blue()>61){
+//                sense2 = true;
+//                telemetry.addData("sensor2 is full twin","Everson is the goat");
+//            }else{
+//                sense2 = false;
+//            }
+//
+//            if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
+//                sense1 = true;
+//                telemetry.addData("sensor1 is full twin","Everson is the goat");
+//            }else{
+//                sense1 = false;
+//            }
 //            telemetry.addData("sensor 2", hue2);
 //            telemetry.addData("sensor 3", hue3);
 
@@ -355,6 +356,7 @@ public class redteleILT extends LinearOpMode {
                 double tync = result.getTyNC();
 
                 //shootCODE
+
 
                 if(color1 || color2 || color3){
                     filled = true;
