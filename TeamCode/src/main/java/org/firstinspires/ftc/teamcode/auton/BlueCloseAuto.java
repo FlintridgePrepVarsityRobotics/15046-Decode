@@ -14,13 +14,13 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.Projects.HWMapOld;
+import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "BlueCloseAuto", group = "fruitauto")
 public class BlueCloseAuto extends OpMode {
 
-    public HWMapOld robot = new HWMapOld();
+    public newHWmap robot = new newHWmap();
     private TelemetryManager panelsTelemetry;
     private Follower follower;
 
@@ -96,7 +96,7 @@ public class BlueCloseAuto extends OpMode {
     public void runIntakeServoOneSecond() {
         intakeServoRunning = true;
         intakeServoStartTime = opmodeTimer.getElapsedTimeSeconds();
-        robot.intakeServo.setPower(1.0);
+        robot.shootServo.setPosition(1.0);
     }
     //Everson very good stuff
     public void updateIntakeServo() {
@@ -104,7 +104,7 @@ public class BlueCloseAuto extends OpMode {
 
         double now = opmodeTimer.getElapsedTimeSeconds();
         if (now - intakeServoStartTime >= INTAKE_SERVO_RUN_TIME) {
-            robot.intakeServo.setPower(0.0);
+            robot.shootServo.setPosition(0.0);
             intakeServoRunning = false;
         }
     }
@@ -127,13 +127,13 @@ public class BlueCloseAuto extends OpMode {
 
 
         double targetTicksPerSec = FLYWHEEL_TARGET_RPM / 60.0 * ticksPerRevLauncher;
-        double measuredTicksPerSec = robot.launcher.getVelocity();
+        double measuredTicksPerSec = robot.turret.getVelocity();
 
         double ffOutput = feedforward.calculate(targetTicksPerSec);
         double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
 
         double launcherPower = Math.max(-1.0, Math.min(1.0, ffOutput + pidOutput));
-        robot.launcher.setPower(launcherPower);
+        robot.turret.setPower(launcherPower);
 
         double measuredRPM = measuredTicksPerSec / ticksPerRevLauncher * 60.0;
         double flywheelErrRPM = Math.abs(measuredRPM - FLYWHEEL_TARGET_RPM);
@@ -143,9 +143,9 @@ public class BlueCloseAuto extends OpMode {
         boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
 
         if (shotsFired >= 3) {
-            robot.launcher.setPower(0);
+            robot.turret.setPower(0);
             robot.intake.setPower(0);
-            robot.intakeServo.setPower(0);
+            robot.turret.setPower(0);
             shooting = false;
             feeding = false;
             finishedShooting = true;
@@ -155,7 +155,7 @@ public class BlueCloseAuto extends OpMode {
 
         if (!flywheelReady) {
             robot.intake.setPower(0);
-            robot.intakeServo.setPower(0);
+            robot.turret.setPower(0);
             feeding = false;
             return;
         }
@@ -164,10 +164,10 @@ public class BlueCloseAuto extends OpMode {
             if (cooldownDone) {
                 feeding = true;
                 feedStartTime = now;
-                robot.intakeServo.setPower(1);
+                robot.turret.setPower(1);
             } else {
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                robot.turret.setPower(0);
             }
         }
 
@@ -180,14 +180,14 @@ public class BlueCloseAuto extends OpMode {
 
             double intakePower = Math.max(-1.0, Math.min(1.0, ffOutput2 + pidOutput2));
             robot.intake.setPower(intakePower);
-            robot.intakeServo.setPower(1);
+            robot.turret.setPower(1);
 
             if ((now - feedStartTime) >= FEED_TIME_SEC) {
                 feeding = false;
                 lastFeedEndTime = now;
                 shotsFired++;
                 robot.intake.setPower(0);
-                robot.intakeServo.setPower(0);
+                robot.turret.setPower(0);
             }
         }
     }
@@ -256,13 +256,13 @@ public class BlueCloseAuto extends OpMode {
                 break;
             case 21:
                 if (actionTimer.getElapsedTimeSeconds() < 0.5) {
-                    robot.launcher.setPower(-1);
+                    robot.turret.setPower(-1);
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
+                    robot.shootServo.setPosition(1);
                 } else {
-                    robot.launcher.setPower(0);
+                    robot.turret.setPower(0);
                     robot.intake.setPower(0);
-                    robot.intakeServo.setPower(1);
+                    robot.shootServo.setPosition(1);
                     slowingForIntake = false;
                     setPathState(nextState);
                 }
@@ -270,10 +270,10 @@ public class BlueCloseAuto extends OpMode {
             case 2:
                 if (!slowingForIntake) {
                     if (!follower.isBusy()) {
-                        double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
+                        double currentRPM = Math.abs(robot.turret.getVelocity() / ticksPerRevLauncher * 60.0);
                         if (currentRPM <= 1000) {
                             robot.intake.setPower(0.5);
-                            robot.intakeServo.setPower(1);
+                            robot.shootServo.setPosition(1);
                             follower.followPath(intakePickup1, 0.7, true);
                             actionTimer.resetTimer();
                             nextState = 3;
@@ -313,10 +313,10 @@ public class BlueCloseAuto extends OpMode {
             case 4:
                 if (!slowingForIntake) {
                     if (!follower.isBusy()) {
-                        double currentRPM = Math.abs(robot.launcher.getVelocity() / ticksPerRevLauncher * 60.0);
+                        double currentRPM = Math.abs(robot.turret.getVelocity() / ticksPerRevLauncher * 60.0);
                         if (currentRPM <= 1000) {
                             robot.intake.setPower(0.5);
-                            robot.intakeServo.setPower(1);
+                            robot.shootServo.setPosition(1);
                             follower.followPath(intakePickup2, 0.7, true);
                             actionTimer.resetTimer();
                             slowingForIntake = true;

@@ -1,4 +1,3 @@
-
 package org.firstinspires.ftc.teamcode.teleop;
 
 import static java.lang.Math.abs;
@@ -20,6 +19,9 @@ import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 
@@ -37,17 +39,17 @@ public class redteleILT extends LinearOpMode {
 // PIDF + Feedforward constants (starting values — tune these)
 // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
 
-    public static double kP = 0.002;
+    public static double kP = 0.006;
 
-    public static double kI = 0.0;
-    public static double kD = 0.00025;
+    public static double kI = 0.0001;
+    public static double kD = 0.0006;
     public static double kF = 0.00042;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
     public static double kS = 0.0;
-    public static double kV = 0.0;
+    public static double kV = 0.00001;
     public static double kA = 0.0;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
@@ -68,6 +70,7 @@ public class redteleILT extends LinearOpMode {
     final double TICKS_PER_REV_INTAKE = 146.44;
 
     double targetTicksPerSec = 0;
+    final double PROX_DIhST = 8.0;
 
 
     @Override
@@ -173,10 +176,10 @@ public class redteleILT extends LinearOpMode {
 //                flywheelon = true;
 //            }
 
-         /*   if (lowSpeed && !lastDown){
-                setpointRPM = 1800;
-                flywheelon = true;
-            }*/
+        /*   if (lowSpeed && !lastDown){
+               setpointRPM = 1800;
+               flywheelon = true;
+           }*/
             if (gamepad1.dpad_down){
 
             }
@@ -249,29 +252,23 @@ public class redteleILT extends LinearOpMode {
 //            telemetry.addData("sensor 2", hue2);
 //            telemetry.addData("sensor 3", hue3);
 
-//
-
 // --- SENSOR READING ---
             // ----------------------------------------------------------------------
-// 1. SENSOR & COLOR READING
-//            Color.RGBToHSV((int) (robot.sensor1.red() * SCALE_FACTOR), (int) (robot.sensor1.green() * SCALE_FACTOR), (int) (robot.sensor1.blue() * SCALE_FACTOR), hsv1);
-//            Color.RGBToHSV((int) (robot.sensor2.red() * SCALE_FACTOR), (int) (robot.sensor2.green() * SCALE_FACTOR), (int) (robot.sensor2.blue() * SCALE_FACTOR), hsv2);
-//            Color.RGBToHSV((int) (robot.sensor3.red() * SCALE_FACTOR), (int) (robot.sensor3.green() * SCALE_FACTOR), (int) (robot.sensor3.blue() * SCALE_FACTOR), hsv3);
-//
-//            String s1 = classifyColor(hsv1);
-//            String s2 = classifyColor(hsv2);
-//            String s3 = classifyColor(hsv3);
-//
-//            boolean c1 = !s1.equals("EMPTY") && !s1.equals("UNKNOWN");
-//            boolean c2 = !s2.equals("EMPTY") && !s2.equals("UNKNOWN");
-//            boolean c3 = !s3.equals("EMPTY") && !s3.equals("UNKNOWN");
-//
-//            telemetry.addData("Intake", "[%s] [%s] [%s]", s1, s2, s3);
+            double dist1 = ((ColorRangeSensor) robot.sensor1).getDistance(DistanceUnit.CM);
+            double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
+            double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
+
+            sense1 = dist1 < PROX_DIhST;
+            sense2 = dist2 < PROX_DIhST;
+            sense3 = dist3 < PROX_DIhST;
+
+            telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
+            telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
 
             if (sense1 && sense2 && sense3) {
                 if (colorTimer.seconds() > 0.3) {
                     intakeFull = true;
-                    telemetry.addData("intake is full twin","Everson is the goat");
+                    telemetry.addData("Status", "intakefull");
                 }
             } else {
                 colorTimer.reset();
@@ -403,25 +400,30 @@ public class redteleILT extends LinearOpMode {
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     int apriltagID = fr.getFiducialId();
 
+
 //
 //                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                    if(apriltagID == 24) {
+                    if(apriltagID == 20) {
 
                         double targetX = fr.getTargetXDegrees();
                         double turretpidOutput = turretpid.calculate(0, targetX);
 
                         double turretfeedforward = 0;
-                        double AngleError = -tx;
-
+                        double AngleError = -targetX;
 
                         if (Math.abs(turretpidOutput) > 0.01) {
                             turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
                         }
 
-                        double motorPower;
-                        if(Math.abs(AngleError) < BEARING_TOLERANCE)
-                            motorPower = 0;
+                        double dynamicTolerance = 100.0 / distance; //use distance and if not accurate enough, decrease 100.0 justin everson isaac
+                        dynamicTolerance = Range.clip(dynamicTolerance, 0.5, 8.0);
 
+                        telemetry.addData("Dynamic Tolerance", dynamicTolerance);
+
+                        double motorPower;
+
+                        if(Math.abs(AngleError) < dynamicTolerance)
+                            motorPower = 0;
                         else
                             motorPower = -(turretpidOutput + turretfeedforward);
 
@@ -435,9 +437,6 @@ public class redteleILT extends LinearOpMode {
 
                         robot.turret.setPower(motorPower);
 
-//                        telemetry.addData("Limelight Target X", targetX);
-//                        telemetry.addData("Final Power", motorPower);
-//                        telemetry.addData("Angle", turretDegrees);
                     }
                 }
             } else if (gamepad1.y) {
