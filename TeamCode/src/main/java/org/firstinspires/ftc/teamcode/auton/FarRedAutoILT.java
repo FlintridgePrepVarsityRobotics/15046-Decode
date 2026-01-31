@@ -32,35 +32,16 @@ import java.util.List;
 import com.pedropathing.paths.Path;
 
 
-@Autonomous(name = "blue far")
-public class FarBlueAutoILT extends OpMode {
-
-
-
-
-
-
-
+@Autonomous(name = "red far")
+public class FarRedAutoILT extends OpMode {
 
     public newHWmap robot = new newHWmap();
     private TelemetryManager panelsTelemetry;
     private Follower follower;
     private Limelight3A limelight;
-
-
-
-
     private Timer pathTimer, actionTimer, opmodeTimer;
     private boolean finishedShooting = false;
-
-
-
-
     private int pathState;
-
-
-
-
 
 
 
@@ -88,6 +69,10 @@ public class FarBlueAutoILT extends OpMode {
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+
+
+
 
     PIDController turretpid = new PIDController(TP, TI, TD);
 
@@ -297,7 +282,7 @@ public class FarBlueAutoILT extends OpMode {
             boolean tagFound = false;
 
             for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                if (fr.getFiducialId() == 20) {
+                if (fr.getFiducialId() == 24) {
                     tagFound = true;
 
                     double distance = getdistance(result.getTa());
@@ -305,7 +290,7 @@ public class FarBlueAutoILT extends OpMode {
                     double targetOffset = 0.0;
 
                     if (distance > 50) {
-                        targetOffset = 5.0;
+                        targetOffset = -5.0;
                     }
 
                     double targetX = fr.getTargetXDegrees();
@@ -350,14 +335,14 @@ public class FarBlueAutoILT extends OpMode {
 
 
 
-    private final Pose startPose = new Pose(59, 8, Math.toRadians(90)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(51, 11, Math.toRadians(107));//107 // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pick1 = new Pose(40,34, Math.toRadians(180));
-    private final Pose pickup1Pose = new Pose(13, 34, Math.toRadians(180)); // Highest (First Set) of Artifacts from the Spike Mark.
-    private final Pose pick2 = new Pose(8.5, 27, Math.toRadians(210));
-    private final Pose pickup2Pose = new Pose(8, 10, Math.toRadians(210));
-    private final Pose pickup3Pose = new Pose(17, 8, Math.toRadians(180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
-    private final Pose backshot = new Pose(9, 8, Math.toRadians(180));
+    private final Pose startPose = new Pose(144-59, 8, Math.toRadians(180-90)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(144-51, 11, Math.toRadians(180-107));//107 // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pick1 = new Pose(144-40,34, Math.toRadians(180-180));
+    private final Pose pickup1Pose = new Pose(144-13, 34, Math.toRadians(180-180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pick2 = new Pose(144-8.5, 27, Math.toRadians(180-210));
+    private final Pose pickup2Pose = new Pose(144-8, 10, Math.toRadians(180-210));
+    private final Pose pickup3Pose = new Pose(144-17, 8, Math.toRadians(180-180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private final Pose backshot = new Pose(144-9, 8, Math.toRadians(180-180));
 
 
 

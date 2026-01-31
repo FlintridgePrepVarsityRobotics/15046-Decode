@@ -36,21 +36,22 @@ public class redteleILT extends LinearOpMode {
     public static double TP = 0.01;
     public static double TI = 0.00015;
     public static double TD = 0.00000005;
-// PIDF + Feedforward constants (starting values — tune these)
-// These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
 
-    public static double kP = 0.006;
+    public static double kP = 0.002;
 
-    public static double kI = 0.0001;
-    public static double kD = 0.0006;
+    public static double kI = 0.0;
+    public static double kD = 0.00025;
     public static double kF = 0.00042;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
     public static double kS = 0.0;
-    public static double kV = 0.00001;
+    public static double kV = 0.0;
     public static double kA = 0.0;
+
+
+
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
@@ -282,7 +283,7 @@ public class redteleILT extends LinearOpMode {
 //            }
 //            lastAState = aNow;
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
+            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > .5) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
@@ -302,7 +303,7 @@ public class redteleILT extends LinearOpMode {
             }
 
 // Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
+            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 50);
 
             if (isShooting) {
                 robot.shootServo.setPosition(0);
@@ -403,7 +404,7 @@ public class redteleILT extends LinearOpMode {
 
 //
 //                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                    if(apriltagID == 20) {
+                    if(apriltagID == 24) {
 
                         double targetX = fr.getTargetXDegrees();
                         double turretpidOutput = turretpid.calculate(0, targetX);

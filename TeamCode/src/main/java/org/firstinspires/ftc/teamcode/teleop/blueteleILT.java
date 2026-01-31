@@ -40,11 +40,9 @@ public class blueteleILT extends LinearOpMode {
     private NormalizedColorSensor test_color2;
     private NormalizedColorSensor test_color3;
     PIDController turretpid = new PIDController(TP, TI, TD);
-    public static double TP = 0.0067;
-    public static double TI = 0;
-    public static double TD = 1;
-// PIDF + Feedforward constants (starting values — tune these)
-// These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
+    public static double TP = 0.01;
+    public static double TI = 0.00015;
+    public static double TD = 0.00000005;
 
     public static double kP = 0.002;
 
@@ -516,10 +514,10 @@ public class blueteleILT extends LinearOpMode {
                 int encoderTicks = robot.turret.getCurrentPosition();
                 double currentDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
 
-                if (currentDegrees > 2) {
+                if (currentDegrees > 5) {
                     robot.turret.setPower(-0.3);
                 }
-                else if (currentDegrees < -2) {
+                else if (currentDegrees < -5) {
                     robot.turret.setPower(0.3);
                 }
                 else {

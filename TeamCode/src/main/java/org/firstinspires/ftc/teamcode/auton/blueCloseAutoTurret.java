@@ -17,8 +17,11 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
@@ -32,7 +35,8 @@ public class blueCloseAutoTurret extends OpMode {
     private Follower follower;
     private Limelight3A limelight;
 
-    private Timer pathTimer, actionTimer, opmodeTimer;
+    private Timer pathTimer, actionTimer,opmodeTimer;
+    private ElapsedTime colorTimer, servoTimer;
     private boolean finishedShooting = false;
 
     private int pathState;
@@ -41,21 +45,28 @@ public class blueCloseAutoTurret extends OpMode {
 
     private PathChain Path1, Path2, Path3, Path4, Path5, Path6, Path7, Path8, Path9;
 
-    public static double kP = 0.0125;
-    public static double kI = 0.00015;
-    public static double kD = 0.00000005;
-    public static double kF = 0.0004208;
+
+    public static double TP = 0.01;
+    public static double TI = 0.00015;
+    public static double TD = 0.00000005;
+
+    public static double kP = 0.002;
+
+    public static double kI = 0.0;
+    public static double kD = 0.00025;
+    public static double kF = 0.00042;
+
+    // Feedforward: kS (static), kV (velocity), kA (acceleration)
+    // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
+
     public static double kS = 0.0;
-    public static double kV = 0.00042;
+    public static double kV = 0.0;
     public static double kA = 0.0;
     final double TICKS_PER_REV_INTAKE = 146.44;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-
-    public static double TP = 0.01;
-    public static double TI = 0.00015;
-    public static double TD = 0.00000005;
+    boolean flywheelReady = false;
     PIDController turretpid = new PIDController(TP, TI, TD);
 
     final double TICKS_PER_REV_TURRET = 294.0;
@@ -64,12 +75,12 @@ public class blueCloseAutoTurret extends OpMode {
     final double MIN_POWER_TO_MOVE = 0.05;
 
     private boolean shooting = false;
-    private int shotsFired = 0;
+    boolean shotsFired = false;
 
     // Dynamic RPM Variable
-    private double currentFlywheelTargetRPM = 1944;
-    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 100;
-
+    private double currentFlywheelTargetRPM;
+    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 50;
+double startFlywheelTargetRPM = 100;
     private static final double FEED_TIME_SEC = 0.244; //perfect rn but earlier it was bad idk
     private static final double BETWEEN_SHOTS_MIN_SEC = 0.132;
 
@@ -77,6 +88,8 @@ public class blueCloseAutoTurret extends OpMode {
     private double feedStartTime = 0.0;
     private double lastFeedEndTime = -999.0;
     private final int ticksPerRevLauncher = 28;
+    double PROX_DIhST = 7.5;
+
 
     public double getdistance(double ta){
         double scale = 10;
@@ -85,7 +98,7 @@ public class blueCloseAutoTurret extends OpMode {
     }
 
     public void startIntake() {
-        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 850 / 60);
         robot.shootServo.setPosition(0.5);
     }
 
@@ -97,51 +110,48 @@ public class blueCloseAutoTurret extends OpMode {
     public void startShooting3() {
         shooting = true;
         finishedShooting = false;
-        shotsFired = 0;
+        shotsFired = false;
         feeding = false;
         lastFeedEndTime = -999.0;
         actionTimer.resetTimer();
-
-        robot.lift.setTargetPosition(-55);
-        robot.lift.setPower(1);
-        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void stopShooting() {
-        try {
-            Thread.sleep(200); // Sleep for 1 second
-        } catch (InterruptedException e) {
-            // Handle the exception
-            Thread.currentThread().interrupt(); // Restore the interrupt flag
-        }
+        servoTimer.reset();
         robot.shootServo.setPosition(0.5);
-        try {
-            Thread.sleep(500); // Sleep for 1 second
-        } catch (InterruptedException e) {
-            // Handle the exception
-            Thread.currentThread().interrupt(); // Restore the interrupt flag
+        while (servoTimer.seconds() < 1.5){
+
         }
         robot.flywheel.setPower(0);
         robot.intake.setPower(0);
         shooting = false;
         feeding = false;
         finishedShooting = true;
-
-        robot.lift.setTargetPosition(1);
-        robot.lift.setPower(-1);
-        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void updateShooting() {
+        double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
+        boolean sense2 = dist2 < PROX_DIhST;
+
         if (!shooting) {
             feeding = false;
             return;
         }
 
+
+        if (!sense2) {
+            if (colorTimer.seconds() > 2) {
+                stopShooting();
+                return; // Stop immediately
+            }
+        } else {
+            colorTimer.reset(); // Reset timer if we see a ball
+        }
+
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             double distance = getdistance(result.getTa());
-            currentFlywheelTargetRPM = (415.2 * Math.log(distance)) + 1173.8 + 25;
+            currentFlywheelTargetRPM = (415.2 * Math.log(distance)) + 1173.8 + 50;
         }
 
         double targetTicksPerSec = currentFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
@@ -157,13 +167,14 @@ public class blueCloseAutoTurret extends OpMode {
         double flywheelErrRPM = Math.abs(measuredRPM - currentFlywheelTargetRPM);
 
         double now = actionTimer.getElapsedTimeSeconds();
-        boolean flywheelReady = (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM);
-        boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
-
-        if (shotsFired >= 2) {
-            stopShooting();
-            return;
+        if (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM){
+            flywheelReady = true;
         }
+        else{
+            flywheelReady = false;
+        }
+
+        boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
 
         if (!flywheelReady) {
             robot.intake.setPower(0);
@@ -172,23 +183,25 @@ public class blueCloseAutoTurret extends OpMode {
         }
 
         if (!feeding) {
-            if (cooldownDone) {
+
+            if (cooldownDone && sense2 && flywheelReady) {
                 feeding = true;
                 feedStartTime = now;
             } else {
                 robot.intake.setPower(0);
+                stopShooting();
             }
         }
 
         if (feeding) {
             robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
             robot.shootServo.setPosition(0);
+
             if ((now - feedStartTime) >= FEED_TIME_SEC) {
                 feeding = false;
                 lastFeedEndTime = now;
-                shotsFired++;
+
                 robot.intake.setPower(0);
-                robot.shootServo.setPosition(0.5);
             }
         }
     }
@@ -196,30 +209,51 @@ public class blueCloseAutoTurret extends OpMode {
     public void updateTurret() {
         LLResult result = limelight.getLatestResult();
 
+
+
+
         if (result != null && result.isValid()) {
             List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
             boolean tagFound = false;
 
+
+
+
             for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                if (fr.getFiducialId() == 20) {
+                if (fr.getFiducialId() == 24) {
                     tagFound = true;
                     double targetX = fr.getTargetXDegrees();
                     double turretpidOutput = turretpid.calculate(0, targetX);
+
+
+
 
                     double turretfeedforward = 0;
                     if (Math.abs(turretpidOutput) > 0.01) {
                         turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
                     }
 
+
+
+
                     double motorPower = -(turretpidOutput + turretfeedforward);
+
+
+
 
                     int encoderTicks = robot.turret.getCurrentPosition();
                     double turretDegrees = (encoderTicks / (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET)) * 360.0;
+
+
+
 
                     if ((turretDegrees >= MAX_DEGREES && motorPower > 0) ||
                             (turretDegrees <= -MAX_DEGREES && motorPower < 0)) {
                         motorPower = 0;
                     }
+
+
+
 
                     robot.turret.setPower(motorPower);
                     break;
@@ -247,44 +281,53 @@ public class blueCloseAutoTurret extends OpMode {
 // shoot to second spike
 
         Path3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(44.028, 59.729), new Pose(14.533, 59.475)))
-                .setTangentHeadingInterpolation()
+                .addPath(new BezierLine(new Pose(44.028, 59.729), new Pose(12.533, 59.475)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 // intake second spike
         Path4 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(14.533, 59.475), new Pose(23.912, 59.351)))
+                .addPath(new BezierLine(new Pose(12.533, 59.475), new Pose(24.5, 59.351)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
-// open gate
+
         Path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(23.912, 67.6776), new Pose(18.208, 69.693)))
+                .addPath(new BezierLine(new Pose(24.5, 59.351), new Pose(18.208, 64.693)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         Path6 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(18.208, 69.693), new Pose(53.292, 61.051), new Pose(60.909, 82.906)))
+                .addPath(new BezierCurve(new Pose(18.208, 64.693), new Pose(53.292, 61.051), new Pose(50.086956521739125, 98.60869565217389)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
 
         Path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(48, 82.906), new Pose(14.808, 81.088)))
-                .setTangentHeadingInterpolation()
+                .addPath(new BezierCurve(new Pose(50.086956521739125, 98.60869565217389), new Pose(60, 77),new Pose(15, 77)))
+                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
                 .build();
 
         Path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(14.808, 81.088), new Pose(60.874, 82.520)))
+                .addPath(new BezierLine(new Pose(15, 77), new Pose(50.086956521739125, 98.60869565217389)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
 
         Path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(48, 82.520), new Pose(18.937, 81.041)))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .addPath(new BezierLine(new Pose(50.086956521739125, 98.60869565217389), new Pose(55.694249649368864, 105.68022440392707)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
+                double targetTicksPerSec = startFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
+                double measuredTicksPerSec = robot.flywheel.getVelocity();
+
+                double ffOutput = feedforward.calculate(targetTicksPerSec);
+                double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+
+                double launcherPower = Math.max(-1.0, Math.min(1.0, ffOutput + pidOutput));
+                robot.flywheel.setPower(launcherPower);
+
                 follower.followPath(Path1, true);
                 setPathState(1);
                 break;
@@ -307,7 +350,7 @@ public class blueCloseAutoTurret extends OpMode {
             case 3:
                 if (!follower.isBusy()) {
                     startIntake();
-                    follower.followPath(Path3, 0.5, true);
+                    follower.followPath(Path3, 0.4, true);
                     setPathState(4);
                 }
                 break;
@@ -330,6 +373,20 @@ public class blueCloseAutoTurret extends OpMode {
             case 6:
                 if (!follower.isBusy()) {
                     follower.followPath(Path6, .8, true);
+                    targetTicksPerSec = startFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
+                    measuredTicksPerSec = robot.flywheel.getVelocity();
+
+                    ffOutput = feedforward.calculate(targetTicksPerSec);
+                    pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+
+                    launcherPower = Math.max(-1.0, Math.min(1.0, ffOutput + pidOutput));
+                    robot.flywheel.setPower(launcherPower);
+                    try {
+                        Thread.sleep(500); // Sleep for 1 second
+                    } catch (InterruptedException e) {
+                        // Handle the exception
+                        Thread.currentThread().interrupt(); // Restore the interrupt flag
+                    }
                     setPathState(7);
                 }
                 break;
@@ -375,6 +432,7 @@ public class blueCloseAutoTurret extends OpMode {
 
             case 12:
                 if (!follower.isBusy()) {
+                    robot.turret.setTargetPosition(0);
                     setPathState(-1);
                 }
                 break;
@@ -407,6 +465,9 @@ public class blueCloseAutoTurret extends OpMode {
         pathTimer = new Timer();
         actionTimer = new Timer();
         opmodeTimer = new Timer();
+        colorTimer = new ElapsedTime();
+        servoTimer=new ElapsedTime();
+
         opmodeTimer.resetTimer();
 
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
