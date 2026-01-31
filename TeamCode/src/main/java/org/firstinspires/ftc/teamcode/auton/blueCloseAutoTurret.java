@@ -36,7 +36,7 @@ public class blueCloseAutoTurret extends OpMode {
     private Limelight3A limelight;
 
     private Timer pathTimer, actionTimer,opmodeTimer;
-    private ElapsedTime colorTimer, servoTimer;
+    private ElapsedTime colorTimer, servoTimer, timeout;
     private boolean finishedShooting = false;
 
     private int pathState;
@@ -49,7 +49,8 @@ public class blueCloseAutoTurret extends OpMode {
     public static double TP = 0.01;
     public static double TI = 0.00015;
     public static double TD = 0.00000005;
-
+    double timeoutSec = 4;
+    
     public static double kP = 0.002;
 
     public static double kI = 0.0;
@@ -119,9 +120,6 @@ double startFlywheelTargetRPM = 100;
     public void stopShooting() {
         servoTimer.reset();
         robot.shootServo.setPosition(0.5);
-        while (servoTimer.seconds() < 1.5){
-
-        }
         robot.flywheel.setPower(0);
         robot.intake.setPower(0);
         shooting = false;
@@ -132,6 +130,11 @@ double startFlywheelTargetRPM = 100;
     public void updateShooting() {
         double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
         boolean sense2 = dist2 < PROX_DIhST;
+
+        if (timeout.seconds() > timeoutSec) {
+            stopShooting();
+            return;
+        }
 
         if (!shooting) {
             feeding = false;
@@ -208,53 +211,30 @@ double startFlywheelTargetRPM = 100;
 
     public void updateTurret() {
         LLResult result = limelight.getLatestResult();
-
-
-
-
         if (result != null && result.isValid()) {
             List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
             boolean tagFound = false;
 
-
-
-
             for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                if (fr.getFiducialId() == 24) {
+                if (fr.getFiducialId() == 20) {
                     tagFound = true;
                     double targetX = fr.getTargetXDegrees();
                     double turretpidOutput = turretpid.calculate(0, targetX);
-
-
-
 
                     double turretfeedforward = 0;
                     if (Math.abs(turretpidOutput) > 0.01) {
                         turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
                     }
 
-
-
-
                     double motorPower = -(turretpidOutput + turretfeedforward);
-
-
-
 
                     int encoderTicks = robot.turret.getCurrentPosition();
                     double turretDegrees = (encoderTicks / (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET)) * 360.0;
-
-
-
 
                     if ((turretDegrees >= MAX_DEGREES && motorPower > 0) ||
                             (turretDegrees <= -MAX_DEGREES && motorPower < 0)) {
                         motorPower = 0;
                     }
-
-
-
-
                     robot.turret.setPower(motorPower);
                     break;
                 }
@@ -467,6 +447,7 @@ double startFlywheelTargetRPM = 100;
         opmodeTimer = new Timer();
         colorTimer = new ElapsedTime();
         servoTimer=new ElapsedTime();
+        timeout = new ElapsedTime();
 
         opmodeTimer.resetTimer();
 

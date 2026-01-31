@@ -95,13 +95,13 @@ public class FarRedAutoILT extends OpMode {
 
     // Dynamic RPM Variable
     private double currentFlywheelTargetRPM = 1944;
-    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 100;
+    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 50;
 
 
 
 
-    private static final double FEED_TIME_SEC = .213;
-    private static final double BETWEEN_SHOTS_MIN_SEC = 0.1;
+    private static final double FEED_TIME_SEC = .13;
+    private static final double BETWEEN_SHOTS_MIN_SEC = 0.067;
 
 
 
@@ -124,7 +124,7 @@ public class FarRedAutoILT extends OpMode {
 
 
     public void startIntake() {
-        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 900 / 60);
         robot.shootServo.setPosition(0.5);
     }
 
@@ -189,7 +189,7 @@ public class FarRedAutoILT extends OpMode {
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             double distance = getdistance(result.getTa());
-            currentFlywheelTargetRPM = (415.2 * Math.log(distance)) + 1130+25+20;
+            currentFlywheelTargetRPM = (415.2 * Math.log(distance)) + 1130+25;
         }
 
 
@@ -258,7 +258,7 @@ public class FarRedAutoILT extends OpMode {
 
 
         if (feeding) {
-            robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+            robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1000 / 60);
             robot.shootServo.setPosition(0);
             if ((now - feedStartTime) >= FEED_TIME_SEC) {
                 feeding = false;
@@ -290,7 +290,7 @@ public class FarRedAutoILT extends OpMode {
                     double targetOffset = 0.0;
 
                     if (distance > 50) {
-                        targetOffset = -5.0;
+                        targetOffset = -4.8; //negative for red, put this in teleop
                     }
 
                     double targetX = fr.getTargetXDegrees();
@@ -338,7 +338,7 @@ public class FarRedAutoILT extends OpMode {
     private final Pose startPose = new Pose(144-59, 8, Math.toRadians(180-90)); // Start Pose of our robot.
     private final Pose scorePose = new Pose(144-51, 11, Math.toRadians(180-107));//107 // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
     private final Pose pick1 = new Pose(144-40,34, Math.toRadians(180-180));
-    private final Pose pickup1Pose = new Pose(144-13, 34, Math.toRadians(180-180)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup1Pose = new Pose(144-8, 34, Math.toRadians(180-180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pick2 = new Pose(144-8.5, 27, Math.toRadians(180-210));
     private final Pose pickup2Pose = new Pose(144-8, 10, Math.toRadians(180-210));
     private final Pose pickup3Pose = new Pose(144-17, 8, Math.toRadians(180-180)); // Lowest (Third Set) of Artifacts from the Spike Mark.
@@ -349,7 +349,7 @@ public class FarRedAutoILT extends OpMode {
 
     private Path scorePreload;
     private PathChain grabPickup1, scorePickup1, grabPickup2, grabPickup22, scorePickup2, grabPickup3, scorePickup3;
-    private PathChain backshots;
+    private PathChain backshots, backshots2;
 
 
     public void buildPaths() {
@@ -363,16 +363,27 @@ public class FarRedAutoILT extends OpMode {
         backshots = follower.pathBuilder()
                 .addPath(new BezierLine(pickup3Pose,backshot))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setTValueConstraint(.6)
+                .setTValueConstraint(.5)
                 .addPath(new BezierLine(backshot,pickup3Pose))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setTValueConstraint(.6)
+                .setTValueConstraint(.5)
                 .addPath(new BezierLine(pickup3Pose,backshot))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setTValueConstraint(.6)
+                .setTValueConstraint(.5)
                 .addPath(new BezierLine(backshot,pickup3Pose))
                 .setConstantHeadingInterpolation(Math.toRadians(180))
-                .setTValueConstraint(.6)
+                .setTValueConstraint(.5)
+
+
+                .build();
+        backshots2 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup3Pose,backshot))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setTValueConstraint(.5)
+                .addPath(new BezierLine(backshot,pickup3Pose))
+                .setConstantHeadingInterpolation(Math.toRadians(180))
+                .setTValueConstraint(.5)
+
 
 
                 .build();
@@ -478,13 +489,13 @@ public class FarRedAutoILT extends OpMode {
 
 
                     /* Grab Sample */
-                    startIntake();
+                    startIntake ();
 
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
 
 
-                    follower.followPath(grabPickup1, .8,true);
+                    follower.followPath(grabPickup1, .7,true);
                     setPathState(3);
                 }
                 break;
@@ -492,7 +503,7 @@ public class FarRedAutoILT extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
                     /* Score Sample */
-                    stopIntake();
+
 
 
 
@@ -502,7 +513,7 @@ public class FarRedAutoILT extends OpMode {
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
 
 
-                    follower.followPath(scorePickup1,.8, true);
+                    follower.followPath(scorePickup1,1, true);
                     setPathState(4);
                 }
                 break;
@@ -511,6 +522,7 @@ public class FarRedAutoILT extends OpMode {
             case 4:
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    stopIntake();
                     startShooting3();
 
 
@@ -525,26 +537,22 @@ public class FarRedAutoILT extends OpMode {
             case 5:
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
                 if (finishedShooting) {
-
-
                     /* Grab Sample */
+                    startIntake();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-
-
-                    follower.followPath(grabPickup2,.8, true);
+                    follower.followPath(grabPickup3,1, true);
                     setPathState(6);
                 }
                 break;
             case 6:
                 if (!follower.isBusy()) {
-
-
                     /* Grab Sample */
-                    startIntake();
+
+
+
+
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-
-
-                    follower.followPath(grabPickup22,.6, true);
+                    follower.followPath(backshots,1, false);
                     startIntake();
                     setPathState(7);
                 }
@@ -557,7 +565,7 @@ public class FarRedAutoILT extends OpMode {
 
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
-                    follower.followPath(scorePickup2,.8, true);
+                    follower.followPath(scorePickup3,1, true);
                     setPathState(8);
                 }
                 break;
@@ -566,6 +574,7 @@ public class FarRedAutoILT extends OpMode {
             case 8:
                 if (!follower.isBusy()) {
                     /* Score Preload */
+                    stopIntake();
                     startShooting3();
 
 
@@ -582,7 +591,7 @@ public class FarRedAutoILT extends OpMode {
                     /* Grab Sample */
                     startIntake();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(grabPickup3,.6, true);
+                    follower.followPath(grabPickup3,1, true);
 
 
                     setPathState(10);
@@ -597,21 +606,22 @@ public class FarRedAutoILT extends OpMode {
 
 
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
-                    follower.followPath(backshots,.8, false);
+                    follower.followPath(backshots2,1, false);
                     setPathState(11);
                 }
                 break;
             case 11:
                 /* This case checks the roboet's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if (!follower.isBusy()) {
-                    stopIntake();
+
                     /* Set the state to a Case we won't use or define, so it just stops running an new paths */
-                    follower.followPath(scorePickup3,.8, true);
+                    follower.followPath(scorePickup3,1, true);
                     setPathState(12);
                 }
                 break;
             case 12:
                 if(!follower.isBusy()){
+                    stopIntake();
                     startShooting3();
                     setPathState(13);
                 }

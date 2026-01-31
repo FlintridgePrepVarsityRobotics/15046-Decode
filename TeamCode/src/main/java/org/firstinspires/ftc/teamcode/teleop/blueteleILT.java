@@ -195,9 +195,7 @@ public class blueteleILT extends LinearOpMode {
                 setpointRPM = 1800;
                 flywheelon = true;
             }*/
-            if (gamepad1.dpad_down){
 
-            }
             if(gamepad1.x){
                 robot.intake.setVelocity(0);
             }
@@ -217,29 +215,6 @@ public class blueteleILT extends LinearOpMode {
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
 //IntakeCode:
-
-//            NormalizedRGBA normColor1 = color1.getNormalizedColors();
-//            NormalizedRGBA normColor2 = color2.getNormalizedColors();
-//            NormalizedRGBA normColor3 = color3.getNormalizedColors();
-
-//            telemetry.addData("Hue", JavaUtil.colorToHue(normColor1.toColor()));
-//            telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(normColor1.toColor()));
-//            telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(normColor1.toColor()));
-//            telemetry.addData("Alpha", "%.3f", normColor1.alpha);
-//
-//            telemetry.addData("Hue2", JavaUtil.colorToHue(normColor2.toColor()));
-//            telemetry.addData("Saturation2", "%.3f", JavaUtil.colorToSaturation(normColor2.toColor()));
-//            telemetry.addData("Value2", "%.3f", JavaUtil.colorToValue(normColor2.toColor()));
-//            telemetry.addData("Alpha2", "%.3f", normColor2.alpha);
-//
-//            telemetry.addData("Hue3", JavaUtil.colorToHue(normColor3.toColor()));
-//            telemetry.addData("Saturation3", "%.3f", JavaUtil.colorToSaturation(normColor3.toColor()));
-//            telemetry.addData("Value3", "%.3f", JavaUtil.colorToValue(normColor3.toColor()));
-//            telemetry.addData("Alpha3", "%.3f", normColor3.alpha);
-
-//            telemetry.addData("normal color 1",normColor1);
-//            telemetry.addData("normal color 2",normColor2);
-//            telemetry.addData("normal color 3",normColor3);
 
 
 
