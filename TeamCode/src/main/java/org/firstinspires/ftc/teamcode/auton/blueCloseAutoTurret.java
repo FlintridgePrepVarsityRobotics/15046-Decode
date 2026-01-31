@@ -8,6 +8,7 @@ import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
+import java.lang.Thread;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
@@ -107,9 +108,21 @@ public class blueCloseAutoTurret extends OpMode {
     }
 
     public void stopShooting() {
+        try {
+            Thread.sleep(200); // Sleep for 1 second
+        } catch (InterruptedException e) {
+            // Handle the exception
+            Thread.currentThread().interrupt(); // Restore the interrupt flag
+        }
+        robot.shootServo.setPosition(0.5);
+        try {
+            Thread.sleep(500); // Sleep for 1 second
+        } catch (InterruptedException e) {
+            // Handle the exception
+            Thread.currentThread().interrupt(); // Restore the interrupt flag
+        }
         robot.flywheel.setPower(0);
         robot.intake.setPower(0);
-        robot.shootServo.setPosition(0.5);
         shooting = false;
         feeding = false;
         finishedShooting = true;
@@ -147,7 +160,7 @@ public class blueCloseAutoTurret extends OpMode {
         boolean flywheelReady = (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM);
         boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
 
-        if (shotsFired >= 3) {
+        if (shotsFired >= 2) {
             stopShooting();
             return;
         }
@@ -222,25 +235,27 @@ public class blueCloseAutoTurret extends OpMode {
 
     public void buildPaths() {
         Path1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(20.050, 122.513), new Pose(54.328, 81.644)))
-                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(143))
+                .addPath(new BezierLine(new Pose(20.050, 122.513), new Pose(50.086956521739125, 98.60869565217389)))
+                .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(140))
                 .build();
+        // shoot preload
 
         Path2 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(54.328, 81.644), new Pose(44.028, 59.729)))
+                .addPath(new BezierLine(new Pose(50.086956521739125, 98.60869565217389), new Pose(44.028, 59.729)))
                 .setLinearHeadingInterpolation(Math.toRadians(143), Math.toRadians(180))
                 .build();
+// shoot to second spike
 
         Path3 = follower.pathBuilder()
                 .addPath(new BezierLine(new Pose(44.028, 59.729), new Pose(14.533, 59.475)))
                 .setTangentHeadingInterpolation()
                 .build();
-
+// intake second spike
         Path4 = follower.pathBuilder()
                 .addPath(new BezierLine(new Pose(14.533, 59.475), new Pose(23.912, 59.351)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
-
+// open gate
         Path5 = follower.pathBuilder()
                 .addPath(new BezierLine(new Pose(23.912, 67.6776), new Pose(18.208, 69.693)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
@@ -292,7 +307,7 @@ public class blueCloseAutoTurret extends OpMode {
             case 3:
                 if (!follower.isBusy()) {
                     startIntake();
-                    follower.followPath(Path3, true);
+                    follower.followPath(Path3, 0.5, true);
                     setPathState(4);
                 }
                 break;
