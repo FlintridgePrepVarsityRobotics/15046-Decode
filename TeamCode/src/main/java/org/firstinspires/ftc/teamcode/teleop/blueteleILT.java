@@ -33,9 +33,36 @@ import java.util.List;
 @Config
 @TeleOp(name = "blueILT teleop")
 public class blueteleILT extends LinearOpMode {
+    private boolean intakeServoRunning = false;
+    private double intakeServoStartTime = 0.0;
+
+    private static final double INTAKE_SERVO_RUN_TIME = 1.0;
+
+    //Eversons very good stuff
+    private boolean returningToScore = false;
+    private boolean slowingForIntake = false;
 
 
 
+
+    private ElapsedTime intakeTimer = new ElapsedTime();
+
+
+    public void runIntake() {
+        intakeServoRunning = true;
+        intakeServoStartTime = intakeTimer.time();
+        robot.intake.setPower(1.0);
+    }
+    //Everson very good stuff
+    public void updateIntakeServo() {
+        if (!intakeServoRunning) return;
+
+        double now = intakeTimer.time();
+        if (now - intakeServoStartTime >= INTAKE_SERVO_RUN_TIME) {
+            robot.intake.setPower(0.0);
+            intakeServoRunning = false;
+        }
+    }
     private NormalizedColorSensor test_color;
     private NormalizedColorSensor test_color2;
     private NormalizedColorSensor test_color3;
@@ -143,6 +170,7 @@ public class blueteleILT extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            telemetry.addData("elapsedtimer",intakeTimer.time());
 
 //DriveCode:
             double y = -gamepad1.left_stick_y;
@@ -244,31 +272,7 @@ public class blueteleILT extends LinearOpMode {
             telemetry.addData("Hue", JavaUtil.colorToHue(colors3.toColor()));
             telemetry.addData("Saturation", "%.3f", JavaUtil.colorToSaturation(colors3.toColor()));
             telemetry.addData("Value", "%.3f", JavaUtil.colorToValue(colors3.toColor()));
-//            int red1 = robot.sensor1.red();
-//            int green1 = robot.sensor1.green();
-//            int blue1 = robot.sensor1.blue();
-//
-//            int red2 = robot.sensor2.red();
-//            int green2 = robot.sensor2.green();
-//            int blue2 = robot.sensor2.blue();
-//
-//            int red3 = robot.sensor3.red();
-//            int green3 = robot.sensor3.green();
-//            int blue3 = robot.sensor3.blue();
-//
-//
-//            telemetry.addData("red3",robot.sensor3.red() );
-//            telemetry.addData("green3", robot.sensor3.green() );
-//            telemetry.addData("blue3",robot.sensor3.blue() );
-//
-//            telemetry.addData("red2",robot.sensor2.red() );
-//            telemetry.addData("green2", robot.sensor2.green() );
-//            telemetry.addData("blue2",robot.sensor2.blue() );
-//
-//            telemetry.addData("red1",robot.sensor1.red() );
-//            telemetry.addData("green1", robot.sensor1.green() );
-//            telemetry.addData("blue1",robot.sensor1.blue() );
-//
+
             if(((OpticalDistanceSensor) test_color).getLightDetected()>.05){
                 telemetry.addData("sensor1 is full twin","Everson is the goat");
                 sense1 = true;
@@ -289,30 +293,10 @@ public class blueteleILT extends LinearOpMode {
             }else{
                 sense3 = false;
             }
-//            telemetry.addData("sensor 2", hue2);
-//            telemetry.addData("sensor 3", hue3);
 
-//
-
-// --- SENSOR READING ---
-            // ----------------------------------------------------------------------
-// 1. SENSOR & COLOR READING
-//            Color.RGBToHSV((int) (robot.sensor1.red() * SCALE_FACTOR), (int) (robot.sensor1.green() * SCALE_FACTOR), (int) (robot.sensor1.blue() * SCALE_FACTOR), hsv1);
-//            Color.RGBToHSV((int) (robot.sensor2.red() * SCALE_FACTOR), (int) (robot.sensor2.green() * SCALE_FACTOR), (int) (robot.sensor2.blue() * SCALE_FACTOR), hsv2);
-//            Color.RGBToHSV((int) (robot.sensor3.red() * SCALE_FACTOR), (int) (robot.sensor3.green() * SCALE_FACTOR), (int) (robot.sensor3.blue() * SCALE_FACTOR), hsv3);
-//
-//            String s1 = classifyColor(hsv1);
-//            String s2 = classifyColor(hsv2);
-//            String s3 = classifyColor(hsv3);
-//
-//            boolean c1 = !s1.equals("EMPTY") && !s1.equals("UNKNOWN");
-//            boolean c2 = !s2.equals("EMPTY") && !s2.equals("UNKNOWN");
-//            boolean c3 = !s3.equals("EMPTY") && !s3.equals("UNKNOWN");
-//
-//            telemetry.addData("Intake", "[%s] [%s] [%s]", s1, s2, s3);
 
             if (sense1 && sense2 && sense3) {
-                if (colorTimer.seconds() > 0.3) {
+                if (colorTimer.seconds() > .7) {
                     intakeFull = true;
                     telemetry.addData("intake is full twin","Everson is the goat");
                 }
@@ -321,22 +305,16 @@ public class blueteleILT extends LinearOpMode {
                 intakeFull = false;
             }
 
-// 3. HANDLE DRIVER INPUT (TOGGLE A)
-//            boolean aNow = gamepad1.a;
-//            if (aNow && !lastAState) {
-//                isIntakeRunning = !isIntakeRunning;
-//            }
-//            lastAState = aNow;
+
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
+            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.6) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 800 / 60);
 //            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
-                    robot.shootServo.setPosition(0.5);
                     buttonTimer.reset();
                 } else {
-                    robot.intake.setPower(0);
+                    runIntake();
                     robot.shootServo.setPosition(.5);
                 }
             }
@@ -356,7 +334,7 @@ public class blueteleILT extends LinearOpMode {
                 telemetry.addData("Everson","is the goat 1");
                 if(allowUp) {
                     telemetry.addData("Everson","is the goat 2 ");
-                    robot.lift.setTargetPosition(-25);
+                    robot.lift.setTargetPosition(-15);
                     robot.lift.setPower(1);
                     robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
@@ -508,8 +486,11 @@ public class blueteleILT extends LinearOpMode {
             }
 //TrackingCodeEND
 
+
             telemetry.update();
+updateIntakeServo();
         }
+
 
         limelight.stop();
     }
