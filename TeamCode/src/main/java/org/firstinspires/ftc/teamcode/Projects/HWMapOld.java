@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-//kjnlkjn
+
 
 public class HWMapOld {
     public DcMotor fLeftWheel = null;  //expansion hub port0
