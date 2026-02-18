@@ -402,7 +402,7 @@ public class redteleILT extends LinearOpMode {
                     int apriltagID = fr.getFiducialId();
 
 
-//
+
 //                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
                     if(apriltagID == 24) {
 

@@ -62,6 +62,6 @@ public class Constants {
             .leftEncoderDirection(Encoder.REVERSE)
             .rightEncoderDirection(Encoder.FORWARD)
             .strafeEncoderDirection(Encoder.REVERSE);
-            ;
+
 }
 //Everson was here

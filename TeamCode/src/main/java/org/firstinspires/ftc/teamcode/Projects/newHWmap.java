@@ -24,7 +24,7 @@ public class newHWmap {
     public Servo shootServo = null;
     public ColorSensor sensor1 = null;
     public ColorSensor sensor2 = null;
-
+//
     public ColorSensor sensor3 = null;
 //    public DcMotor lift = null;
     public DcMotorEx intake = null;
