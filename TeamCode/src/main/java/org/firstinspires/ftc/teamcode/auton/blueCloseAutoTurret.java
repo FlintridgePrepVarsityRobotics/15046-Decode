@@ -16,10 +16,11 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
@@ -28,7 +29,61 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import java.util.List;
 
 @Autonomous(name = "BlueCloseAuto_NewPaths", group = "fruitauto")
-public class blueCloseAutoTurret extends OpMode {
+public class blueCloseAutoTurret extends LinearOpMode {
+    @Override
+    public void runOpMode() throws InterruptedException {
+        pathTimer = new Timer();
+        actionTimer = new Timer();
+        opmodeTimer = new Timer();
+        colorTimer = new ElapsedTime();
+        servoTimer=new ElapsedTime();
+        timeout = new ElapsedTime();
+
+        opmodeTimer.resetTimer();
+
+        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
+        robot.init(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(startPose);
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        limelight.start();
+
+        robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        panelsTelemetry.debug("Status", "Initialized");
+        panelsTelemetry.update(telemetry);
+
+        buildPaths();
+        follower.setStartingPose(startPose);
+        opmodeTimer.resetTimer();
+        setPathState(0);
+        waitForStart();
+        while (opModeIsActive()) {
+            follower.update();
+            autonomousPathUpdate();
+            updateTurret();
+
+            if (shooting) {
+                updateShooting();
+            }
+
+            telemetry.addData("path state", pathState);
+            telemetry.addData("shots fired", shotsFired);
+            telemetry.addData("Target RPM", currentFlywheelTargetRPM);
+            telemetry.update();
+        }
+
+
+
+
+        limelight.stop();
+
+    }
 
     public newHWmap robot = new newHWmap();
     private TelemetryManager panelsTelemetry;
@@ -424,57 +479,7 @@ double startFlywheelTargetRPM = 100;
         pathTimer.resetTimer();
     }
 
-    @Override
-    public void loop() {
-        follower.update();
-        autonomousPathUpdate();
-        updateTurret();
 
-        if (shooting) {
-            updateShooting();
-        }
 
-        telemetry.addData("path state", pathState);
-        telemetry.addData("shots fired", shotsFired);
-        telemetry.addData("Target RPM", currentFlywheelTargetRPM);
-        telemetry.update();
-    }
 
-    @Override
-    public void init() {
-        pathTimer = new Timer();
-        actionTimer = new Timer();
-        opmodeTimer = new Timer();
-        colorTimer = new ElapsedTime();
-        servoTimer=new ElapsedTime();
-        timeout = new ElapsedTime();
-
-        opmodeTimer.resetTimer();
-
-        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-
-        robot.init(hardwareMap);
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(startPose);
-
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
-        limelight.start();
-
-        robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        panelsTelemetry.debug("Status", "Initialized");
-        panelsTelemetry.update(telemetry);
-
-        buildPaths();
-        follower.setStartingPose(startPose);
-    }
-
-    @Override public void init_loop() {}
-    @Override public void start() { opmodeTimer.resetTimer(); setPathState(0); }
-    @Override public void stop() {
-        limelight.stop();
-    }
 }

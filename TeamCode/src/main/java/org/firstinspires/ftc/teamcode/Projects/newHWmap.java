@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 //justin going to wofo with ur mom
+//15 5/16
+//15 7/16
 
 public class newHWmap {
     public static final double SHOOTER_PUSH = 0.2;   // Position to push ball into flywheel / block intake

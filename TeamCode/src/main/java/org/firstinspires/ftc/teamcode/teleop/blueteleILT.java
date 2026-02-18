@@ -326,8 +326,7 @@ public class blueteleILT extends LinearOpMode {
             }
 
 // Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 50);
-
+            boolean isShooting = gamepad1.b;
             if (isShooting) {
                 robot.shootServo.setPosition(0);
                 robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
