@@ -97,6 +97,12 @@ public class redteleILT extends LinearOpMode {
         boolean sense2 = false;
         boolean sense3 = false;
 
+        boolean lastBState = false;
+        boolean lastXState = false;
+        boolean intakeAfterShot = false;
+
+        ElapsedTime intakeReleaseTimer = new ElapsedTime();
+
         boolean lastUp = false;
         boolean lastMid = false;
         boolean lastDown = false;
@@ -184,8 +190,23 @@ public class redteleILT extends LinearOpMode {
             if (gamepad1.dpad_down){
 
             }
-            if(gamepad1.x){
-                robot.intake.setVelocity(0);
+            if(gamepad1.b){
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+            }
+
+            boolean bNow = gamepad1.b;
+
+// 🔥 B was released
+            boolean xNow = gamepad1.x;
+            if (!xNow && lastXState) {
+                // 1️⃣ Close shoot servo
+
+
+                // 2️⃣ Start intake
+                robot.intake.setVelocity(-TICKS_PER_REV_INTAKE * 1100 / 60);
+
+                intakeReleaseTimer.reset();
+                intakeAfterShot = true;
             }
             double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
@@ -266,15 +287,8 @@ public class redteleILT extends LinearOpMode {
             telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
             telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
 
-            if (sense1 && sense2 && sense3) {
-                if (colorTimer.seconds() > 0.3) {
-                    intakeFull = true;
-                    telemetry.addData("Status", "intakefull");
-                }
-            } else {
-                colorTimer.reset();
-                intakeFull = false;
-            }
+
+
 
 // 3. HANDLE DRIVER INPUT (TOGGLE A)
 //            boolean aNow = gamepad1.a;
@@ -285,15 +299,29 @@ public class redteleILT extends LinearOpMode {
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > .5) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
+                if (sense1 && sense2 && sense3) {
+                    if (colorTimer.seconds() > 0.3) {
+                        intakeFull = true;
+                        telemetry.addData("Status", "intakefull");
+                    }
+                } else {
+                    colorTimer.reset();
+                    intakeFull = false;
+                }
+                if (intakeFull && intakeAfterShot) {
+                    robot.intake.setVelocity(0);
+                    intakeAfterShot = false;
+                }
                 if (isIntakeRunning) {
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
 //            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
                     robot.shootServo.setPosition(0.5);
                     buttonTimer.reset();
-                } else {
+                }else{
                     robot.intake.setPower(0);
                     robot.shootServo.setPosition(.5);
                 }
+
             }
 
 
@@ -301,34 +329,35 @@ public class redteleILT extends LinearOpMode {
             if (intakeFull && isIntakeRunning) {
                 isIntakeRunning = false;
             }
-
+            if (!intakeFull && !isIntakeRunning&&gamepad1.a) {
+                isIntakeRunning = true;
+            }
 // Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 50);
-
-            if (isShooting) {
-                robot.shootServo.setPosition(0);
+            if(gamepad1.b){
                 robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
-                telemetry.addData("Everson","is the goat 1");
-                if(allowUp) {
-                    telemetry.addData("Everson","is the goat 2 ");
-                    robot.lift.setTargetPosition(-55);
-                    robot.lift.setPower(1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-//
-
-                filled = false;
-
             }
-            else if (isIntakeRunning) {
+            lastBState = bNow;
+
+// 🔥 B was released
+            if (!bNow && lastBState) {
+                // 1️⃣ Close shoot servo
                 robot.shootServo.setPosition(0.5);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+
+                // 2️⃣ Start intake
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+
+                intakeReleaseTimer.reset();
+                intakeAfterShot = true;
             }
-            else {
-                robot.intake.setPower(0);
-                robot.lift.setTargetPosition(1);
-                robot.lift.setPower(-1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            lastXState = xNow;
+
+            if (intakeAfterShot) {
+                if (intakeReleaseTimer.seconds() >= 1.0) {
+                    robot.intake.setVelocity(0);
+
+                    intakeAfterShot = false;
+                }
             }
 
             if (intakeFull) filled = true;

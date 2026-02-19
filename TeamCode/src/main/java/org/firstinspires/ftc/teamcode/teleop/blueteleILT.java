@@ -48,11 +48,7 @@ public class blueteleILT extends LinearOpMode {
     private ElapsedTime intakeTimer = new ElapsedTime();
 
 
-    public void runIntake() {
-        intakeServoRunning = true;
-        intakeServoStartTime = intakeTimer.time();
-        robot.intake.setPower(1.0);
-    }
+
     //Everson very good stuff
     public void updateIntakeServo() {
         if (!intakeServoRunning) return;
@@ -138,6 +134,12 @@ public class blueteleILT extends LinearOpMode {
         boolean sense2 = false;
         boolean sense3 = false;
 
+        boolean lastBState = false;
+        boolean intakeAfterShot = false;
+
+        ElapsedTime intakeReleaseTimer = new ElapsedTime();
+
+
         boolean lastUp = false;
         boolean lastMid = false;
         boolean lastDown = false;
@@ -208,24 +210,10 @@ public class blueteleILT extends LinearOpMode {
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
-//            boolean highSpeed = gamepad1.dpad_right;
-//            boolean midSpeed = gamepad1.dpad_up;
-//            boolean lowSpeed = gamepad1.dpad_left;
 
-
-
-//            if (highSpeed && !lastUp){
-//                setpointRPM = 2400;
-//                flywheelon = true;
-//            }
-
-         /*   if (lowSpeed && !lastDown){
-                setpointRPM = 1800;
-                flywheelon = true;
-            }*/
 
             if(gamepad1.x){
-                robot.intake.setVelocity(0);
+                robot.intake.setVelocity(-0.5);
             }
             double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
@@ -310,13 +298,16 @@ public class blueteleILT extends LinearOpMode {
             if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.6) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
+                    robot.shootServo.setPosition(0.5);
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 800 / 60);
 //            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
                     buttonTimer.reset();
                 } else {
-                    runIntake();
-                    robot.shootServo.setPosition(.5);
+                    robot.intake.setVelocity(0);
+                    robot.shootServo.setPosition(0);
                 }
+            }else{
+                robot.intake.setVelocity(0);
             }
 
 
@@ -326,32 +317,62 @@ public class blueteleILT extends LinearOpMode {
             }
 
 // Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b;
-            if (isShooting) {
-                robot.shootServo.setPosition(0);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
-                telemetry.addData("Everson","is the goat 1");
-                if(allowUp) {
-                    telemetry.addData("Everson","is the goat 2 ");
-                    robot.lift.setTargetPosition(-15);
-                    robot.lift.setPower(1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-//
+//            if(gamepad1.b){
+//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+//            }
 
-                filled = false;
+            boolean bNow = gamepad1.b;
 
-            }
-            else if (isIntakeRunning) {
+// 🔥 B was released
+            if (!bNow && lastBState) {
+                // 1️⃣ Close shoot servo
                 robot.shootServo.setPosition(0.5);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+
+                // 2️⃣ Start intake
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+
+                intakeReleaseTimer.reset();
+                intakeAfterShot = true;
             }
-            else {
-                robot.intake.setPower(0);
-                robot.lift.setTargetPosition(1);
-                robot.lift.setPower(-1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            lastBState = bNow;
+
+            if (intakeAfterShot) {
+                if (intakeReleaseTimer.seconds() >= 1.0) {
+                    robot.intake.setVelocity(0);
+
+                    intakeAfterShot = false;
+                }
             }
+
+
+
+//            boolean isShooting = gamepad1.b;
+//            if (isShooting) {
+//                robot.shootServo.setPosition(0);
+//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+//                telemetry.addData("Everson","is the goat 1");
+//                if(allowUp) {
+//                    telemetry.addData("Everson","is the goat 2 ");
+//                    robot.lift.setTargetPosition(-15);
+//                    robot.lift.setPower(1);
+//                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                }
+////
+//
+//                filled = false;
+//
+//            }
+//            else if (isIntakeRunning) {
+//                robot.shootServo.setPosition(0.5);
+//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+//            }
+//            else {
+//                robot.intake.setPower(0);
+//                robot.lift.setTargetPosition(1);
+//                robot.lift.setPower(-1);
+//                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            }
 
             if (intakeFull) filled = true;
             // telemetry.addData("System Full?", filled);
@@ -394,20 +415,20 @@ public class blueteleILT extends LinearOpMode {
                 }
 
                 // telemetry.addData("balls are in?", filled);
-                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
-                    robot.shootServo.setPosition(0);
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
-                    if(allowUp) {
-                        telemetry.addData("Everson","is the goat 3 ");
-                        robot.lift.setTargetPosition(-55);
-                        robot.lift.setPower(1);
-                        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    }
-                }else{
-                    robot.lift.setTargetPosition(1);
-                    robot.lift.setPower(-1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
+//                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
+//                    robot.shootServo.setPosition(0);
+//                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
+//                    if(allowUp) {
+//                        telemetry.addData("Everson","is the goat 3 ");
+//                        robot.lift.setTargetPosition(-55);
+//                        robot.lift.setPower(1);
+//                        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                    }
+//                }else{
+//                    robot.lift.setTargetPosition(1);
+//                    robot.lift.setPower(-1);
+//                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                }
 
                 //shootEND
 
