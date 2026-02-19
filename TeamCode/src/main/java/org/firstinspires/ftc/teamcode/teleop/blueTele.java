@@ -63,7 +63,7 @@ public class blueTele extends LinearOpMode {
                 .setCamera(hardwareMap.get(WebcamName.class, "webcam"))
                 .setCameraResolution(new Size(640, 480))
                 .build();
-//
+
         int frameWidth = 640;
         int centerX = frameWidth / 2;
         int tolerance = 50; // pixels within which the tag is centered
