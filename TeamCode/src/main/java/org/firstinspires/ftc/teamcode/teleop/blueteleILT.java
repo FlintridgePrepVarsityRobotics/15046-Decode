@@ -284,7 +284,7 @@ public class blueteleILT extends LinearOpMode {
 
 
             if (sense1 && sense2 && sense3) {
-                if (colorTimer.seconds() > .7) {
+                if (colorTimer.seconds() > 0.3) {
                     intakeFull = true;
                     telemetry.addData("intake is full twin","Everson is the goat");
                 }
@@ -293,21 +293,24 @@ public class blueteleILT extends LinearOpMode {
                 intakeFull = false;
             }
 
-
+// 3. HANDLE DRIVER INPUT (TOGGLE A)
+//            boolean aNow = gamepad1.a;
+//            if (aNow && !lastAState) {
+//                isIntakeRunning = !isIntakeRunning;
+//            }
+//            lastAState = aNow;
             boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.6) {    // 500*ticksperrev is #ofrevolutions we need per min
+            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.shootServo.setPosition(0.5);
                     robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 800 / 60);
 //            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
+                    robot.shootServo.setPosition(0.5);
                     buttonTimer.reset();
                 } else {
-                    robot.intake.setVelocity(0);
-                    robot.shootServo.setPosition(0);
+                    robot.intake.setPower(0);
+                    robot.shootServo.setPosition(.5);
                 }
-            }else{
-                robot.intake.setVelocity(0);
             }
 
 
@@ -315,6 +318,7 @@ public class blueteleILT extends LinearOpMode {
             if (intakeFull && isIntakeRunning) {
                 isIntakeRunning = false;
             }
+
 
 // Priority 1: SHOOTING (Button B)
 //            if(gamepad1.b){

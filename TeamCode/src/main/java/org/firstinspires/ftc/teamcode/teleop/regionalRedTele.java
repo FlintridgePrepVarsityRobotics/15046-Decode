@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode.teleop;
 
 import static java.lang.Math.abs;
@@ -30,8 +31,8 @@ import java.util.List;
 
 
 @Config
-@TeleOp(name = "redILT teleop")
-public class redteleILT extends LinearOpMode {
+@TeleOp(name = "red Reg teleop")
+public class regionalRedTele extends LinearOpMode {
     PIDController turretpid = new PIDController(TP, TI, TD);
     public static double TP = 0.01;
     public static double TI = 0.00015;
@@ -51,8 +52,6 @@ public class redteleILT extends LinearOpMode {
     public static double kA = 0.0;
 
 
-
-
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
     //LauncherPIDEND
@@ -62,7 +61,7 @@ public class redteleILT extends LinearOpMode {
     private Limelight3A limelight;
     public newHWmap robot = new newHWmap();
 
-    final double TICKS_PER_REV = 294.0;      // 28*10.5 (3:1 and 4:1)
+    final double TICKS_PER_REV = 294.0;      // GoBilda 5202/5203
     final double GEAR_RATIO = 0.3953;        // 34 / 86
     final double MAX_DEGREES = 70;
 
@@ -71,6 +70,13 @@ public class redteleILT extends LinearOpMode {
     final double TICKS_PER_REV_INTAKE = 101.08;
 
     double targetTicksPerSec = 0;
+    final double PROX_DIhST1 = 7.5;
+    final double PROX_DIhST2 = 6.0;
+    final double PROX_DIhST3 = 5.5;
+
+
+
+
 
 
     @Override
@@ -96,12 +102,6 @@ public class redteleILT extends LinearOpMode {
         boolean sense2 = false;
         boolean sense3 = false;
 
-        boolean lastBState = false;
-        boolean lastXState = false;
-        boolean intakeAfterShot = false;
-
-        ElapsedTime intakeReleaseTimer = new ElapsedTime();
-
         boolean lastUp = false;
         boolean lastMid = false;
         boolean lastDown = false;
@@ -113,23 +113,22 @@ public class redteleILT extends LinearOpMode {
 
         robot.init(hardwareMap);
 
+
+//setting modes, information on turret, limelight, telemetry
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
-        telemetry.setMsTransmissionInterval(5);
-
-
         limelight.pipelineSwitch(0);
+        limelight.start();
 
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
          */
-        limelight.start();
 
 //        telemetry.addData(">", "Robot Ready.  Press Play.");
+        telemetry.setMsTransmissionInterval(5);
         telemetry.update();
         waitForStart();
 
@@ -140,6 +139,9 @@ public class redteleILT extends LinearOpMode {
             double x = gamepad1.left_stick_x * -1.1;
             double rx = gamepad1.right_stick_x;
             double speed = 1;
+
+            double measuredTicksPerSec = robot.flywheel.getVelocity();
+            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -153,59 +155,80 @@ public class redteleILT extends LinearOpMode {
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 //DriveCodeEND
+
+
+
 //liftCode:
-//            if(gamepad1.right_bumper){
-//                allowUp = !allowUp;
-//            }
-//            telemetry.addData("toggle lift:",allowUp);
-//
+
             if(gamepad1.right_bumper){
                 allowUp = true;
 
             }
             if(gamepad1.left_bumper){
                 allowUp = false;
+            }
+            if(gamepad1.right_trigger> .5 && gamepad1.left_trigger>.5){
+
+                robot.lift.setTargetPosition(-70);
+                robot.lift.setPower(1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             }
+            //end lift code
+
+            //intake
+            if(gamepad1.x){
+                robot.intake.setVelocity(0);
+            }
+            boolean aNow = gamepad1.a;
+            if (aNow && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
+                isIntakeRunning = !isIntakeRunning;
+                if (isIntakeRunning) {
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 950 / 60);
+                    robot.shootServo.setPosition(0.5);
+                    buttonTimer.reset();
+                } else {
+                    robot.intake.setVelocity(0);
+                    robot.shootServo.setPosition(.5);
+                }
+                buttonTimer.reset();
+            }
+
+// 4. AUTO-STOP LOGIC
+            if (intakeFull && isIntakeRunning) {
+                isIntakeRunning = false;
+                robot.intake.setVelocity(0);
+            }
+
+// Priority 1: SHOOTING (Button B)
+            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 50);
+
+            if (isShooting) {
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+                telemetry.addData("Everson","is the goat 1");
+                if(allowUp) {
+                    telemetry.addData("Everson","is the goat 2 ");
+                    robot.lift.setTargetPosition(-55);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }else if(isIntakeRunning = false && !gamepad1.b) {
+                robot.intake.setVelocity(0);
+                robot.shootServo.setPosition(.5);
+                robot.lift.setTargetPosition(1);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+            else {
+                robot.lift.setTargetPosition(1);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+
 //FlywheelCode:
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-
-//            boolean highSpeed = gamepad1.dpad_right;
-//            boolean midSpeed = gamepad1.dpad_up;
-//            boolean lowSpeed = gamepad1.dpad_left;
-
-
-
-//            if (highSpeed && !lastUp){
-//                setpointRPM = 2400;
-//                flywheelon = true;
-//            }
-
-        /*   if (lowSpeed && !lastDown){
-               setpointRPM = 1800;
-               flywheelon = true;
-           }*/
-            if (gamepad1.dpad_down){
-
-            }
-
-//            boolean xNow = gamepad1.x;
-//            if (!xNow && lastXState) {
-//                // 1️⃣ Close shoot servo
-//
-//
-//                // 2️⃣ Start intake
-//                robot.intake.setVelocity(-TICKS_PER_REV_INTAKE * 950 / 60);
-//
-//                intakeReleaseTimer.reset();
-//                intakeAfterShot = true;
-//            }
-            double measuredTicksPerSec = robot.flywheel.getVelocity();
-            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-//            telemetry.addData("setpointRPM", (setpointRPM));
-//            telemetry.addData("measuredRPM", measuredRPM);
-//            telemetry.update();
 
             double ffOutput = feedforward.calculate(targetTicksPerSec);
 
@@ -216,29 +239,6 @@ public class redteleILT extends LinearOpMode {
 
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
-//IntakeCode:
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-//                    hsv1
-//            );
-//
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-//                    hsv2
-//            );
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-//                    hsv3
-//            );
-            float hue1 = hsv1[0];
-            float hue2 = hsv2[0];
-            float hue3 = hsv3[0];
 
 // --- SENSOR READING ---
             // ----------------------------------------------------------------------
@@ -252,79 +252,18 @@ public class redteleILT extends LinearOpMode {
 
             telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
             telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
-            telemetry.addData("dist1", dist1);
-            telemetry.addData("dist2", dist2);
-            telemetry.addData("dist3", dist3);
-            telemetry.addData("sense1", sense1);
-            telemetry.addData("sense2", sense2);
-            telemetry.addData("sense3", sense3);
-
-
-
 
             if (sense1 && sense2 && sense3) {
                 if (colorTimer.seconds() > 0.3) {
                     intakeFull = true;
-                    telemetry.addData("intake is full twin","Everson is the goat");
+                    telemetry.addData("Status", "intakefull");
                 }
             } else {
                 colorTimer.reset();
                 intakeFull = false;
             }
+//liftEND
 
-            boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.5) {    // 500*ticksperrev is #ofrevolutions we need per min
-                isIntakeRunning = !isIntakeRunning;
-                if (isIntakeRunning) {
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 950 / 60);
-                    robot.shootServo.setPosition(0.5);
-                    buttonTimer.reset();
-                } else {
-                    robot.intake.setPower(0);
-                    robot.shootServo.setPosition(.5);
-                }
-                buttonTimer.reset();
-            }
-
-
-// 4. AUTO-STOP LOGIC
-            if (intakeFull && isIntakeRunning) {
-                isIntakeRunning = false;
-                robot.intake.setPower(0);
-            }
-
-//            if(gamepad1.b){
-//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
-//            }
-
-//            lastBState = bNow;
-//
-//// 🔥 B was released
-//            if (!bNow && lastBState) {
-//                // 1️⃣ Close shoot servo
-//                robot.shootServo.setPosition(0.5);
-//
-//                // 2️⃣ Start intake
-//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
-//
-//                intakeReleaseTimer.reset();
-//                intakeAfterShot = true;
-//            }
-
-//            lastXState = xNow;
-
-            if (intakeAfterShot) {
-                if (intakeReleaseTimer.seconds() >= 1.0) {
-                    robot.intake.setVelocity(0);
-
-                    intakeAfterShot = false;
-                }
-            }
-
-            if (intakeFull) filled = true;
-            // telemetry.addData("System Full?", filled);
-            lastAState = aNow;
-//IntakeCodeEND
 //TrackingCode:
             LLStatus status = limelight.getStatus();
 
@@ -358,26 +297,29 @@ public class redteleILT extends LinearOpMode {
                 // telemetry.addData("balls are in?", filled);
                 if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
                     robot.shootServo.setPosition(0);
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1450/60);
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
                     if(allowUp) {
                         telemetry.addData("Everson","is the goat 3 ");
                         robot.lift.setTargetPosition(-55);
                         robot.lift.setPower(1);
                         robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     }
-                }else if(isIntakeRunning = false){
-                    robot.intake.setPower(0);
-                    robot.shootServo.setPosition(.5);
-                } else{
+                }else{
                     robot.lift.setTargetPosition(1);
                     robot.lift.setPower(-1);
                     robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
 
                 //shootEND
+
+                // Access fiducial results
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     int apriltagID = fr.getFiducialId();
+
+
+
+//                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
                     if(apriltagID == 24) {
 
                         double targetX = fr.getTargetXDegrees();
@@ -428,8 +370,6 @@ public class redteleILT extends LinearOpMode {
                     robot.turret.setPower(0);
                 }
 
-//                telemetry.addData("Mode", "Manual Reset");
-//                telemetry.addData("Angle", currentDegrees);
             }
             else {
                 // telemetry.addData("Limelight", "No data available");
@@ -478,5 +418,4 @@ public class redteleILT extends LinearOpMode {
 
         return "UNKNOWN";
     }
-
 }
