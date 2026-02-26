@@ -43,36 +43,18 @@ public class blueteleILT extends LinearOpMode {
     private boolean slowingForIntake = false;
 
 
-
-
-    private ElapsedTime intakeTimer = new ElapsedTime();
-
-
-    public void runIntake() {
-        intakeServoRunning = true;
-        intakeServoStartTime = intakeTimer.time();
-        robot.intake.setPower(1.0);
-    }
-    //Everson very good stuff
-    public void updateIntakeServo() {
-        if (!intakeServoRunning) return;
-
-        double now = intakeTimer.time();
-        if (now - intakeServoStartTime >= INTAKE_SERVO_RUN_TIME) {
-            robot.intake.setPower(0.0);
-            intakeServoRunning = false;
-        }
-    }
     private NormalizedColorSensor test_color;
     private NormalizedColorSensor test_color2;
     private NormalizedColorSensor test_color3;
+
+
     PIDController turretpid = new PIDController(TP, TI, TD);
     public static double TP = 0.01;
     public static double TI = 0.00015;
     public static double TD = 0.00000005;
 
-    public static double kP = 0.002;
 
+    public static double kP = 0.002;
     public static double kI = 0.0;
     public static double kD = 0.00025;
     public static double kF = 0.00042;
@@ -84,9 +66,6 @@ public class blueteleILT extends LinearOpMode {
     public static double kV = 0.0;
     public static double kA = 0.0;
 
-    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
-    SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-    //LauncherPIDEND
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
 
@@ -104,10 +83,33 @@ public class blueteleILT extends LinearOpMode {
     double targetTicksPerSec = 0;
 
 
+    private ElapsedTime intakeTimer = new ElapsedTime();
+
+    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+
+    public void runIntake() {
+        intakeServoRunning = true;
+        intakeServoStartTime = intakeTimer.time();
+        robot.intake.setPower(1.0);
+    }
+    //Everson very good stuff
+    public void updateIntakeServo() {
+        if (!intakeServoRunning) return;
+
+        double now = intakeTimer.time();
+        if (now - intakeServoStartTime >= INTAKE_SERVO_RUN_TIME) {
+            robot.intake.setPower(0.0);
+            intakeServoRunning = false;
+        }
+    }
+    //LauncherPIDEND
+
+
     @Override
     public void runOpMode() throws InterruptedException
     {
-
 //variables:
         boolean centered  = false;
         boolean lastAState = false;
@@ -146,31 +148,44 @@ public class blueteleILT extends LinearOpMode {
         boolean flywheelon = false;
         int ticksPerRev = 28;
         boolean filled = false;
+        //Variables end
 
         robot.init(hardwareMap);
-
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        limelight.start();
 
         telemetry.setMsTransmissionInterval(5);
-
-
-        limelight.pipelineSwitch(0);
+        telemetry.update();
 
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
          */
-        limelight.start();
 
 //        telemetry.addData(">", "Robot Ready.  Press Play.");
-        telemetry.update();
         waitForStart();
 
         while (opModeIsActive()) {
             telemetry.addData("elapsedtimer",intakeTimer.time());
+
+            double measuredTicksPerSec = robot.flywheel.getVelocity();
+            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
+
+            double ffOutput = feedforward.calculate(targetTicksPerSec);
+
+            double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+
+            double combinedOutput = ffOutput + pidOutput;
+            combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
+
+            pidf.setPIDF(kP, kI, kD, kF);
+            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+            robot.flywheel.setPower(combinedOutput);
 
 //DriveCode:
             double y = -gamepad1.left_stick_y;
@@ -189,63 +204,104 @@ public class blueteleILT extends LinearOpMode {
             robot.bLeftWheel.setPower(backLeftPower * speed);
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
-//DriveCodeEND
-//liftCode:
-//            if(gamepad1.right_bumper){
-//                allowUp = !allowUp;
-//            }
-//            telemetry.addData("toggle lift:",allowUp);
-//
+//DriveCode End:
+
+//lift start
             if(gamepad1.right_bumper){
                 allowUp = true;
 
             }
             if(gamepad1.left_bumper){
                 allowUp = false;
+            }
+
+            if(gamepad1.right_trigger> .5 && gamepad1.left_trigger>.5){
+
+                robot.lift.setTargetPosition(-70);
+                robot.lift.setPower(1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             }
-//FlywheelCode:
-            pidf.setPIDF(kP, kI, kD, kF);
-            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+//lift end
 
-//            boolean highSpeed = gamepad1.dpad_right;
-//            boolean midSpeed = gamepad1.dpad_up;
-//            boolean lowSpeed = gamepad1.dpad_left;
+//Intake Start
+            if (sense1 && sense2 && sense3) {
+                if (colorTimer.seconds() > .7) {
+                    intakeFull = true;
+                    telemetry.addData("intake is full twin","Everson is the goat");
+                }
+            } else {
+                colorTimer.reset();
+                intakeFull = false;
+            }
 
 
+            boolean aNow = gamepad1.a;
+            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.6) {    // 500*ticksperrev is #ofrevolutions we need per min
+                isIntakeRunning = !isIntakeRunning;
+                if (isIntakeRunning) {
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 800 / 60);
+//            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
+                    buttonTimer.reset();
+                } else {
+                    runIntake();
+                    robot.shootServo.setPosition(.5);
+                }
+            }
 
-//            if (highSpeed && !lastUp){
-//                setpointRPM = 2400;
-//                flywheelon = true;
-//            }
 
-         /*   if (lowSpeed && !lastDown){
-                setpointRPM = 1800;
-                flywheelon = true;
-            }*/
+// 4. AUTO-STOP LOGIC
+            if (intakeFull && isIntakeRunning) {
+                isIntakeRunning = false;
+            }
 
             if(gamepad1.x){
                 robot.intake.setVelocity(0);
             }
-            double measuredTicksPerSec = robot.flywheel.getVelocity();
-            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-//            telemetry.addData("setpointRPM", (setpointRPM));
-//            telemetry.addData("measuredRPM", measuredRPM);
-//            telemetry.update();
+//intake/lift
+            if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
+                if(allowUp) {
+                    telemetry.addData("Everson","is the goat 3 ");
+                    robot.lift.setTargetPosition(-55);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }else{
+                robot.lift.setTargetPosition(1);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+            //intake end
 
-            double ffOutput = feedforward.calculate(targetTicksPerSec);
-
-            double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
-
-            double combinedOutput = ffOutput + pidOutput;
-            combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
-
-            robot.flywheel.setPower(combinedOutput);
-//LauncherCodeEND
-//IntakeCode:
 
 
-
+            // Priority 1: SHOOTING (Button B)
+            boolean isShooting = gamepad1.b;
+            if (isShooting) {
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
+                telemetry.addData("Everson","is the goat 1");
+                if(allowUp) {
+                    telemetry.addData("Everson","is the goat 2 ");
+                    robot.lift.setTargetPosition(-15);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+                filled = false;
+            }
+            else if (isIntakeRunning) {
+                robot.shootServo.setPosition(0.5);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
+            }
+            else {
+                robot.intake.setPower(0);
+                robot.lift.setTargetPosition(1);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            }
+//color sensing
             NormalizedRGBA colors = test_color.getNormalizedColors();
             telemetry.addData("Light Detected1", ((OpticalDistanceSensor) test_color).getLightDetected());
             telemetry.addData("Red", "%.3f", colors.red);
@@ -293,78 +349,11 @@ public class blueteleILT extends LinearOpMode {
             }else{
                 sense3 = false;
             }
-
-
-            if (sense1 && sense2 && sense3) {
-                if (colorTimer.seconds() > .7) {
-                    intakeFull = true;
-                    telemetry.addData("intake is full twin","Everson is the goat");
-                }
-            } else {
-                colorTimer.reset();
-                intakeFull = false;
-            }
-
-
-            boolean aNow = gamepad1.a;
-            if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > 0.6) {    // 500*ticksperrev is #ofrevolutions we need per min
-                isIntakeRunning = !isIntakeRunning;
-                if (isIntakeRunning) {
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 800 / 60);
-//            robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60); //test code
-                    buttonTimer.reset();
-                } else {
-                    runIntake();
-                    robot.shootServo.setPosition(.5);
-                }
-            }
-
-
-// 4. AUTO-STOP LOGIC
-            if (intakeFull && isIntakeRunning) {
-                isIntakeRunning = false;
-            }
-
-// Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b;
-            if (isShooting) {
-                robot.shootServo.setPosition(0);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
-                telemetry.addData("Everson","is the goat 1");
-                if(allowUp) {
-                    telemetry.addData("Everson","is the goat 2 ");
-                    robot.lift.setTargetPosition(-15);
-                    robot.lift.setPower(1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-//
-
-                filled = false;
-
-            }
-            else if (isIntakeRunning) {
-                robot.shootServo.setPosition(0.5);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 500 / 60);
-            }
-            else {
-                robot.intake.setPower(0);
-                robot.lift.setTargetPosition(1);
-                robot.lift.setPower(-1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
+//color sensing end
 
             if (intakeFull) filled = true;
-            // telemetry.addData("System Full?", filled);
-//IntakeCodeEND
-//lift:
-            if(gamepad1.right_trigger> .5 && gamepad1.left_trigger>.5){
 
-                robot.lift.setTargetPosition(-70);
-                robot.lift.setPower(1);
-                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            }
-//liftEND
 //TrackingCode:
             LLStatus status = limelight.getStatus();
 
@@ -382,8 +371,6 @@ public class blueteleILT extends LinearOpMode {
 
                 //shootCODE
 
-
-
                 boolean midSpeed = gamepad1.dpad_up;
                 if (midSpeed){
                     targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
@@ -393,41 +380,12 @@ public class blueteleILT extends LinearOpMode {
                     targetTicksPerSec = 0;
                 }
 
-                // telemetry.addData("balls are in?", filled);
-                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
-                    robot.shootServo.setPosition(0);
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1100/60);
-                    if(allowUp) {
-                        telemetry.addData("Everson","is the goat 3 ");
-                        robot.lift.setTargetPosition(-55);
-                        robot.lift.setPower(1);
-                        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    }
-                }else{
-                    robot.lift.setTargetPosition(1);
-                    robot.lift.setPower(-1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-
-
-                //shootEND
-
-//                telemetry.addData("distance", distance);
-//                telemetry.addData("tx", result.getTx());
-////                telemetry.addData("txnc", result.getTxNC());
-////                telemetry.addData("ty", result.getTy());
-////                telemetry.addData("tync", result.getTyNC());
-//                telemetry.addData("target area", result.getTa());
-//
-//                telemetry.addData("Botpose", botpose.toString());
                 // Access fiducial results
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     int apriltagID = fr.getFiducialId();
 
-//
-//                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                    if(apriltagID == 20) {
+                   if(apriltagID == 20) {
 
                         double targetX = fr.getTargetXDegrees();
                         double turretpidOutput = turretpid.calculate(0, targetX);
@@ -502,7 +460,6 @@ updateIntakeServo();
 
     public double getCombinedOutput (double setpointRPM){
         int ticksPerRev = 28;
-        //  double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
         double measuredTicksPerSec = robot.flywheel.getVelocity();
         double ffOutput = feedforward.calculate(targetTicksPerSec);
         double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);

@@ -51,8 +51,6 @@ public class redteleILT extends LinearOpMode {
     public static double kA = 0.0;
 
 
-
-
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
     //LauncherPIDEND
@@ -72,6 +70,10 @@ public class redteleILT extends LinearOpMode {
 
     double targetTicksPerSec = 0;
     final double PROX_DIhST = 8.0;
+
+
+
+
 
 
     @Override
@@ -108,23 +110,22 @@ public class redteleILT extends LinearOpMode {
 
         robot.init(hardwareMap);
 
+
+//setting modes, information on turret, limelight, telemetry
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
-        telemetry.setMsTransmissionInterval(5);
-
-
         limelight.pipelineSwitch(0);
+        limelight.start();
 
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
          */
-        limelight.start();
 
 //        telemetry.addData(">", "Robot Ready.  Press Play.");
+        telemetry.setMsTransmissionInterval(5);
         telemetry.update();
         waitForStart();
 
@@ -135,6 +136,9 @@ public class redteleILT extends LinearOpMode {
             double x = gamepad1.left_stick_x * -1.1;
             double rx = gamepad1.right_stick_x;
             double speed = 1;
+
+            double measuredTicksPerSec = robot.flywheel.getVelocity();
+            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
 
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
@@ -148,140 +152,31 @@ public class redteleILT extends LinearOpMode {
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 //DriveCodeEND
+
+
+
 //liftCode:
-//            if(gamepad1.right_bumper){
-//                allowUp = !allowUp;
-//            }
-//            telemetry.addData("toggle lift:",allowUp);
-//
+
             if(gamepad1.right_bumper){
                 allowUp = true;
 
             }
             if(gamepad1.left_bumper){
                 allowUp = false;
+            }
+            if(gamepad1.right_trigger> .5 && gamepad1.left_trigger>.5){
+
+                robot.lift.setTargetPosition(-70);
+                robot.lift.setPower(1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             }
-//FlywheelCode:
-            pidf.setPIDF(kP, kI, kD, kF);
-            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+            //end lift code
 
-//            boolean highSpeed = gamepad1.dpad_right;
-//            boolean midSpeed = gamepad1.dpad_up;
-//            boolean lowSpeed = gamepad1.dpad_left;
-
-
-
-//            if (highSpeed && !lastUp){
-//                setpointRPM = 2400;
-//                flywheelon = true;
-//            }
-
-        /*   if (lowSpeed && !lastDown){
-               setpointRPM = 1800;
-               flywheelon = true;
-           }*/
-            if (gamepad1.dpad_down){
-
-            }
+            //intake
             if(gamepad1.x){
                 robot.intake.setVelocity(0);
             }
-            double measuredTicksPerSec = robot.flywheel.getVelocity();
-            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-//            telemetry.addData("setpointRPM", (setpointRPM));
-//            telemetry.addData("measuredRPM", measuredRPM);
-//            telemetry.update();
-
-            double ffOutput = feedforward.calculate(targetTicksPerSec);
-
-            double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
-
-            double combinedOutput = ffOutput + pidOutput;
-            combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
-
-            robot.flywheel.setPower(combinedOutput);
-//LauncherCodeEND
-//IntakeCode:
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-//                    hsv1
-//            );
-//
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-//                    hsv2
-//            );
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-//                    hsv3
-//            );
-            float hue1 = hsv1[0];
-            float hue2 = hsv2[0];
-            float hue3 = hsv3[0];
-//            telemetry.addData("sensor 1", hue1);
-//            telemetry.addData("red",robot.sensor3.red() );
-//            telemetry.addData("green", robot.sensor3.green() );
-//            telemetry.addData("blue",robot.sensor3.blue() );
-//
-//            if(robot.sensor3.green()>64 || robot.sensor3.blue()>68){
-//                telemetry.addData("sensor3 is full twin","Everson is the goat");
-//                sense3 = true;
-//            }else{
-//                sense3 = false;
-//            }
-//
-//            if(robot.sensor2.green()>74 || robot.sensor2.blue()>61){
-//                sense2 = true;
-//                telemetry.addData("sensor2 is full twin","Everson is the goat");
-//            }else{
-//                sense2 = false;
-//            }
-//
-//            if(robot.sensor1.green()>103 || robot.sensor1.blue()>75){
-//                sense1 = true;
-//                telemetry.addData("sensor1 is full twin","Everson is the goat");
-//            }else{
-//                sense1 = false;
-//            }
-//            telemetry.addData("sensor 2", hue2);
-//            telemetry.addData("sensor 3", hue3);
-
-// --- SENSOR READING ---
-            // ----------------------------------------------------------------------
-            double dist1 = ((ColorRangeSensor) robot.sensor1).getDistance(DistanceUnit.CM);
-            double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
-            double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
-
-            sense1 = dist1 < PROX_DIhST;
-            sense2 = dist2 < PROX_DIhST;
-            sense3 = dist3 < PROX_DIhST;
-
-            telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
-            telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
-
-            if (sense1 && sense2 && sense3) {
-                if (colorTimer.seconds() > 0.3) {
-                    intakeFull = true;
-                    telemetry.addData("Status", "intakefull");
-                }
-            } else {
-                colorTimer.reset();
-                intakeFull = false;
-            }
-
-// 3. HANDLE DRIVER INPUT (TOGGLE A)
-//            boolean aNow = gamepad1.a;
-//            if (aNow && !lastAState) {
-//                isIntakeRunning = !isIntakeRunning;
-//            }
-//            lastAState = aNow;
             boolean aNow = gamepad1.a;
             if (aNow && !lastAState && !intakeFull && buttonTimer.seconds() > .5) {    // 500*ticksperrev is #ofrevolutions we need per min
                 isIntakeRunning = !isIntakeRunning;
@@ -331,15 +226,49 @@ public class redteleILT extends LinearOpMode {
                 robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
-            if (intakeFull) filled = true;
-            // telemetry.addData("System Full?", filled);
-//IntakeCodeEND
-//lift:
-//            if(gamepad1.right_bumper){
-//                robot.lift.setTargetPosition(10);
-//
-//            }
+//FlywheelCode:
+            pidf.setPIDF(kP, kI, kD, kF);
+            feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+
+            double ffOutput = feedforward.calculate(targetTicksPerSec);
+
+            double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+
+            double combinedOutput = ffOutput + pidOutput;
+            combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
+
+            robot.flywheel.setPower(combinedOutput);
+//LauncherCodeEND
+
+            float hue1 = hsv1[0];
+            float hue2 = hsv2[0];
+            float hue3 = hsv3[0];
+
+
+// --- SENSOR READING ---
+            // ----------------------------------------------------------------------
+            double dist1 = ((ColorRangeSensor) robot.sensor1).getDistance(DistanceUnit.CM);
+            double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
+            double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
+
+            sense1 = dist1 < PROX_DIhST;
+            sense2 = dist2 < PROX_DIhST;
+            sense3 = dist3 < PROX_DIhST;
+
+            telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
+            telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
+
+            if (sense1 && sense2 && sense3) {
+                if (colorTimer.seconds() > 0.3) {
+                    intakeFull = true;
+                    telemetry.addData("Status", "intakefull");
+                }
+            } else {
+                colorTimer.reset();
+                intakeFull = false;
+            }
 //liftEND
+
 //TrackingCode:
             LLStatus status = limelight.getStatus();
 
@@ -388,14 +317,6 @@ public class redteleILT extends LinearOpMode {
 
                 //shootEND
 
-//                telemetry.addData("distance", distance);
-//                telemetry.addData("tx", result.getTx());
-////                telemetry.addData("txnc", result.getTxNC());
-////                telemetry.addData("ty", result.getTy());
-////                telemetry.addData("tync", result.getTyNC());
-//                telemetry.addData("target area", result.getTa());
-//
-//                telemetry.addData("Botpose", botpose.toString());
                 // Access fiducial results
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
