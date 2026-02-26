@@ -69,7 +69,9 @@ public class redteleILT extends LinearOpMode {
     final double TICKS_PER_REV_INTAKE = 146.44;
 
     double targetTicksPerSec = 0;
-    final double PROX_DIhST = 8.0;
+    final double PROX_DIhST1 = 7.5;
+    final double PROX_DIhST2 = 6.0;
+    final double PROX_DIhST3 = 5.5;
 
 
 
@@ -251,9 +253,9 @@ public class redteleILT extends LinearOpMode {
             double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
             double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
 
-            sense1 = dist1 < PROX_DIhST;
-            sense2 = dist2 < PROX_DIhST;
-            sense3 = dist3 < PROX_DIhST;
+            sense1 = dist1 < PROX_DIhST1;
+            sense2 = dist2 < PROX_DIhST2;
+            sense3 = dist3 < PROX_DIhST3;
 
             telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
             telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
@@ -375,8 +377,6 @@ public class redteleILT extends LinearOpMode {
                     robot.turret.setPower(0);
                 }
 
-//                telemetry.addData("Mode", "Manual Reset");
-//                telemetry.addData("Angle", currentDegrees);
             }
             else {
                 // telemetry.addData("Limelight", "No data available");
