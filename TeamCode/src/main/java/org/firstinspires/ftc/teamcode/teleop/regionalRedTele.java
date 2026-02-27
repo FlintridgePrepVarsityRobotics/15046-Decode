@@ -285,7 +285,7 @@ public class regionalRedTele extends LinearOpMode {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     int apriltagID = fr.getFiducialId();
-                    if(apriltagID == 24) {
+                    if(apriltagID == 20) {
 
                                 double targetX = fr.getTargetXDegrees();
                                 double turretpidOutput = turretpid.calculate(0, targetX);
