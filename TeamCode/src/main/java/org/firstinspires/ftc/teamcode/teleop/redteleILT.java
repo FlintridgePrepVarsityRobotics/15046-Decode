@@ -167,6 +167,13 @@ public class redteleILT extends LinearOpMode {
                 allowUp = false;
 
             }
+            if(gamepad1.right_trigger> .5 && gamepad1.left_trigger>.5){
+
+                robot.lift.setTargetPosition(-70);
+                robot.lift.setPower(1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            }
 //FlywheelCode:
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
@@ -286,6 +293,21 @@ public class redteleILT extends LinearOpMode {
                 buttonTimer.reset();
             }
 
+            if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50) {
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
+                if (allowUp) {
+                    robot.lift.setTargetPosition(-20);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                } else {
+                    robot.lift.setTargetPosition(0);
+                    robot.lift.setPower(1);
+                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+            }
+
+
 
 // 4. AUTO-STOP LOGIC
             if (intakeFull && isIntakeRunning) {
@@ -356,24 +378,6 @@ public class redteleILT extends LinearOpMode {
                 }
 
                 // telemetry.addData("balls are in?", filled);
-                if(gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50){
-                    robot.shootServo.setPosition(0);
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE*1450/60);
-                    if(allowUp) {
-                        telemetry.addData("Everson","is the goat 3 ");
-                        robot.lift.setTargetPosition(-55);
-                        robot.lift.setPower(1);
-                        robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    }
-                }else if(isIntakeRunning = false){
-                    robot.intake.setPower(0);
-                    robot.shootServo.setPosition(.5);
-                } else{
-                    robot.lift.setTargetPosition(1);
-                    robot.lift.setPower(-1);
-                    robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-
                 //shootEND
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
