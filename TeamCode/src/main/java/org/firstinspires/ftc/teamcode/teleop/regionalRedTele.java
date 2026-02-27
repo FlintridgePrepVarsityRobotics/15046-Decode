@@ -280,33 +280,12 @@ public class regionalRedTele extends LinearOpMode {
                             targetTicksPerSec = 0;
                         }
 
-                        // telemetry.addData("balls are in?", filled);
-                        if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 50) {
-                            robot.shootServo.setPosition(0);
-                            robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1100 / 60);
-                            if (allowUp) {
-                                telemetry.addData("Everson", "is the goat 3 ");
-                                robot.lift.setTargetPosition(-55);
-                                robot.lift.setPower(1);
-                                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                            }
-                        } else {
-                            robot.lift.setTargetPosition(1);
-                            robot.lift.setPower(-1);
-                            robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        }
-
-                        //shootEND
-
-                        // Access fiducial results
-                        List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
-                        for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                            int apriltagID = fr.getFiducialId();
-
-
-
-//                    telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(), fr.getTargetXDegrees(), fr.getTargetYDegrees());
-                            if(apriltagID == 24) {
+                // telemetry.addData("balls are in?", filled);
+                //shootEND
+                List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+                for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                    int apriltagID = fr.getFiducialId();
+                    if(apriltagID == 24) {
 
                                 double targetX = fr.getTargetXDegrees();
                                 double turretpidOutput = turretpid.calculate(0, targetX);

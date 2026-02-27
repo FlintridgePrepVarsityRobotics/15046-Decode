@@ -178,36 +178,7 @@ public class redteleILT extends LinearOpMode {
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
 
-//            boolean highSpeed = gamepad1.dpad_right;
-//            boolean midSpeed = gamepad1.dpad_up;
-//            boolean lowSpeed = gamepad1.dpad_left;
 
-
-
-//            if (highSpeed && !lastUp){
-//                setpointRPM = 2400;
-//                flywheelon = true;
-//            }
-
-        /*   if (lowSpeed && !lastDown){
-               setpointRPM = 1800;
-               flywheelon = true;
-           }*/
-            if (gamepad1.dpad_down){
-
-            }
-
-//            boolean xNow = gamepad1.x;
-//            if (!xNow && lastXState) {
-//                // 1️⃣ Close shoot servo
-//
-//
-//                // 2️⃣ Start intake
-//                robot.intake.setVelocity(-TICKS_PER_REV_INTAKE * 950 / 60);
-//
-//                intakeReleaseTimer.reset();
-//                intakeAfterShot = true;
-//            }
             double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
 //            telemetry.addData("setpointRPM", (setpointRPM));
@@ -222,27 +193,7 @@ public class redteleILT extends LinearOpMode {
             combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
 
             robot.flywheel.setPower(combinedOutput);
-//LauncherCodeEND
-//IntakeCode:
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor1.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor1.blue() * SCALE_FACTOR),
-//                    hsv1
-//            );
-//
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor2.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor2.blue() * SCALE_FACTOR),
-//                    hsv2
-//            );
-//            Color.RGBToHSV(
-//                    (int) (robot.sensor3.red() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.green() * SCALE_FACTOR),
-//                    (int) (robot.sensor3.blue() * SCALE_FACTOR),
-//                    hsv3
-//            );
+
             float hue1 = hsv1[0];
             float hue2 = hsv2[0];
             float hue3 = hsv3[0];
@@ -315,25 +266,7 @@ public class redteleILT extends LinearOpMode {
                 robot.intake.setPower(0);
             }
 
-//            if(gamepad1.b){
-//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
-//            }
 
-//            lastBState = bNow;
-//
-//// 🔥 B was released
-//            if (!bNow && lastBState) {
-//                // 1️⃣ Close shoot servo
-//                robot.shootServo.setPosition(0.5);
-//
-//                // 2️⃣ Start intake
-//                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
-//
-//                intakeReleaseTimer.reset();
-//                intakeAfterShot = true;
-//            }
-
-//            lastXState = xNow;
 
             if (intakeAfterShot) {
                 if (intakeReleaseTimer.seconds() >= 1.0) {
