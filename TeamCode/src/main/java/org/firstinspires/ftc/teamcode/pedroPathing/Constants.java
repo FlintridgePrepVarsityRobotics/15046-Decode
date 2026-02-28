@@ -48,7 +48,7 @@ public class Constants {
             .leftFrontMotorDirection(DcMotor.Direction.FORWARD)
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
+            .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);//
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
             .forwardTicksToInches(0.00295886868602)
             .strafeTicksToInches(0.00295376722397)
