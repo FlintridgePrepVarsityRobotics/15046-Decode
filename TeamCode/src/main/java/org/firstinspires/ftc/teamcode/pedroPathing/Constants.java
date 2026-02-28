@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-        .mass(27.06)
+        .mass(28.56)//added 1 1/2 pounds to robot mass after Aurix said [redacted]
 //            .forwardZeroPowerAcceleration(-38.7525387791384267)
 //            .lateralZeroPowerAcceleration(-76.6048014843286867)
 //            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.01, .026))
@@ -50,9 +50,9 @@ public class Constants {
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE);
     public static ThreeWheelConstants localizerConstants = new ThreeWheelConstants()
-            .forwardTicksToInches(.00292169103085053)
-            .strafeTicksToInches(.002981049)
-            .turnTicksToInches(.00294860837229)
+            .forwardTicksToInches(0.00294564308)
+            .strafeTicksToInches(0.00295376722397)
+            .turnTicksToInches(0.00297964376732)
             .leftPodY((8.625)/2)
             .rightPodY(-(8.625)/2)
             .strafePodX(-6.86325)
@@ -61,7 +61,7 @@ public class Constants {
             .strafeEncoder_HardwareMapName("BR")
             .leftEncoderDirection(Encoder.REVERSE)
             .rightEncoderDirection(Encoder.FORWARD)
-            .strafeEncoderDirection(Encoder.REVERSE);
+            .strafeEncoderDirection(Encoder.FORWARD);
 
 }
 //Everson was here
