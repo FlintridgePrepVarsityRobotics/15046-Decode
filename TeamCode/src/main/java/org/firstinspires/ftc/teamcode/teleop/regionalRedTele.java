@@ -33,15 +33,14 @@ import java.util.List;
 @Config
 @TeleOp(name = "red Reg teleop")
 public class regionalRedTele extends LinearOpMode {
-    PIDController turretpid = new PIDController(TP, TI, TD);
     public static double TP = 0.01;
     public static double TI = 0.00015;
     public static double TD = 0.00000005;
 
-    public static double kP = 0.002;
+    public static double kP = 0.006;
 
-    public static double kI = 0.0;
-    public static double kD = 0.00025;
+    public static double kI = 0.02;
+    public static double kD = 0.00026;
     public static double kF = 0.00042;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
@@ -49,8 +48,9 @@ public class regionalRedTele extends LinearOpMode {
 
     public static double kS = 0.0;
     public static double kV = 0.0;
-    public static double kA = 0.0;
+    public static double kA = 0.2;
 
+    PIDController turretpid = new PIDController(TP, TI, TD);
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
@@ -84,27 +84,16 @@ public class regionalRedTele extends LinearOpMode {
         boolean intakeFull = false;
         boolean isIntakeRunning = false;
         boolean allowUp = true;
-        int poo = 0;
         boolean color1 = false;
         boolean color2 = false;
         boolean color3 = false;
-        float hsv1[] = {0F, 0F, 0F};
-        float hsv2[] = {0F, 0F, 0F};
-        float hsv3[] = {0F, 0F, 0F};
-        final double SCALE_FACTOR = 255;
 
         boolean sense1 = false;
         boolean sense2 = false;
         boolean sense3 = false;
-
-        boolean lastUp = false;
-        boolean lastMid = false;
-        boolean lastDown = false;
-        boolean lastX = false;
         double setpointRPM = 0;
         boolean flywheelon = false;
         int ticksPerRev = 28;
-        boolean filled = false;
 
         robot.init(hardwareMap);
 
@@ -198,19 +187,26 @@ public class regionalRedTele extends LinearOpMode {
                 robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
                 telemetry.addData("Everson", "is the goat 1");
                 if (allowUp) {
-                    robot.lift.setTargetPosition(-55);
+                    robot.lift.setTargetPosition(-40);
                     robot.lift.setPower(1);
                     robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 } else {
                     robot.lift.setTargetPosition(0);
-                    robot.lift.setPower(1);
+                    robot.lift.setPower(-1);
                     robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    telemetry.addLine("brakepad retract Everson is goat");
                 }
             }
 
             if (!isIntakeRunning && !gamepad1.b) {
-                    robot.intake.setVelocity(0);
-                    robot.shootServo.setPosition(.5);
+                robot.intake.setVelocity(0);
+                robot.shootServo.setPosition(.5);
+                robot.lift.setTargetPosition(0);
+                robot.lift.setPower(-1);
+                robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                telemetry.addLine("brakepad retract Everson is goat2");
+            }
+
 
 //FlywheelCode:
                     pidf.setPIDF(kP, kI, kD, kF);
@@ -249,12 +245,16 @@ public class regionalRedTele extends LinearOpMode {
                         intakeFull = false;
                     }
 //liftEND
-
 //TrackingCode:
+            if (gamepad1.dpad_down) {
+                targetTicksPerSec = 0;
+                robot.flywheel.setPower(0);
+            }
                     LLStatus status = limelight.getStatus();
 
                     LLResult result = limelight.getLatestResult();
                     if (result != null && result.isValid()) {
+
                         // Access general information
                         Pose3D botpose = result.getBotpose();
                         double distance = getDistance(result.getTa());
@@ -262,15 +262,9 @@ public class regionalRedTele extends LinearOpMode {
                         double txnc = result.getTxNC();
                         double ty = result.getTy();
                         double tync = result.getTyNC();
+                        telemetry.addLine("eversonisgoat robot sees apritag");
 
                         //shootCODE
-
-
-                        if (color1 || color2 || color3) {
-                            filled = true;
-
-                        }
-
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
@@ -280,12 +274,14 @@ public class regionalRedTele extends LinearOpMode {
                             targetTicksPerSec = 0;
                         }
 
-                // telemetry.addData("balls are in?", filled);
-                //shootEND
-                List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
-                for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    int apriltagID = fr.getFiducialId();
-                    if(apriltagID == 20) {
+                        // telemetry.addData("balls are in?", filled);
+                        //shootEND
+                        List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+                        for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                            int apriltagID = fr.getFiducialId();
+                            if (apriltagID == 20) {
+
+                                telemetry.addLine("eversonisgoat robot sees correct apritag");
 
                                 double targetX = fr.getTargetXDegrees();
                                 double turretpidOutput = turretpid.calculate(0, targetX);
@@ -304,7 +300,7 @@ public class regionalRedTele extends LinearOpMode {
 
                                 double motorPower;
 
-                                if(Math.abs(AngleError) < dynamicTolerance)
+                                if (Math.abs(AngleError) < dynamicTolerance)
                                     motorPower = 0;
                                 else
                                     motorPower = -(turretpidOutput + turretfeedforward);
@@ -321,7 +317,8 @@ public class regionalRedTele extends LinearOpMode {
 
                             }
                         }
-                    } else if (gamepad1.y) {
+                    }
+                    else if (gamepad1.y) {
                         int encoderTicks = robot.turret.getCurrentPosition();
                         double currentDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
 
@@ -335,52 +332,30 @@ public class regionalRedTele extends LinearOpMode {
                             robot.turret.setPower(0);
                         }
 
-                    } else {
+                    }
+                    else {
                         // telemetry.addData("Limelight", "No data available");
                         robot.turret.setPower(0);
                     }
 //TrackingCodeEND
 
                     telemetry.update();
-                }
 
-                limelight.stop();
             }
-        }
-
-        public double getCombinedOutput (double setpointRPM){
-            int ticksPerRev = 28;
-            //  double targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-            double measuredTicksPerSec = robot.flywheel.getVelocity();
-            double ffOutput = feedforward.calculate(targetTicksPerSec);
-            double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
-            double combinedOutput = ffOutput + pidOutput;
-            double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-            combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
-            return (combinedOutput);
-        }
-        private String classifyColor ( float[] hsv){
-            float hue = hsv[0];
-            float sat = hsv[1];
-            float val = hsv[2];
-
-            if (sat < 0.3 || val < 0.3) {
-                return "EMPTY";
-            }
-
-            if (hue >= 110 && hue <= 170) {
-                return "GREEN";
-            }
-
-            if (hue >= 250 && hue <= 320) {
-                return "PURPLE";
-            }
-
-            return "UNKNOWN";
+//        limelight.stop();
         }
         public double getDistance (double ta){
             double scale = 10;
             double newDistance = scale / ta;
             return (newDistance);
         }
+    public double getDistanceangle(double ty) {
+        double limelightMountAngle = 25.0;
+        double limelightHeightInches = 10.0;
+        double goalHeightInches = 29.5;
+        double angleToGoal = limelightMountAngle + ty;
+        double angleRadians = angleToGoal * (Math.PI / 180.0);
+
+        return (goalHeightInches - limelightHeightInches) / Math.tan(angleRadians);
+    }
 }

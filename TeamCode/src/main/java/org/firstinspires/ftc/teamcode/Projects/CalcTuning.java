@@ -36,10 +36,10 @@ public class CalcTuning extends LinearOpMode {
 
     // PIDF + Feedforward constants (starting values — tune these)
     // These gains are chosen so PIDF+FF outputs a motor power in [-1,1].
-    public static double kP = 0.002;
+    public static double kP = 0.006;
 
-    public static double kI = 0.0;
-    public static double kD = 0.00025;
+    public static double kI = 0.04;
+    public static double kD = 0.00027;
     public static double kF = 0.00042;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
@@ -47,7 +47,7 @@ public class CalcTuning extends LinearOpMode {
 
     public static double kS = 0.0;
     public static double kV = 0.0;
-    public static double kA = 0.0;
+    public static double kA = 0.2;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
@@ -163,6 +163,10 @@ public class CalcTuning extends LinearOpMode {
             if (gamepad1.x && !lastX){
                 setpointRPM = 0;
                 flywheelon = false;
+            }
+            if (gamepad1.right_bumper){
+                setpointRPM = 1700;
+                flywheelon = true;
             }
 
             // Measurements in ticks/sec
