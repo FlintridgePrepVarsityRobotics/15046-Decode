@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
@@ -17,19 +18,20 @@ import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.dashboard.config.Config;
 import java.util.List;
-
-
-
-
-
 
 @Config
 @TeleOp(name = "red Reg teleop")
 public class regionalRedTele extends LinearOpMode {
-    public static double TP = 0.0125;
-    public static double TI = 0;
-    public static double TD = 2.5;
+    public static double TP = 0.01;
+    public static double TI = 0.0001;
+    public static double TD = 0.00000005;
 //67🫃
 
     public static double kP = 0.006;
@@ -39,18 +41,18 @@ public class regionalRedTele extends LinearOpMode {
     public static double kD = 0.00026;
     public static double kF = 0.00042;
 
+    public static double goalX = 72.0;
+    public static double goalY = 0.0;
+    private Follower follower;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
-
 
     public static double kS = 0.0;
     public static double kV = 0.0;
     public static double kA = 0.2;
 
-
     PIDController turretpid = new PIDController(TP, TI, TD);
-
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
@@ -58,10 +60,8 @@ public class regionalRedTele extends LinearOpMode {
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
 
-
     private Limelight3A limelight;
     public newHWmap robot = new newHWmap();
-
 
     final double TICKS_PER_REV = 294.0;      // GoBilda 5202/5203
     final double GEAR_RATIO = 0.3953;        // 34 / 86
@@ -72,18 +72,14 @@ public class regionalRedTele extends LinearOpMode {
     final double BEARING_TOLERANCE = 7.5;    // degrees
     final double TICKS_PER_REV_INTAKE = 101.08;
 
-
     double targetTicksPerSec = 0;
     final double PROX_DIhST1 = 7.5;
     final double PROX_DIhST2 = 6.0;
     final double PROX_DIhST3 = 5.5;
 
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
-
 
 //variables:
         boolean intakeFull = false;
@@ -94,52 +90,44 @@ public class regionalRedTele extends LinearOpMode {
         boolean sense2 = false;
         boolean sense3 = false;
         double setpointRPM = 0;
+
         boolean flywheelon = false;
         int ticksPerRev = 28;
-
+        boolean trackingAllowed = false;
 
         robot.init(hardwareMap);
 
-
-
+        follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose(0, 0, 0));
 
 //setting modes, information on turret, limelight, telemetry
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
         limelight.start();
 
-
         /*
          * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
          */
-
 
 //        telemetry.addData(">", "Robot Ready.  Press Play.");
         telemetry.setMsTransmissionInterval(5);
         telemetry.update();
         waitForStart();
 
-
         while (opModeIsActive()) {
-
-
+            follower.update();
 //DriveCode:
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x * -1.1;
             double rx = gamepad1.right_stick_x;
             double speed = 1;
 
-
             double measuredTicksPerSec = robot.flywheel.getVelocity();
             double measuredRPM = measuredTicksPerSec / ticksPerRev * 60.0;
-
-
-
 
             double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
             double frontLeftPower = (y + x + rx) / denominator;
@@ -147,41 +135,25 @@ public class regionalRedTele extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-
             robot.fLeftWheel.setPower(frontLeftPower * speed);
             robot.bLeftWheel.setPower(backLeftPower * speed);
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 //DriveCodeEND
 
-
-
-
 //liftCode:
-
-
             if (gamepad1.right_bumper) {
                 allowUp = true;
-
-
             }
             if (gamepad1.left_bumper) {
                 allowUp = false;
             }
             if (gamepad1.right_trigger > .5 && gamepad1.left_trigger > .5) {
-
-
-
-
                 robot.lift.setTargetPosition(-100);
                 robot.lift.setPower(0.75);
                 robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
             }
             //end lift code
-
-
             //intake
             if (gamepad1.x) {
                 robot.intake.setVelocity(0);
@@ -195,19 +167,14 @@ public class regionalRedTele extends LinearOpMode {
                 }
                 buttonTimer.reset();
             }
-
-
 // 4. AUTO-STOP LOGIC
             if (intakeFull && isIntakeRunning) {
                 isIntakeRunning = false;
                 robot.intake.setVelocity(0);
             }
 
-
 // Priority 1: SHOOTING (Button B)
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 50);
-
-
+            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
             if (isShooting) {
                 robot.shootServo.setPosition(0);
                 robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
@@ -223,6 +190,11 @@ public class regionalRedTele extends LinearOpMode {
                     telemetry.addLine("brakepad retract Everson is goat");
                 }
             }
+            if (!isShooting && gamepad1.b) {
+                robot.shootServo.setPosition(0);
+                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 0);
+            }
+
 
 
             if (!isIntakeRunning && !gamepad1.b) {
@@ -236,27 +208,15 @@ public class regionalRedTele extends LinearOpMode {
                 }
             }
 
-
-
-
 //FlywheelCode:
             pidf.setPIDF(kP, kI, kD, kF);
             feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-
-
             double ffOutput = feedforward.calculate(targetTicksPerSec);
-
-
             double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
-
-
             double combinedOutput = ffOutput + pidOutput;
             combinedOutput = Math.max(-1.0, Math.min(1.0, combinedOutput));
-
-
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
-
 
 // --- SENSOR READING ---
             // ----------------------------------------------------------------------
@@ -264,15 +224,12 @@ public class regionalRedTele extends LinearOpMode {
             double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
             double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
 
-
             sense1 = dist1 < 7.5;
             sense2 = dist2 < 6.3;
             sense3 = dist3 < 6;
 
-
             telemetry.addData("dihstances (cm)", "1: %.1f, 2: %.1f, 3: %.1f", dist1, dist2, dist3);
             telemetry.addData("Dihtected?", "1: %b, 2: %b, 3: %b", sense1, sense2, sense3);
-
 
             if (sense1 && sense2 && sense3) {
                 if (colorTimer.seconds() > 0.3) {
@@ -290,118 +247,111 @@ public class regionalRedTele extends LinearOpMode {
                 robot.flywheel.setVelocity(0);
                 targetTicksPerSec = 0;
             }
+
             LLStatus status = limelight.getStatus();
-
-
             LLResult result = limelight.getLatestResult();
+
+            if (gamepad1.y) {
+                trackingAllowed = true;
+
+                robot.turret.setPower(0);
+                robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                robot.fLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.fRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.bLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.bRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                robot.fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                follower.setStartingPose(new Pose(0, 0, 0));
+                telemetry.addData("e the goat", "reset turret, drive enc, and odo");
+                telemetry.addData("Distance", getDistance(result.getTa()));
+            }
+
+            boolean onTag = false;
+            double targetTurretDeg = 0;
+            double dynamicTolerance = 2.0;
+            double turretMotorPower = 0.0;
+
+            int encoderTicks = robot.turret.getCurrentPosition();
+            double currentTurretDeg = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
+
             if (result != null && result.isValid()) {
-
-
-                // Access general information
-                Pose3D botpose = result.getBotpose();
-                double distance = getDistance(result.getTa());
-                double tx = result.getTx();
-                double txnc = result.getTxNC();
-                double ty = result.getTy();
-                double tync = result.getTyNC();
-                telemetry.addLine("eversonisgoat robot sees apritag");
-
-
-                //shootCODE
-                boolean midSpeed = gamepad1.dpad_up;
-                if (midSpeed) {
-                    targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                    setpointRPM = (600.10148 * Math.log(distance)) + 1410.24409;
-                    // flywheelon = true;
-                }
-
-
-                // telemetry.addData("balls are in?", filled);
-                //shootEND
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    int apriltagID = fr.getFiducialId();
-                    if (apriltagID == 20) {
+                    if (fr.getFiducialId() == 20) {
+                        double tx = fr.getTargetXDegrees();
+                        targetTurretDeg = currentTurretDeg - tx;
 
+                        double distance = getDistance(result.getTa());
+                        dynamicTolerance = Range.clip(100.0 / distance, 0.5, 8.0);
 
-                        telemetry.addLine("eversonisgoat robot sees correct apritag");
-
-
-                        double targetX = fr.getTargetXDegrees();
-                        double turretpidOutput = turretpid.calculate(0, targetX);
-
-
-                        double turretfeedforward = 0;
-                        double AngleError = -targetX;
-
-
-                        if (Math.abs(turretpidOutput) > 0.01) {
-                            turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
+                        boolean midSpeed = gamepad1.dpad_up;
+                        if (midSpeed) {
+                            setpointRPM = (600.10148 * Math.log10(distance)) + 1350;
+                            targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
                         }
 
-
-                        double dynamicTolerance = 100.0 / distance; //use distance and if not accurate enough, decrease 100.0 justin everson isaac
-                        dynamicTolerance = Range.clip(dynamicTolerance, 0, 8.0);
-
-
-                        telemetry.addData("Dynamic Tolerance", dynamicTolerance);
-
-
-                        double motorPower;
-
-
-                        if (Math.abs(AngleError) < dynamicTolerance)
-                            motorPower = 0;
-                        else
-                            motorPower = -(turretpidOutput + turretfeedforward);
-
-
-                        int encoderTicks = robot.turret.getCurrentPosition();
-                        double turretDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
-
-
-                        if ((turretDegrees >= MAX_DEGREES && motorPower > 0) ||
-                                (turretDegrees <= -MAX_DEGREES && motorPower < 0)) {
-                            motorPower = 0;
-                        }
-
-
-                        robot.turret.setPower(motorPower);
-
-
+                        onTag = true;
+                        telemetry.addData("Turret Mode", "limelight");
+                        telemetry.addData("tolerance", dynamicTolerance);
+                        telemetry.addData("Setpoint RPM", setpointRPM);
+                        TelemetryPacket packet = new TelemetryPacket();
+                        FtcDashboard dashboard = FtcDashboard.getInstance();
+                        dashboard.setTelemetryTransmissionInterval(25);
+                        packet.put("Setpoint RPM", setpointRPM);
+                        telemetry.addData("Measured RPM", "%.1f", measuredRPM);
+                        packet.put("Measured RPM", measuredRPM);
+                        dashboard.sendTelemetryPacket(packet);
+                        telemetry.update();
+                        break;
                     }
                 }
             }
-            else if (gamepad1.y) {
-                int encoderTicks = robot.turret.getCurrentPosition();
-                double currentDegrees = (encoderTicks / (TICKS_PER_REV / GEAR_RATIO)) * 360.0;
+            if (!onTag && trackingAllowed) {
+                double robotX = follower.getPose().getX();
+                double robotY = follower.getPose().getY();
+                double robotHeading = Math.toDegrees(follower.getPose().getHeading());
 
+                double fieldAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY, goalX - robotX));
+                targetTurretDeg = normalizeDegrees(fieldAngleToGoal - robotHeading);
+                dynamicTolerance = 2.0;
 
-                if (currentDegrees > 2) {
-                    robot.turret.setPower(-0.3);
-                }
-                else if (currentDegrees < -2) {
-                    robot.turret.setPower(0.3);
-                }
-                else {
-                    robot.turret.setPower(0);
-                }
-
-
+                onTag = true;
+                telemetry.addData("Turret Mode", "odo (pedro)");
+                telemetry.addData("Distance", getDistance(result.getTa()));
             }
-            else {
-                // telemetry.addData("Limelight", "No data available");
-                robot.turret.setPower(0);
+            if (onTag) {
+                double clampedTarget;
+                if (Math.abs(targetTurretDeg) > 90.0) {
+                    clampedTarget = 0.0;
+                } else {
+                    clampedTarget = Range.clip(targetTurretDeg, -MAX_DEGREES, MAX_DEGREES);
+                }
+
+                double angleError = Math.abs(clampedTarget - currentTurretDeg);
+
+                if (angleError <= dynamicTolerance) {
+                    turretMotorPower = 0;
+                    turretpid.reset();
+                } else {
+                    turretMotorPower = turretpid.calculate(currentTurretDeg, clampedTarget);
+                }
+            } else {
+                turretMotorPower = 0;
             }
+            turretMotorPower = turretLims(turretMotorPower, currentTurretDeg);
+            robot.turret.setPower(turretMotorPower);
 //TrackingCodeEND
-
-
             telemetry.update();
-
-
         }
-//        limelight.stop();
     }
+
     public double getDistance (double ta){
         double scale = 10;
         double newDistance = scale / ta;
@@ -414,8 +364,16 @@ public class regionalRedTele extends LinearOpMode {
         double angleToGoal = limelightMountAngle + ty;
         double angleRadians = angleToGoal * (Math.PI / 180.0);
 
-
         return (goalHeightInches - limelightHeightInches) / Math.tan(angleRadians);
     }
+    private double normalizeDegrees(double degrees) {
+        while (degrees > 180) degrees -= 360;
+        while (degrees <= -180) degrees += 360;
+        return degrees;
+    }
+    private double turretLims(double power, double currentDegrees) {
+        if (currentDegrees >= 70 && power > 0) return 0;
+        if (currentDegrees <= -70 && power < 0) return 0;
+        return power;
+    }
 }
-

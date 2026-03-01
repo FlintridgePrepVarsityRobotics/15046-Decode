@@ -250,14 +250,7 @@ public class CalcTuning extends LinearOpMode {
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     int apriltagID = fr.getFiducialId();
                     if (apriltagID == 20) {
-
-
                         telemetry.addLine("eversonisgoat robot sees correct apritag");
-
-
-
-
-
                     }
                 }
             }
