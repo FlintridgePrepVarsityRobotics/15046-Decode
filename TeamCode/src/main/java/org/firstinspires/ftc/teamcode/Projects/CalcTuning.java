@@ -15,18 +15,23 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.dashboard.config.Config;
-
+import com.qualcomm.robotcore.util.Range;
 import android.util.Size;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
+
 @Config
 @TeleOp(name = "CalcTuning")
 public class CalcTuning extends LinearOpMode {
 
     public newHWmap robot = new newHWmap();
+
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
     ElapsedTime reverseTimer = new ElapsedTime();
@@ -56,14 +61,10 @@ public class CalcTuning extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
         // --- Vision setup ---
-
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
-        telemetry.setMsTransmissionInterval(5);
-
         limelight.pipelineSwitch(0);
         limelight.start();
-        telemetry.update();
+        telemetry.setMsTransmissionInterval(5);
 
         int frameWidth = 640;
         int centerX = frameWidth / 2;
@@ -141,7 +142,6 @@ public class CalcTuning extends LinearOpMode {
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
 
-            LLResult result = limelight.getLatestResult();
 
             // --- Launcher RPM Control ---
 
@@ -209,7 +209,6 @@ public class CalcTuning extends LinearOpMode {
 
             lastAState = aNow;
 
-            telemetry.update();
             // --- B button: timed intake pulse ---
             if (gamepad1.b && Math.abs(measuredRPM - setpointRPM) <= 100) {
                 if (!bWasPressed) {
@@ -224,27 +223,54 @@ public class CalcTuning extends LinearOpMode {
                 bWasPressed = false;
                 robot.intake.setPower(0);
             }
+            LLStatus status = limelight.getStatus();
+
+
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+
+
+                // Access general information
+                Pose3D botpose = result.getBotpose();
+                double distance = getDistance(result.getTa());
+                double tx = result.getTx();
+                double txnc = result.getTxNC();
+                double ty = result.getTy();
+                double tync = result.getTyNC();
+                telemetry.addLine("eversonisgoat robot sees apritag");
+
+
+                //shootCODE
+
+
+
+                // telemetry.addData("balls are in?", filled);
+                //shootEND
+                List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
+                for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                    int apriltagID = fr.getFiducialId();
+                    if (apriltagID == 20) {
+
+
+                        telemetry.addLine("eversonisgoat robot sees correct apritag");
+
+
+
+
+
+                    }
+                }
+            }
 
             // --- Telemetry for tuning ---
             telemetry.addData("Setpoint RPM", setpointRPM);
             packet.put("Setpoint RPM", setpointRPM);
             telemetry.addData("Measured RPM", "%.1f", measuredRPM);
             packet.put("Measured RPM", measuredRPM);
-            telemetry.addData("FF Output", "%.4f", ffOutput);
-            packet.put("FF Output", ffOutput);
-            telemetry.addData("PID Output", "%.4f", pidOutput);
-            packet.put("PID Output", pidOutput);
-            telemetry.addData("Combined (power)", "%.4f", combinedOutput);
-            packet.put("Combined (power)", combinedOutput);
-            telemetry.addData("Distance", getdistance(result.getTa()));
-            packet.put("Distance", getdistance(result.getTa()));
 
-            telemetry.addData("Clear", sensor1.alpha());
-            telemetry.addData("Red  ", sensor1.red());
-            telemetry.addData("Green", sensor1.green());
-            telemetry.addData("Blue ", sensor1.blue());
-            telemetry.addData("Hue1", hsv1[0]);
-            telemetry.addData("Hue2", hsv2[0]);
+            telemetry.addData("Distance", getDistance(result.getTa()));
+            packet.put("Distance", getDistance(result.getTa()));
+
 
             // --- AprilTag Centering (Y button) ---
 // While the robot is looking at the tag once, it will toggle intake off
@@ -256,9 +282,10 @@ public class CalcTuning extends LinearOpMode {
             lastDown = downSpeed;
         }
     }
-    public double getdistance(double ta){
+    public double getDistance (double ta){
         double scale = 10;
-        return(scale/ta);
+        double newDistance = scale / ta;
+        return (newDistance);
     }
 }
 
