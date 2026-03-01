@@ -30,7 +30,7 @@ public class regionalRedTele extends LinearOpMode {
     public static double TP = 0.0125;
     public static double TI = 0;
     public static double TD = 2.5;
-
+//67🫃
 
     public static double kP = 0.006;
 
