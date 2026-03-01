@@ -94,6 +94,7 @@ public class regionalRedTele extends LinearOpMode {
         boolean flywheelon = false;
         int ticksPerRev = 28;
         boolean trackingAllowed = false;
+        boolean FirstYPress = true;
 
         robot.init(hardwareMap);
 
@@ -251,12 +252,33 @@ public class regionalRedTele extends LinearOpMode {
             LLStatus status = limelight.getStatus();
             LLResult result = limelight.getLatestResult();
 
-            if (gamepad1.y) {
+
+            if (FirstYPress && gamepad1.y) {
                 trackingAllowed = true;
 
                 robot.turret.setPower(0);
                 robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                robot.fLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.fRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.bLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.bRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                robot.fLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.fRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                robot.bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                follower.setStartingPose(new Pose(0, 0, 0));
+                telemetry.addData("e the goat", "reset turret, drive enc, and odo");
+                telemetry.addData("Distance", getDistance(result.getTa()));
+
+                FirstYPress = false;
+            }
+            if (!FirstYPress && gamepad1.y) {
+                robot.turret.setTargetPosition(0);
+                sleep(500);
 
                 robot.fLeftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.fRightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -293,7 +315,7 @@ public class regionalRedTele extends LinearOpMode {
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
-                            setpointRPM = (600.10148 * Math.log10(distance)) + 1350;
+                            setpointRPM = (600.10148 * Math.log10(distance)) + 1375;
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
                         }
 
