@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.auton;
 
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
@@ -7,18 +10,25 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "regCloseBlue")
 public class regCloseBlue extends OpMode {
 
     private Follower follower;
+    public newHWmap robot = new newHWmap();
+
     private Timer pathTimer, actionTimer, opmodeTimer;
 
     private final Pose startPose = new Pose(18.5, 120, Math.toRadians(143.5));
+    final double TICKS_PER_REV_INTAKE = 101.08;
 
     private int pathState;
 
@@ -31,6 +41,36 @@ public class regCloseBlue extends OpMode {
     public PathChain Spike1Intake;
     public PathChain Scoring3;
     public PathChain Park;
+    private Limelight3A limelight;
+
+    // TURRET PID CONSTANTS
+    public static double TP = 0.01;
+    public static double TI = 0.0001;
+    public static double TD = 0.00000005;
+
+    // FLYWHEEL PIDF CONSTANTS
+    public static double kP = 0.006;
+    public static double kI = 0.2;
+    public static double kD = 0.00026;
+    public static double kF = 0.00042;
+
+    public static double kS = 0.0;
+    public static double kV = 0.0;
+    public static double kA = 0.2;
+
+    // PID INITIATION
+    PIDController turretpid = new PIDController(TP, TI, TD);
+    PIDFController pidf = new PIDFController(kP, kI, kD, kF);
+    SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
+    private double currentFlywheelTargetRPM = 1944;
+    private static final double FLYWHEEL_ALLOWED_ERR_RPM = 100;
+    private final int ticksPerRevLauncher = 28;
+
+    final double TICKS_PER_REV = 294.0;
+    final double GEAR_RATIO = 0.3953;
+    double targetTicksPerSec = 0;
+    double setpointRPM = 0;
+
     public void buildPaths() {
 
             Shooting = follower.pathBuilder().addPath(
@@ -49,7 +89,7 @@ public class regCloseBlue extends OpMode {
                                     new Pose(55.000, 77.000),
                                     new Pose(44.000, 58.500)
                             )
-                    ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
+                    ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(185))
 
                     .build();
 
@@ -57,7 +97,7 @@ public class regCloseBlue extends OpMode {
                             new BezierLine(
                                     new Pose(44.000, 58.500),
 
-                                    new Pose(14.000, 58.500)
+                                    new Pose(12.000, 58.500)
                             )
                     ).setTangentHeadingInterpolation()
 
@@ -65,7 +105,7 @@ public class regCloseBlue extends OpMode {
 
             GateOpen = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(10.000, 58.5),
+                                    new Pose(12.000, 58.5),
                                     new Pose(27.000, 58.000),
                                     new Pose(14.250, 62)
                             )
@@ -75,7 +115,7 @@ public class regCloseBlue extends OpMode {
 
             Scoring2 = follower.pathBuilder().addPath(
                             new BezierCurve(
-                                    new Pose(14.250, 61.500),
+                                    new Pose(14.250, 62.500),
                                     new Pose(70.000, 67.000),
                                     new Pose(40.000, 94.000)
                             )
@@ -87,7 +127,7 @@ public class regCloseBlue extends OpMode {
                             new BezierCurve(
                                     new Pose(40.000, 94.000),
                                     new Pose(50.000, 87.000),
-                                    new Pose(44.000, 81.000)
+                                    new Pose(44.000, 80.000)
                             )
                     ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
 
@@ -95,9 +135,9 @@ public class regCloseBlue extends OpMode {
 
             Spike1Intake = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(44.000, 81.000),
+                                    new Pose(44.000, 80.000),
 
-                                    new Pose(16.500, 81.000)
+                                    new Pose(16.500, 80.000)
                             )
                     ).setTangentHeadingInterpolation()
 
@@ -105,7 +145,7 @@ public class regCloseBlue extends OpMode {
 
             Scoring3 = follower.pathBuilder().addPath(
                             new BezierLine(
-                                    new Pose(16.500, 81.000),
+                                    new Pose(16.500, 80.000),
 
                                     new Pose(40.000, 94.000)
                             )
@@ -127,6 +167,7 @@ public class regCloseBlue extends OpMode {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
+                FlywheelOn();
                 follower.followPath(Shooting);
                 setPathState(1);
                 break;
@@ -141,7 +182,7 @@ public class regCloseBlue extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
                 if(!follower.isBusy()) {
                     /* Score Preload */
-
+                    ScoreArtifacts();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
                     follower.followPath(Spike2Alignment,.5,true);
                     setPathState(2);
@@ -151,9 +192,10 @@ public class regCloseBlue extends OpMode {
                 /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
                 if(!follower.isBusy()) {
                     /* Grab Sample */
-
+                    intakeOn();
                     /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
                     follower.followPath(Spike2Intake,.5,true);
+                    intakeOff();
                     setPathState(3);
                 }
                 break;
@@ -257,8 +299,15 @@ public class regCloseBlue extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+        robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         follower = Constants.createFollower(hardwareMap);
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(0);
+        limelight.start();
+
         buildPaths();
         follower.setStartingPose(startPose);
 
@@ -286,4 +335,42 @@ public class regCloseBlue extends OpMode {
         pathTimer.resetTimer();
     }
 
+    public void intakeOn(){
+        robot.shootServo.setPosition(1);
+        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 750 / 60);
+    }
+
+    public void intakeOff(){
+        robot.intake.setVelocity(0);
+    }
+
+    public void ScoreArtifacts(){
+
+
+        robot.shootServo.setPosition(0);
+
+
+        robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 750 / 60);
+    }
+
+    public void FlywheelOn(){
+
+        double targetTicksPerSec = currentFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
+        double measuredTicksPerSec = robot.flywheel.getVelocity();
+
+
+        double ffOutput = feedforward.calculate(targetTicksPerSec);
+        double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
+
+
+        double launcherPower = Math.max(-1.0, Math.min(1.0, ffOutput + pidOutput));
+        robot.flywheel.setPower(launcherPower);
+
+
+        double measuredRPM = measuredTicksPerSec / ticksPerRevLauncher * 60.0;
+        double flywheelErrRPM = Math.abs(measuredRPM - currentFlywheelTargetRPM);
+
+    }
+
+    // public void UpdateTurret()
 }
