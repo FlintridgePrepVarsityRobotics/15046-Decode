@@ -46,7 +46,7 @@ public class CalcTuning extends LinearOpMode {
     public static double kI = 0.04;
     public static double kD = 0.00027;
     public static double kF = 0.00042;
-
+    final double TICKS_PER_REV_INTAKE = 101.08;
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
     // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
@@ -199,7 +199,7 @@ public class CalcTuning extends LinearOpMode {
                 // just pressed
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setPower(0.8);
+                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
                     buttonTimer.reset();
                 } else {
                     robot.intake.setPower(0);

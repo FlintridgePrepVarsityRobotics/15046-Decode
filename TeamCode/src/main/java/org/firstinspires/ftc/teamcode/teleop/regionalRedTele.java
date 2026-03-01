@@ -27,9 +27,9 @@ import java.util.List;
 @Config
 @TeleOp(name = "red Reg teleop")
 public class regionalRedTele extends LinearOpMode {
-    public static double TP = 0.01;
-    public static double TI = 0.0001;
-    public static double TD = 0.00000005;
+    public static double TP = 0.0125;
+    public static double TI = 0;
+    public static double TD = 2.5;
 
 
     public static double kP = 0.006;
