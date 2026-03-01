@@ -311,7 +311,7 @@ public class regionalRedTele extends LinearOpMode {
                 boolean midSpeed = gamepad1.dpad_up;
                 if (midSpeed) {
                     targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                    setpointRPM = (420 * Math.log(distance)) + 1050;
+                    setpointRPM = (600.10148 * Math.log(distance)) + 1410.24409;
                     // flywheelon = true;
                 }
 
