@@ -29,6 +29,15 @@ import java.util.List;
 @Config
 @TeleOp(name = "red Reg teleop")
 public class regionalRedTele extends LinearOpMode {
+    public static double IP = 0.0005;
+    public static double II = 0;
+    public static double ID = 0;
+    public static double IF = 0.000048;
+    public static double IS = 0.0;
+    public static double IV = 0.0;
+    public static double IA = 0.2;
+    PIDFController Intakepidf = new PIDFController(IP, II, ID, IF);
+    SimpleMotorFeedforward feedforwardIntake = new SimpleMotorFeedforward(IS, IV, IA);
     public static double TP = 0.01;
     public static double TI = 0.0001;
     public static double TD = 0.00000005;
@@ -37,8 +46,8 @@ public class regionalRedTele extends LinearOpMode {
     public static double kP = 0.006;
 
 
-    public static double kI = 0.2;
-    public static double kD = 0.00026;
+    public static double kI = 0.04;
+    public static double kD = 0.00008;
     public static double kF = 0.00042;
 
     public static double goalX = 72.0;
@@ -66,17 +75,10 @@ public class regionalRedTele extends LinearOpMode {
     final double TICKS_PER_REV = 294.0;      // GoBilda 5202/5203
     final double GEAR_RATIO = 0.3953;        // 34 / 86
     final double MAX_DEGREES = 70;
-
-
-    final double MIN_POWER_TO_MOVE = 0.05;
-    final double BEARING_TOLERANCE = 7.5;    // degrees
-    final double TICKS_PER_REV_INTAKE = 101.08;
+    double ticksPerRevIntake = 101.08;
 
     double targetTicksPerSec = 0;
-    final double PROX_DIhST1 = 7.5;
-    final double PROX_DIhST2 = 6.0;
-    final double PROX_DIhST3 = 5.5;
-
+    double setpointRPMIntake = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -140,6 +142,7 @@ public class regionalRedTele extends LinearOpMode {
             robot.bLeftWheel.setPower(backLeftPower * speed);
             robot.fRightWheel.setPower(frontRightPower * speed);
             robot.bRightWheel.setPower(backRightPower * speed);
+
 //DriveCodeEND
 
 //liftCode:
@@ -162,15 +165,20 @@ public class regionalRedTele extends LinearOpMode {
             if (gamepad1.a && !intakeFull && buttonTimer.seconds() > 0.5) {
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
-                    robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 750 / 60);
+                    setpointRPMIntake = 500;
                     robot.shootServo.setPosition(0.5);
+                    runIntake();
                     buttonTimer.reset();
                 }
                 buttonTimer.reset();
             }
 // 4. AUTO-STOP LOGIC
+            Intakepidf.setPIDF(IP,II,ID,IF);
+            feedforwardIntake = new SimpleMotorFeedforward(IS,IV,IA);
+
             if (intakeFull && isIntakeRunning) {
                 isIntakeRunning = false;
+                setpointRPMIntake = 0;
                 robot.intake.setVelocity(0);
             }
 
@@ -178,7 +186,8 @@ public class regionalRedTele extends LinearOpMode {
             boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
             if (isShooting) {
                 robot.shootServo.setPosition(0);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1450 / 60);
+                setpointRPMIntake = 1900;
+                runIntake();
                 telemetry.addData("Everson", "is the goat 1");
                 if (allowUp) {
                     robot.lift.setTargetPosition(-55);
@@ -193,7 +202,8 @@ public class regionalRedTele extends LinearOpMode {
             }
             if (!isShooting && gamepad1.b) {
                 robot.shootServo.setPosition(0);
-                robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 0);
+                setpointRPMIntake = 0;
+                robot.intake.setVelocity(0);
             }
 
 
@@ -208,6 +218,7 @@ public class regionalRedTele extends LinearOpMode {
                     telemetry.addLine("brakepad retract Everson is goat2");
                 }
             }
+
 
 //FlywheelCode:
             pidf.setPIDF(kP, kI, kD, kF);
@@ -315,11 +326,20 @@ public class regionalRedTele extends LinearOpMode {
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
-                            setpointRPM = (600.10148 * Math.log10(distance)) + 1375;
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
+                            if (distance < 13) {
+                                setpointRPM = (600.10148 * Math.log10(distance)) + 1410.24409;
+                            } else if (distance > 13) {
+                                setpointRPM = 10 * (-0.00631729 * distance * distance
+                                        + 1.94772 * distance
+                                        + 185.17291);
+                                //setpointRPM = 10*(0.026218 * Math.pow(distance, 3) - 2.53637 * Math.pow(distance, 2) + 82.8973 * distance - 672.92205);
+                            }
                         }
 
-                        onTag = true;
+
+
+                            onTag = true;
                         telemetry.addData("Turret Mode", "limelight");
                         telemetry.addData("tolerance", dynamicTolerance);
                         telemetry.addData("Setpoint RPM", setpointRPM);
@@ -370,7 +390,6 @@ public class regionalRedTele extends LinearOpMode {
             turretMotorPower = turretLims(turretMotorPower, currentTurretDeg);
             robot.turret.setPower(turretMotorPower);
 //TrackingCodeEND
-            telemetry.update();
         }
     }
 
@@ -398,4 +417,14 @@ public class regionalRedTele extends LinearOpMode {
         if (currentDegrees <= -70 && power < 0) return 0;
         return power;
     }
+    public void runIntake(){
+        double targetTicksPerSecIntake = setpointRPMIntake/60 * ticksPerRevIntake;
+        double measuredTicksPerSecIntake = robot.intake.getVelocity();
+        double ffOutputIntake = feedforwardIntake.calculate(targetTicksPerSecIntake);
+        double pidOutputIntake = Intakepidf.calculate(measuredTicksPerSecIntake,targetTicksPerSecIntake);
+        double combinedOutputIntake = ffOutputIntake + pidOutputIntake;
+        combinedOutputIntake = Math.max(-1.0, Math.min(1.0, combinedOutputIntake));
+        robot.intake.setPower(combinedOutputIntake);
+    }
+
 }
