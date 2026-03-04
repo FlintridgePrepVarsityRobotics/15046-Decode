@@ -50,8 +50,11 @@ public class regionalRedTele extends LinearOpMode {
     public static double kD = 0.00008;
     public static double kF = 0.00042;
 
-    public static double goalX = 72.0;
-    public static double goalY = 0.0;
+    public static double goalX = 144.0;
+    public static double goalY = 144.0;
+    public static double resetX = 127.5;
+    public static double resetY = 131.0;
+    public static double resetHeading = 36.5;
     private Follower follower;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
@@ -101,7 +104,8 @@ public class regionalRedTele extends LinearOpMode {
         robot.init(hardwareMap);
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(0, 0, 0));
+        follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
+//        follower.setStartingPose(new Pose(0, 0, 0));
 
 //setting modes, information on turret, limelight, telemetry
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -276,7 +280,8 @@ public class regionalRedTele extends LinearOpMode {
                 robot.bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 robot.bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                follower.setStartingPose(new Pose(0, 0, 0));
+                follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
+//                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
                 telemetry.addData("Distance", getDistance(result.getTa()));
 
@@ -296,7 +301,8 @@ public class regionalRedTele extends LinearOpMode {
                 robot.bLeftWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                 robot.bRightWheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                follower.setStartingPose(new Pose(0, 0, 0));
+                follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
+//                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
                 telemetry.addData("Distance", getDistance(result.getTa()));
             }
@@ -312,7 +318,7 @@ public class regionalRedTele extends LinearOpMode {
             if (result != null && result.isValid()) {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    if (fr.getFiducialId() == 20) {
+                    if (fr.getFiducialId() == 24) {
                         double tx = fr.getTargetXDegrees();
                         targetTurretDeg = currentTurretDeg - tx;
 
@@ -331,8 +337,6 @@ public class regionalRedTele extends LinearOpMode {
                                 //setpointRPM = 10*(0.026218 * Math.pow(distance, 3) - 2.53637 * Math.pow(distance, 2) + 82.8973 * distance - 672.92205);
                             }
                         }
-
-
 
                             onTag = true;
                         telemetry.addData("Turret Mode", "limelight");
