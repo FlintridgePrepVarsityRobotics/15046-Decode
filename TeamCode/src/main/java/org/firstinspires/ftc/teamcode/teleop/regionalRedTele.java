@@ -112,11 +112,6 @@ public class regionalRedTele extends LinearOpMode {
         limelight.pipelineSwitch(0);
         limelight.start();
 
-        /*
-         * Starts polling for data.  If you neglect to call start(), getLatestResult() will return null.
-         */
-
-//        telemetry.addData(">", "Robot Ready.  Press Play.");
         telemetry.setMsTransmissionInterval(5);
         telemetry.update();
         waitForStart();

@@ -113,6 +113,11 @@ public class redteleILT extends LinearOpMode {
 
         robot.init(hardwareMap);
 
+        robot.fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
