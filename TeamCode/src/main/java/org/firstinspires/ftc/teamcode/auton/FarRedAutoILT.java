@@ -336,8 +336,8 @@ public class FarRedAutoILT extends OpMode {
 
 
     private final Pose startPose = new Pose(144-59, 8, Math.toRadians(180-90)); // Start Pose of our robot.
-    private final Pose scorePose = new Pose(144-51, 11, Math.toRadians(180-107));//107 // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
-    private final Pose pick1 = new Pose(144-40,34, Math.toRadians(180-180));
+    private final Pose scorePose = new Pose(144-51, 11, Math.toRadians(69));//107 // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pick1 = new Pose(144-40,35.5, Math.toRadians(180-180));
     private final Pose pickup1Pose = new Pose(144-8, 34, Math.toRadians(180-180)); // Highest (First Set) of Artifacts from the Spike Mark.
     private final Pose pick2 = new Pose(144-8.5, 27, Math.toRadians(180-210));
     private final Pose pickup2Pose = new Pose(144-8, 10, Math.toRadians(180-210));

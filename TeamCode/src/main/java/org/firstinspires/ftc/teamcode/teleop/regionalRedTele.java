@@ -52,8 +52,10 @@ public class regionalRedTele extends LinearOpMode {
 
     public static double goalX = 144.0;
     public static double goalY = 144.0;
-    public static double resetX = 127.5;
-    public static double resetY = 131.0;
+    public static double tagX = 96.0;
+    public static double tagY = 144.0;
+    public static double resetX = 125.5;
+    public static double resetY = 120.0;
     public static double resetHeading = 36.5;
     private Follower follower;
 
@@ -320,28 +322,39 @@ public class regionalRedTele extends LinearOpMode {
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     if (fr.getFiducialId() == 24) {
                         double tx = fr.getTargetXDegrees();
-                        targetTurretDeg = currentTurretDeg - tx;
 
                         double distance = getDistance(result.getTa());
+
+                        double robotHeading = Math.toDegrees(follower.getPose().getHeading());
+
+                        double absAngleToTag = normalizeDegrees(robotHeading + currentTurretDeg - tx);
+
+                        double robotX_Lime = tagX - distance * Math.cos(Math.toRadians(absAngleToTag));
+                        double robotY_Lime = tagY - distance * Math.sin(Math.toRadians(absAngleToTag));
+
+                        double absoluteAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY_Lime, goalX - robotX_Lime));
+
+                        targetTurretDeg = absoluteAngleToGoal - robotHeading;
+
                         dynamicTolerance = Range.clip(100.0 / distance, 0.5, 8.0);
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
                             if (distance < 13) {
-                                setpointRPM = (600.10148 * Math.log10(distance)) + 1410.24409;
-                            } else if (distance > 13) {
+                                setpointRPM = (600.10148 * Math.log10(distance)) + 1410.24409; //change ta to ty bc ta is inaccurate
+                            } else if (distance >= 13) {
                                 setpointRPM = 10 * (-0.00631729 * distance * distance
                                         + 1.94772 * distance
                                         + 185.17291);
-                                //setpointRPM = 10*(0.026218 * Math.pow(distance, 3) - 2.53637 * Math.pow(distance, 2) + 82.8973 * distance - 672.92205);
                             }
                         }
 
-                            onTag = true;
-                        telemetry.addData("Turret Mode", "limelight");
+                        onTag = true;
+                        telemetry.addData("Turret Mode", "limelight offset to corner");
                         telemetry.addData("tolerance", dynamicTolerance);
                         telemetry.addData("Setpoint RPM", setpointRPM);
+
                         TelemetryPacket packet = new TelemetryPacket();
                         FtcDashboard dashboard = FtcDashboard.getInstance();
                         dashboard.setTelemetryTransmissionInterval(25);
