@@ -114,6 +114,11 @@ public class regionalRedTele extends LinearOpMode {
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        robot.fLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.fRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.bLeftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        robot.bRightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
         limelight.start();
@@ -285,7 +290,7 @@ public class regionalRedTele extends LinearOpMode {
                 follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
 //                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
-                telemetry.addData("Distance", getDistance(result.getTa()));
+                telemetry.addData("Distance", getDistanceangle(result.getTy()));
 
                 FirstYPress = false;
             }
@@ -306,7 +311,7 @@ public class regionalRedTele extends LinearOpMode {
                 follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
 //                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
-                telemetry.addData("Distance", getDistance(result.getTa()));
+                telemetry.addData("Distance", getDistanceangle(result.getTy()));
             }
 
             boolean onTag = false;
@@ -322,36 +327,27 @@ public class regionalRedTele extends LinearOpMode {
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
                     if (fr.getFiducialId() == 24) {
                         double tx = fr.getTargetXDegrees();
+                        double ty = fr.getTargetYDegrees();
 
-                        double distance = getDistance(result.getTa());
-
+                        double distance = getDistanceangle(ty);
                         double robotHeading = Math.toDegrees(follower.getPose().getHeading());
-
                         double absAngleToTag = normalizeDegrees(robotHeading + currentTurretDeg - tx);
 
                         double robotX_Lime = tagX - distance * Math.cos(Math.toRadians(absAngleToTag));
                         double robotY_Lime = tagY - distance * Math.sin(Math.toRadians(absAngleToTag));
-
                         double absoluteAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY_Lime, goalX - robotX_Lime));
 
-                        targetTurretDeg = absoluteAngleToGoal - robotHeading;
-
+                        targetTurretDeg = normalizeDegrees(absoluteAngleToGoal - robotHeading);
                         dynamicTolerance = Range.clip(100.0 / distance, 0.5, 8.0);
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                            if (distance < 13) {
-                                setpointRPM = (600.10148 * Math.log10(distance)) + 1410.24409; //change ta to ty bc ta is inaccurate
-                            } else if (distance >= 13) {
-                                setpointRPM = 10 * (-0.00631729 * distance * distance
-                                        + 1.94772 * distance
-                                        + 185.17291);
-                            }
+                            setpointRPM = (137.01032* Math.sqrt(distance)) + 881;
                         }
 
                         onTag = true;
-                        telemetry.addData("Turret Mode", "limelight offset to corner");
+                        telemetry.addData("Turret Mode", "LL offset to corner");
                         telemetry.addData("tolerance", dynamicTolerance);
                         telemetry.addData("Setpoint RPM", setpointRPM);
 
@@ -378,7 +374,7 @@ public class regionalRedTele extends LinearOpMode {
 
                 onTag = true;
                 telemetry.addData("Turret Mode", "odo (pedro)");
-                telemetry.addData("Distance", getDistance(result.getTa()));
+                telemetry.addData("Distance", getDistanceangle(result.getTy()));
             }
             if (onTag) {
                 double clampedTarget;
@@ -411,8 +407,8 @@ public class regionalRedTele extends LinearOpMode {
         return (newDistance);
     }
     public double getDistanceangle(double ty) {
-        double limelightMountAngle = 25.0;
-        double limelightHeightInches = 10.0;
+        double limelightMountAngle = 20.0;
+        double limelightHeightInches = 14.0;
         double goalHeightInches = 29.5;
         double angleToGoal = limelightMountAngle + ty;
         double angleRadians = angleToGoal * (Math.PI / 180.0);
