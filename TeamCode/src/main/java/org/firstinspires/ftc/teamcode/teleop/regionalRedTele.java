@@ -50,17 +50,22 @@ public class regionalRedTele extends LinearOpMode {
     public static double kD = 0.00008;
     public static double kF = 0.00042;
 
+    //blue
+//    public static double goalX = 0.0;
+//    public static double goalY = 144.0;
+//    public static double tagX = 48.0;
+//    public static double tagY = 130.0;
+//    public static double resetX = 22.0;
+//    public static double resetY = 120.0;
+//    public static double resetHeading = 0.0; //107.5
     public static double goalX = 144.0;
     public static double goalY = 144.0;
     public static double tagX = 96.0;
-    public static double tagY = 144.0;
-    public static double resetX = 125.5;
+    public static double tagY = 130.0;
+    public static double resetX = 122.0;
     public static double resetY = 120.0;
-    public static double resetHeading = 36.5;
+    public static double resetHeading = 36.5; //36.5
     private Follower follower;
-
-    // Feedforward: kS (static), kV (velocity), kA (acceleration)
-    // kV roughly ~ 1 / (max_ticks_per_sec) as a starting point
 
     public static double kS = 0.0;
     public static double kV = 0.0;
@@ -70,7 +75,6 @@ public class regionalRedTele extends LinearOpMode {
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
     SimpleMotorFeedforward feedforward = new SimpleMotorFeedforward(kS, kV, kA);
-    //LauncherPIDEND
     public ElapsedTime buttonTimer = new ElapsedTime();
     public ElapsedTime colorTimer = new ElapsedTime();
 
@@ -109,7 +113,7 @@ public class regionalRedTele extends LinearOpMode {
         follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
 //        follower.setStartingPose(new Pose(0, 0, 0));
 
-//setting modes, information on turret, limelight, telemetry
+//setting modes, info on turret, limelight, telemetry
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -178,7 +182,7 @@ public class regionalRedTele extends LinearOpMode {
                 }
                 buttonTimer.reset();
             }
-// 4. AUTO-STOP LOGIC
+//auto-stop
             Intakepidf.setPIDF(IP,II,ID,IF);
             feedforwardIntake = new SimpleMotorFeedforward(IS,IV,IA);
 
@@ -188,7 +192,7 @@ public class regionalRedTele extends LinearOpMode {
                 robot.intake.setVelocity(0);
             }
 
-// Priority 1: SHOOTING (Button B)
+// shooting, btn b
             boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
             if (isShooting) {
                 robot.shootServo.setPosition(0);
@@ -236,8 +240,6 @@ public class regionalRedTele extends LinearOpMode {
             robot.flywheel.setPower(combinedOutput);
 //LauncherCodeEND
 
-// --- SENSOR READING ---
-            // ----------------------------------------------------------------------
             double dist1 = ((ColorRangeSensor) robot.sensor1).getDistance(DistanceUnit.CM);
             double dist2 = ((ColorRangeSensor) robot.sensor2).getDistance(DistanceUnit.CM);
             double dist3 = ((ColorRangeSensor) robot.sensor3).getDistance(DistanceUnit.CM);
@@ -290,7 +292,9 @@ public class regionalRedTele extends LinearOpMode {
                 follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
 //                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
-                telemetry.addData("Distance", getDistanceangle(result.getTy()));
+                if(result != null) {
+                    telemetry.addData("Distance", getDistance(result.getTy()));
+                }
 
                 FirstYPress = false;
             }
@@ -311,7 +315,9 @@ public class regionalRedTele extends LinearOpMode {
                 follower.setStartingPose(new Pose(resetX, resetY, Math.toRadians(resetHeading))); //supposed absolute coords
 //                follower.setStartingPose(new Pose(0, 0, 0));
                 telemetry.addData("e the goat", "reset turret, drive enc, and odo");
-                telemetry.addData("Distance", getDistanceangle(result.getTy()));
+                if(result != null) {
+                    telemetry.addData("Distance", getDistance(result.getTy()));
+                }
             }
 
             boolean onTag = false;
@@ -325,29 +331,25 @@ public class regionalRedTele extends LinearOpMode {
             if (result != null && result.isValid()) {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    if (fr.getFiducialId() == 24) {
+                    if (fr.getFiducialId() == 20) { //20 is blue, 24 is red
                         double tx = fr.getTargetXDegrees();
-                        double ty = fr.getTargetYDegrees();
+                        targetTurretDeg = currentTurretDeg - tx;
 
-                        double distance = getDistanceangle(ty);
-                        double robotHeading = Math.toDegrees(follower.getPose().getHeading());
-                        double absAngleToTag = normalizeDegrees(robotHeading + currentTurretDeg - tx);
-
-                        double robotX_Lime = tagX - distance * Math.cos(Math.toRadians(absAngleToTag));
-                        double robotY_Lime = tagY - distance * Math.sin(Math.toRadians(absAngleToTag));
-                        double absoluteAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY_Lime, goalX - robotX_Lime));
-
-                        targetTurretDeg = normalizeDegrees(absoluteAngleToGoal - robotHeading);
+                        double distance = getDistance(result.getTy());
                         dynamicTolerance = Range.clip(100.0 / distance, 0.5, 8.0);
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                            setpointRPM = (137.01032* Math.sqrt(distance)) + 881;
+                            if (distance < 13) {
+                                setpointRPM = (494 * Math.log(distance)) - 75;
+                            } else if (distance > 13) {
+                                setpointRPM = 10 * (-0.00631729 * distance * distance + 1.94772 * distance + 185.17291);
+                            }
                         }
 
                         onTag = true;
-                        telemetry.addData("Turret Mode", "LL offset to corner");
+                        telemetry.addData("Turret Mode", "limelight");
                         telemetry.addData("tolerance", dynamicTolerance);
                         telemetry.addData("Setpoint RPM", setpointRPM);
 
@@ -374,7 +376,9 @@ public class regionalRedTele extends LinearOpMode {
 
                 onTag = true;
                 telemetry.addData("Turret Mode", "odo (pedro)");
-                telemetry.addData("Distance", getDistanceangle(result.getTy()));
+                if(result != null) {
+                    telemetry.addData("Distance", getDistance(result.getTy()));
+                }
             }
             if (onTag) {
                 double clampedTarget;
@@ -401,12 +405,12 @@ public class regionalRedTele extends LinearOpMode {
         }
     }
 
-    public double getDistance (double ta){
-        double scale = 10;
-        double newDistance = scale / ta;
-        return (newDistance);
-    }
-    public double getDistanceangle(double ty) {
+//    public double getDistance (double ta){
+//        double scale = 10;
+//        double newDistance = scale / ta;
+//        return (newDistance);
+//    }
+    public double getDistance(double ty) {
         double limelightMountAngle = 20.0;
         double limelightHeightInches = 14.0;
         double goalHeightInches = 29.5;
@@ -434,5 +438,4 @@ public class regionalRedTele extends LinearOpMode {
         combinedOutputIntake = Math.max(-1.0, Math.min(1.0, combinedOutputIntake));
         robot.intake.setPower(combinedOutputIntake);
     }
-
 }

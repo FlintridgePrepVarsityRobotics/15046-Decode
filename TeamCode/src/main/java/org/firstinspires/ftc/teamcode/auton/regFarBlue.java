@@ -23,15 +23,20 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
 
-@Autonomous(name = "regFarRed")
-public class regFarRed extends OpMode {
+@Autonomous(name = "regFarBlue")
+public class regFarBlue extends OpMode {
 
     public newHWmap robot = new newHWmap();
+
     private TelemetryManager panelsTelemetry;
+
     private Follower follower;
     private Limelight3A limelight;
+
     private Timer pathTimer, actionTimer, opmodeTimer;
+
     private boolean finishedShooting = false;
+
     private int pathState;
 
     public static double TP = 0.01;
@@ -46,6 +51,7 @@ public class regFarRed extends OpMode {
     public static double kS = 0.0;
     public static double kV = 0.0;
     public static double kA = 0.0;
+
     final double TICKS_PER_REV_INTAKE = 146.44;
 
     PIDFController pidf = new PIDFController(kP, kI, kD, kF);
@@ -55,24 +61,29 @@ public class regFarRed extends OpMode {
 
     final double TICKS_PER_REV_TURRET = 294.0;
     final double GEAR_RATIO_TURRET = 0.3953;
+
     final double MAX_DEGREES = 70;
+
     final double MIN_POWER_TO_MOVE = 0.05;
 
     private boolean shooting = false;
     private int shotsFired = 0;
 
     private double currentFlywheelTargetRPM = 1944;
+
     private static final double FLYWHEEL_ALLOWED_ERR_RPM = 50;
 
-    private static final double FEED_TIME_SEC = .25; //cd
+    private static final double FEED_TIME_SEC = .25;
     private static final double BETWEEN_SHOTS_MIN_SEC = 0.35;
 
     private boolean feeding = false;
+
     private double feedStartTime = 0.0;
     private double lastFeedEndTime = -999.0;
+
     private final int ticksPerRevLauncher = 28;
 
-    private final Pose startPose = new Pose(82.000, 7.625, Math.toRadians(90));
+    private final Pose startPose = new Pose(62.000, 7.625, Math.toRadians(90));
 
     public PathChain Spike3, Spike3Intake, Scoring, Corner, CornerIntake, Scoring2;
     public PathChain BackshotCurve1, BackshotCurve2, Backshot3, Scoring3, Park;
@@ -107,6 +118,7 @@ public class regFarRed extends OpMode {
         robot.flywheel.setPower(0);
         robot.intake.setPower(0);
         robot.shootServo.setPosition(0.5);
+
         shooting = false;
         feeding = false;
         finishedShooting = true;
@@ -117,6 +129,7 @@ public class regFarRed extends OpMode {
     }
 
     public void updateShooting() {
+
         if (!shooting) {
             feeding = false;
             return;
@@ -135,6 +148,7 @@ public class regFarRed extends OpMode {
         double flywheelErrRPM = Math.abs(measuredRPM - currentFlywheelTargetRPM);
 
         double now = actionTimer.getElapsedTimeSeconds();
+
         boolean flywheelReady = (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM);
         boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
 
@@ -144,40 +158,50 @@ public class regFarRed extends OpMode {
         }
 
         if (!feeding) {
-            robot.shootServo.setPosition(0.5); //closed
+
+            robot.shootServo.setPosition(0.5);
             robot.intake.setPower(0);
 
             if (flywheelReady && cooldownDone) {
                 feeding = true;
                 feedStartTime = now;
             }
+
         } else {
-            robot.shootServo.setPosition(0.0); //open
+
+            robot.shootServo.setPosition(0.0);
             robot.intake.setVelocity(TICKS_PER_REV_INTAKE * 1000 / 60);
 
             if ((now - feedStartTime) >= FEED_TIME_SEC) {
+
                 feeding = false;
                 lastFeedEndTime = now;
                 shotsFired++;
 
                 robot.shootServo.setPosition(0.5);
                 robot.intake.setPower(0);
+
             }
         }
     }
 
     public void updateTurret() {
+
         LLResult result = limelight.getLatestResult();
 
         if (result != null && result.isValid()) {
+
             List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
             boolean tagFound = false;
 
             for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                if (fr.getFiducialId() == 24) {
+
+                if (fr.getFiducialId() == 20) {
+
                     tagFound = true;
 
                     double distance = getdistance(result.getTa());
+
                     double targetOffset = 0.0;
 
                     if (distance > 50) {
@@ -185,9 +209,11 @@ public class regFarRed extends OpMode {
                     }
 
                     double targetX = fr.getTargetXDegrees();
+
                     double turretpidOutput = turretpid.calculate(targetOffset, targetX);
 
                     double turretfeedforward = 0;
+
                     if (Math.abs(turretpidOutput) > 0.01) {
                         turretfeedforward = Math.signum(turretpidOutput) * MIN_POWER_TO_MOVE;
                     }
@@ -195,79 +221,87 @@ public class regFarRed extends OpMode {
                     double motorPower = -(turretpidOutput + turretfeedforward);
 
                     int encoderTicks = robot.turret.getCurrentPosition();
+
                     double turretDegrees = (encoderTicks / (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET)) * 360.0;
 
                     if ((turretDegrees >= MAX_DEGREES && motorPower > 0) ||
                             (turretDegrees <= -MAX_DEGREES && motorPower < 0)) {
+
                         motorPower = 0;
+
                     }
 
                     robot.turret.setPower(motorPower);
                     break;
+
                 }
             }
+
             if (!tagFound) {
                 robot.turret.setPower(0);
             }
+
         } else {
             robot.turret.setPower(0);
         }
     }
 
     public void setTurretAngle(double degrees) {
+
         int targetTicks = (int) Math.round(degrees * (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET) / 360.0);
+
         robot.turret.setTargetPosition(targetTicks);
         robot.turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.turret.setPower(0.6);
+
     }
 
     public void buildPaths() {
 
         Spike3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(82.000, 7.625), new Pose(82.000, 24.000), new Pose(100.000, 35.200)))
-                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0)).build();
+                .addPath(new BezierCurve(new Pose(62.000, 7.625), new Pose(62.000, 24.000), new Pose(44.000, 35.200)))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180)).build();
 
         Spike3Intake = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(100.000, 35.200), new Pose(134.000, 35.200)))
+                .addPath(new BezierLine(new Pose(44.000, 35.200), new Pose(10.000, 35.200)))
                 .setTangentHeadingInterpolation().build();
 
         Scoring = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(134.000, 35.200), new Pose(90.000, 15.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(69)).build();
+                .addPath(new BezierLine(new Pose(10.000, 35.200), new Pose(54.000, 15.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(111)).build();
 
         Corner = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(90.000, 15.000), new Pose(109.750, 30.000), new Pose(131.500, 25.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(69), Math.toRadians(330)).build();
+                .addPath(new BezierCurve(new Pose(54.000, 15.000), new Pose(34.250, 30.000), new Pose(12.500, 25.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(111), Math.toRadians(210)).build();
 
         CornerIntake = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(131.500, 25.000), new Pose(131.500, 11.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(330), Math.toRadians(330)).build();
+                .addPath(new BezierLine(new Pose(12.500, 25.000), new Pose(12.500, 11.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(210), Math.toRadians(210)).build();
 
         Scoring2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(131.500, 11.000), new Pose(105.750, 20.000), new Pose(90.000, 15.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(330), Math.toRadians(69)).build();
+                .addPath(new BezierCurve(new Pose(12.500, 11.000), new Pose(38.250, 20.000), new Pose(54.000, 15.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(210), Math.toRadians(111)).build();
 
         BackshotCurve1 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(90.000, 15.000), new Pose(93.875, 15.000), new Pose(107.750, 15.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(69), Math.toRadians(0)).build();
+                .addPath(new BezierCurve(new Pose(54.000, 15.000), new Pose(50.125, 15.000), new Pose(36.250, 15.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(111), Math.toRadians(180)).build();
 
         BackshotCurve2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(107.750, 15.000), new Pose(118.625, 15.000), new Pose(131.500, 11.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                .addPath(new BezierCurve(new Pose(36.250, 15.000), new Pose(25.375, 15.000), new Pose(12.500, 11.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
 
         Backshot3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(131.500, 11.000), new Pose(110.000, 18.000), new Pose(131.500, 25.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0)).build();
+                .addPath(new BezierCurve(new Pose(12.500, 11.000), new Pose(34.000, 18.000), new Pose(12.500, 25.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180)).build();
 
         Scoring3 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(131.500, 25.000), new Pose(90.000, 15.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(69)).build();
+                .addPath(new BezierLine(new Pose(12.500, 25.000), new Pose(54.000, 15.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(111)).build();
 
         Park = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(90.000, 15.000), new Pose(85.000, 29.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(69), Math.toRadians(69)).build();
+                .addPath(new BezierLine(new Pose(54.000, 15.000), new Pose(59.000, 29.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(111), Math.toRadians(111)).build();
     }
-
     public void autonomousPathUpdate() {
         switch (pathState) {
             case 0:
@@ -275,6 +309,7 @@ public class regFarRed extends OpMode {
                 startShooting3(2488); // test rpm
                 setPathState(1);
                 break;
+
 
             case 1:
                 if (finishedShooting) {
@@ -284,6 +319,7 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 2:
                 if(!follower.isBusy()) {
                     startIntake();
@@ -292,12 +328,14 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 3:
                 if(!follower.isBusy()) {
                     follower.followPath(Scoring, .5, true);
                     setPathState(4);
                 }
                 break;
+
 
             case 4:
                 if(!follower.isBusy()) {
@@ -307,12 +345,14 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 5:
                 if (finishedShooting) {
                     follower.followPath(Corner, .5, true);
                     setPathState(6);
                 }
                 break;
+
 
             case 6:
                 if(!follower.isBusy()) {
@@ -322,12 +362,14 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 7:
                 if(!follower.isBusy()) {
                     follower.followPath(Scoring2, .5, true);
                     setPathState(8);
                 }
                 break;
+
 
             case 8:
                 if(!follower.isBusy()) {
@@ -337,6 +379,7 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 9:
                 if (finishedShooting) {
                     follower.followPath(BackshotCurve1, .5, true);
@@ -344,12 +387,14 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 10:
                 if(!follower.isBusy()) {
                     follower.followPath(BackshotCurve2, .5, true);
                     setPathState(11);
                 }
                 break;
+
 
             case 11:
                 if(!follower.isBusy()) {
@@ -359,12 +404,14 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 12:
                 if(!follower.isBusy()) {
                     follower.followPath(Scoring3, .5, true);
                     setPathState(13);
                 }
                 break;
+
 
             case 13:
                 if(!follower.isBusy()) {
@@ -374,6 +421,7 @@ public class regFarRed extends OpMode {
                 }
                 break;
 
+
             case 14:
                 if(!follower.isBusy()) {
                     setPathState(-1);
@@ -382,10 +430,12 @@ public class regFarRed extends OpMode {
         }
     }
 
+
     public void setPathState(int pState) {
         pathState = pState;
         pathTimer.resetTimer();
     }
+
 
     @Override
     public void loop() {
@@ -393,15 +443,18 @@ public class regFarRed extends OpMode {
         autonomousPathUpdate();
         updateTurret();
 
+
         if (shooting) {
             updateShooting();
         }
+
 
         telemetry.addData("target rpm", currentFlywheelTargetRPM);
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.update();
     }
+
 
     @Override
     public void init() {
@@ -410,34 +463,46 @@ public class regFarRed extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
+
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
 
         robot.init(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
 
+
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
         limelight.start();
+
 
         robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         robot.turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
         panelsTelemetry.update(telemetry);
+
 
         buildPaths();
         follower.setStartingPose(startPose);
     }
 
+
     @Override public void init_loop() {}
+
 
     @Override public void start() {
         opmodeTimer.resetTimer();
         setPathState(0);
     }
 
+
     @Override public void stop() {
         limelight.stop();
     }
 }
+
+
+
