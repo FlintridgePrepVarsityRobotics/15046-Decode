@@ -38,9 +38,9 @@ public class regionalRedTele extends LinearOpMode {
     public static double IA = 0.2;
     PIDFController Intakepidf = new PIDFController(IP, II, ID, IF);
     SimpleMotorFeedforward feedforwardIntake = new SimpleMotorFeedforward(IS, IV, IA);
-    public static double TP = 0.01;
+    public static double TP = 0.03;
     public static double TI = 0.0001;
-    public static double TD = 0.00000005;
+    public static double TD = 0.00000005;;
 //67🫃
 
     public static double kP = 0.006;
@@ -50,13 +50,13 @@ public class regionalRedTele extends LinearOpMode {
     public static double kD = 0.00008;
     public static double kF = 0.00042;
 
-    public static double goalX = 144.0;
-    public static double goalY = 144.0;
-    public static double tagX = 96.0;
-    public static double tagY = 144.0;
-    public static double resetX = 125.5;
-    public static double resetY = 120.0;
-    public static double resetHeading = 36.5;
+    public static double goalX = -72;
+    public static double goalY = 0;
+    public static double tagX = 96;
+    public static double tagY = 144;
+    public static double resetX = 0;
+    public static double resetY = 0;
+    public static double resetHeading = 0;
     private Follower follower;
 
     // Feedforward: kS (static), kV (velocity), kA (acceleration)
@@ -150,7 +150,6 @@ public class regionalRedTele extends LinearOpMode {
             robot.bRightWheel.setPower(backRightPower * speed);
 
 //DriveCodeEND
-
 //liftCode:
             if (gamepad1.right_bumper) {
                 allowUp = true;
@@ -159,8 +158,8 @@ public class regionalRedTele extends LinearOpMode {
                 allowUp = false;
             }
             if (gamepad1.right_trigger > .5 && gamepad1.left_trigger > .5) {
-                robot.lift.setTargetPosition(-100);
-                robot.lift.setPower(0.75);
+                robot.lift.setTargetPosition(-130);
+                robot.lift.setPower(1);
                 robot.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
             //end lift code
@@ -325,7 +324,7 @@ public class regionalRedTele extends LinearOpMode {
             if (result != null && result.isValid()) {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    if (fr.getFiducialId() == 24) {
+                    if (fr.getFiducialId() == 20) {
                         double tx = fr.getTargetXDegrees();
                         double ty = fr.getTargetYDegrees();
 
@@ -336,14 +335,14 @@ public class regionalRedTele extends LinearOpMode {
                         double robotX_Lime = tagX - distance * Math.cos(Math.toRadians(absAngleToTag));
                         double robotY_Lime = tagY - distance * Math.sin(Math.toRadians(absAngleToTag));
                         double absoluteAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY_Lime, goalX - robotX_Lime));
-
-                        targetTurretDeg = normalizeDegrees(absoluteAngleToGoal - robotHeading);
+//                        targetTurretDeg = normalizeDegrees(absoluteAngleToGoal - robotHeading);
+                        targetTurretDeg = currentTurretDeg - tx;
                         dynamicTolerance = Range.clip(100.0 / distance, 0.5, 8.0);
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
-                            setpointRPM = (137.01032* Math.sqrt(distance)) + 881;
+                            setpointRPM = -75 + (494* Math.log(distance));
                         }
 
                         onTag = true;
