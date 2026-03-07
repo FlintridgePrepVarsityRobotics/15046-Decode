@@ -80,7 +80,7 @@ public class regFarBlue extends OpMode {
 
     private static final double FLYWHEEL_ALLOWED_ERR_RPM = 20;
 
-    private static final double FEED_TIME_SEC = .5;
+    private static final double FEED_TIME_SEC = .6;
     private static final double BETWEEN_SHOTS_MIN_SEC = 0.5;
 
     private boolean feeding = false;
@@ -177,7 +177,7 @@ public class regFarBlue extends OpMode {
         boolean flywheelReady = (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM);
         boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
 
-        if (shotsFired >= 4) {
+        if (shotsFired >= 3) {
             stopShooting();
             robot.shootServo.setPosition(0.5);
             return;
