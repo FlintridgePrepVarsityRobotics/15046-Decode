@@ -236,7 +236,7 @@ public class regionalRedTele extends LinearOpMode {
 
 
 // shooting, btn b
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
+            boolean isShooting = gamepad1.b && (setpointRPM > 0) && (Math.abs(measuredRPM - setpointRPM) <= 100);
             if (isShooting) {
                 robot.shootServo.setPosition(0);
                 setpointRPMIntake = 1900;
@@ -416,9 +416,9 @@ public class regionalRedTele extends LinearOpMode {
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
                             if (distance < 70) {
-                                setpointRPM = (494 * Math.log(distance)) - 105;
+                                setpointRPM = (493 * Math.log(distance)) - 105;
                             } else if (distance > 70) {
-                                setpointRPM = (494 * Math.log(distance)) + 105;
+                                setpointRPM = (494 * Math.log(distance)) + 100;
                             }
                         }
 
@@ -469,7 +469,7 @@ public class regionalRedTele extends LinearOpMode {
                 double odoDistance = Math.hypot(goalX - robotX, goalY - robotY);
 
 
-                if (setpointRPM <= 2100) {
+                if (setpointRPM < 2100) {
                     double fieldAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY, goalX - robotX));
                     targetTurretDeg = normalizeDegrees(fieldAngleToGoal - robotHeading);
                     dynamicTolerance = 2.0;

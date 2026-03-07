@@ -42,7 +42,6 @@ public class regionalBlueTele extends LinearOpMode {
     public static double TP = 0.013;
     public static double TI = 0.0001;
     public static double TD = 0.00000005;
-//67🫃
 
 
     public static double kP = 0.006;
@@ -77,7 +76,7 @@ public class regionalBlueTele extends LinearOpMode {
     public static double kA = 0.2;
 
 
-    public static double tagOffset = 8.0; // dist the tag is to the right of where the turret aims
+    public static double tagOffset = 8.0; //negative for red
 
 
     PIDController turretpid = new PIDController(TP, TI, TD);
@@ -216,7 +215,7 @@ public class regionalBlueTele extends LinearOpMode {
                 isIntakeRunning = !isIntakeRunning;
                 if (isIntakeRunning) {
                     isIntakeReversed = false;
-                    setpointRPMIntake = 900;
+                    setpointRPMIntake = 700;
                     robot.shootServo.setPosition(0.5);
                     runIntake();
                 }
@@ -237,7 +236,7 @@ public class regionalBlueTele extends LinearOpMode {
 
 
 // shooting, btn b
-            boolean isShooting = gamepad1.b && (Math.abs(measuredRPM - setpointRPM) <= 100);
+            boolean isShooting = gamepad1.b && (setpointRPM > 0) && (Math.abs(measuredRPM - setpointRPM) <= 100);
             if (isShooting) {
                 robot.shootServo.setPosition(0);
                 setpointRPMIntake = 1900;
@@ -321,6 +320,11 @@ public class regionalBlueTele extends LinearOpMode {
                 isTurretLocked = false;
             }
 
+            if (gamepad1.dpad_right) {
+                robot.turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            }
+
 
             LLStatus status = limelight.getStatus();
             LLResult result = limelight.getLatestResult();
@@ -394,8 +398,8 @@ public class regionalBlueTele extends LinearOpMode {
             if (result != null && result.isValid()) {
                 List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                 for (LLResultTypes.FiducialResult fr : fiducialResults) {
-                    if (fr.getFiducialId() == 20) { //20 is blue, 24 is red
-
+                    // ID 24 is Red
+                    if (fr.getFiducialId() == 20) {
 
                         double distance = getDistance(result.getTy());
                         double activeOffset = 0.0;
@@ -404,33 +408,27 @@ public class regionalBlueTele extends LinearOpMode {
                         }
                         double targetTx = Math.toDegrees(Math.atan(activeOffset / distance));
 
-
                         double tx = fr.getTargetXDegrees();
                         double calculatedTargetDeg = currentTurretDeg - (tx - targetTx);
 
-
                         dynamicTolerance = Range.clip(120.0 / distance, 0.3, 8.0);
-
 
                         boolean midSpeed = gamepad1.dpad_up;
                         if (midSpeed) {
                             targetTicksPerSec = setpointRPM / 60.0 * ticksPerRev;
                             if (distance < 70) {
-                                setpointRPM = (494 * Math.log(distance)) - 105;
+                                setpointRPM = (493 * Math.log(distance)) - 105;
                             } else if (distance > 70) {
-                                setpointRPM = (494 * Math.log(distance)) + 105;
+                                setpointRPM = (494 * Math.log(distance)) + 100;
                             }
                         }
-
 
                         if (setpointRPM < 2100) {
                             isTurretLocked = false;
                         }
 
-
                         if (!isTurretLocked) {
                             targetTurretDeg = calculatedTargetDeg;
-
 
                             if (setpointRPM >= 2100 && Math.abs(calculatedTargetDeg - currentTurretDeg) <= dynamicTolerance) {
                                 isTurretLocked = true;
@@ -441,12 +439,10 @@ public class regionalBlueTele extends LinearOpMode {
                             telemetry.addData("Turret Status", "loganLOCK");
                         }
 
-
                         onTag = true;
                         telemetry.addData("Turret Mode", "limelight");
                         telemetry.addData("tolerance", dynamicTolerance);
                         telemetry.addData("Setpoint RPM", setpointRPM);
-
 
                         TelemetryPacket packet = new TelemetryPacket();
                         FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -465,15 +461,12 @@ public class regionalBlueTele extends LinearOpMode {
                 double robotY = follower.getPose().getY();
                 double robotHeading = Math.toDegrees(follower.getPose().getHeading());
 
-
                 double odoDistance = Math.hypot(goalX - robotX, goalY - robotY);
 
-
-                if (setpointRPM <= 2100) {
+                if (setpointRPM < 2100) {
                     double fieldAngleToGoal = Math.toDegrees(Math.atan2(goalY - robotY, goalX - robotX));
                     targetTurretDeg = normalizeDegrees(fieldAngleToGoal - robotHeading);
                     dynamicTolerance = 2.0;
-
 
                     onTag = true;
                     telemetry.addData("Turret Mode", "odo (pedro)");
@@ -487,12 +480,9 @@ public class regionalBlueTele extends LinearOpMode {
                     clampedTarget = Range.clip(targetTurretDeg, -MAX_DEGREES, MAX_DEGREES);
                 }
 
-
                 double angleError = Math.abs(clampedTarget - currentTurretDeg);
 
-
                 turretMotorPower = turretpid.calculate(currentTurretDeg, clampedTarget);
-
 
                 if (isTurretLocked) {
                     turretMotorPower = Range.clip(turretMotorPower, -0.08, 0.08);
@@ -508,7 +498,6 @@ public class regionalBlueTele extends LinearOpMode {
         }
     }
 
-
     // Angle-based distance (ty)
     public double getDistance(double ty) {
         double limelightMountAngle = 20.0;
@@ -519,20 +508,17 @@ public class regionalBlueTele extends LinearOpMode {
         return (goalHeightInches - limelightHeightInches) / Math.tan(angleRadians);
     }
 
-
     private double normalizeDegrees(double degrees) {
         while (degrees > 180) degrees -= 360;
         while (degrees <= -180) degrees += 360;
         return degrees;
     }
 
-
     private double turretLims(double power, double currentDegrees) {
         if (currentDegrees >= 70 && power > 0) return 0;
         if (currentDegrees <= -70 && power < 0) return 0;
         return power;
     }
-
 
     public void runIntake() {
         double targetTicksPerSecIntake = setpointRPMIntake / 60 * ticksPerRevIntake;
@@ -544,6 +530,3 @@ public class regionalBlueTele extends LinearOpMode {
         robot.intake.setPower(combinedOutputIntake);
     }
 }
-
-
-

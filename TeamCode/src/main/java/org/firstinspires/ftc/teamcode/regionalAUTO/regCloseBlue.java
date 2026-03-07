@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode.regionalAUTO;
 
 
 
+
+
+
+
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.controller.wpilibcontroller.SimpleMotorFeedforward;
@@ -22,8 +26,14 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 
 
+
+
+
+
 import org.firstinspires.ftc.teamcode.Projects.newHWmap;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
+
 
 
 @Autonomous(name = "Regional Close Blue")
@@ -48,9 +58,17 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public static double TP = 0.01;
     public static double TI = 0.00015;
     public static double TD = 0.00000005;
+
+
+
+
 
 
 
@@ -63,6 +81,10 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public static double kS = 0.0;
     public static double kV = 0.0;
     public static double kA = 0.0;
@@ -71,7 +93,15 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     final double TICKS_PER_REV_INTAKE = 146.44;
+
+
+
+
 
 
 
@@ -82,7 +112,15 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     PIDController turretpid = new PIDController(TP, TI, TD);
+
+
+
+
 
 
 
@@ -93,13 +131,25 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     final double MAX_DEGREES = 70;
     double ticksPerRevIntake = 101.08;
 
 
 
 
+
+
+
+
     final double MIN_POWER_TO_MOVE = 0.05;
+
+
+
+
 
 
 
@@ -110,12 +160,24 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     private double currentFlywheelTargetRPM = 1944;
 
 
 
 
+
+
+
+
     private static final double FLYWHEEL_ALLOWED_ERR_RPM = 50;
+
+
+
+
 
 
 
@@ -126,12 +188,22 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     private boolean feeding = false;
     double dergs = 0;
 
 
+
+
     private double feedStartTime = 0.0;
     private double lastFeedEndTime = -999.0;
+
+
+
+
 
 
 
@@ -143,10 +215,20 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     private final Pose startPose = new Pose(18.5, 120, Math.toRadians(143.5));
 
 
+
+
     public PathChain Shooting;
+
+
+
+
 
 
 
@@ -163,11 +245,19 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public double getdistance(double ta){
         double scale = 10;
         double distance = scale/ta;
         return(distance);
     }
+
+
+
+
 
 
 
@@ -185,11 +275,19 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public void stopIntake() {
         setpointRPMIntake = 0;
         robot.intake.setPower(0);
         robot.shootServo.setPosition(0.5);
     }
+
+
+
+
 
 
 
@@ -211,6 +309,10 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public void stopShooting() {
         robot.intake.setPower(0);
         robot.shootServo.setPosition(0.5);
@@ -218,9 +320,17 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
         shooting = false;
         feeding = false;
         finishedShooting = true;
+
+
+
+
 
 
 
@@ -233,7 +343,12 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
     public void updateShooting() {
+
 
         if (!shooting) {
             double targetTicksPerSec = currentFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
@@ -246,22 +361,32 @@ public class regCloseBlue extends OpMode {
             return;
         }
 
+
         double targetTicksPerSec = currentFlywheelTargetRPM / 60.0 * ticksPerRevLauncher;
         double measuredTicksPerSec = robot.flywheel.getVelocity();
+
 
         double ffOutput = feedforward.calculate(targetTicksPerSec);
         double pidOutput = pidf.calculate(measuredTicksPerSec, targetTicksPerSec);
 
+
         double launcherPower = Math.max(-1.0, Math.min(1.0, ffOutput + pidOutput));
         robot.flywheel.setPower(launcherPower);
+
 
         double measuredRPM = measuredTicksPerSec / ticksPerRevLauncher * 60.0;
         double flywheelErrRPM = Math.abs(measuredRPM - currentFlywheelTargetRPM);
 
+
         double now = actionTimer.getElapsedTimeSeconds();
+
 
         boolean flywheelReady = (flywheelErrRPM <= FLYWHEEL_ALLOWED_ERR_RPM);
         boolean cooldownDone = (now - lastFeedEndTime) >= BETWEEN_SHOTS_MIN_SEC;
+
+
+
+
 
 
 
@@ -308,6 +433,7 @@ public class regCloseBlue extends OpMode {
         double currDegs = robot.turret.getCurrentPosition() /
                 (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET) * 360.0;
 
+
         if (!turretManualControl) {
             if (Math.abs(currDegs - dergs) <= 3) {
                 turretManualControl = true;
@@ -317,6 +443,7 @@ public class regCloseBlue extends OpMode {
             return;
         }
 
+
         // PID holding
         if (Math.abs(currDegs - dergs) > 3) {
             turretMotorPower = turretpid.calculate(currDegs, dergs);
@@ -325,13 +452,16 @@ public class regCloseBlue extends OpMode {
         }
         robot.turret.setPower(turretMotorPower);
     }
-        public void setTurretAngle(double degrees) {
+    public void setTurretAngle(double degrees) {
+
 
         int targetTicks = (int) Math.round(degrees * (TICKS_PER_REV_TURRET / GEAR_RATIO_TURRET) / 360.0);
+
 
         robot.turret.setTargetPosition(targetTicks);
         robot.turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.turret.setPower(0.6);
+
 
     }
     public void buildPaths() {
@@ -349,6 +479,10 @@ public class regCloseBlue extends OpMode {
                                 new Pose(45.000, 58.5)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(136), Math.toRadians(185))
+
+
+
+
 
 
 
@@ -381,20 +515,20 @@ public class regCloseBlue extends OpMode {
                         new BezierCurve(
                                 new Pose(40.000, 94.000),
                                 new Pose(50.000, 87.000),
-                                new Pose(44.000, 81.000)
+                                new Pose(44.000, 80.000)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
                 .build();
         Spike1Intake = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(44.000, 81.000),
-                                new Pose(16.500, 81.000)
+                                new Pose(44.000, 80.000),
+                                new Pose(16.500, 80.000)
                         )
                 ).setTangentHeadingInterpolation()
                 .build();
         Scoring3 = follower.pathBuilder().addPath(
                         new BezierLine(
-                                new Pose(16.500, 81.000),
+                                new Pose(16.500, 80.000),
                                 new Pose(40.000, 94.000)
                         )
                 ).setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(138.5))
@@ -416,12 +550,16 @@ public class regCloseBlue extends OpMode {
                 break;
 
 
+
+
             case 1:
                 if (!follower.isBusy() && finishedShooting ) {
                     follower.followPath(Spike2Alignment, .7, true);
                     setPathState(2);
                 }
                 break;
+
+
 
 
             case 2:
@@ -434,12 +572,16 @@ public class regCloseBlue extends OpMode {
                 break;
 
 
+
+
             case 3:
                 if(!follower.isBusy()) {
                     follower.followPath(GateOpen, .5, true);
                     setPathState(4);
                 }
                 break;
+
+
 
 
             case 4:
@@ -456,12 +598,14 @@ public class regCloseBlue extends OpMode {
                 }
                 break;
 
+
             case 6:
                 if (finishedShooting && !follower.isBusy()) {
                     follower.followPath(Spike1Alignment, .7, true);
                     setPathState(7);
                 }
                 break;
+
 
             case 7:
                 if(!follower.isBusy()) {
@@ -471,6 +615,7 @@ public class regCloseBlue extends OpMode {
                     setPathState(8);
                 }
                 break;
+
 
             case 8:
                 if(!follower.isBusy()) {
@@ -487,6 +632,8 @@ public class regCloseBlue extends OpMode {
                 break;
 
 
+
+
             case 10:
                 if(!follower.isBusy() && finishedShooting) {
                     follower.followPath(Park, .5, true);
@@ -494,14 +641,24 @@ public class regCloseBlue extends OpMode {
                 }
                 break;
 
+
             case 11:
                 if (!follower.isBusy()) {
                     setPathState(-1);
                 }
                 break;
 
+
         }
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -514,6 +671,14 @@ public class regCloseBlue extends OpMode {
         pathState = pState;
         pathTimer.resetTimer();
     }
+
+
+
+
+
+
+
+
 
 
 
@@ -548,6 +713,14 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
     @Override
     public void init() {
         pathTimer = new Timer();
@@ -562,7 +735,23 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+
+
+
+
+
+
+
+
 
 
 
@@ -582,9 +771,25 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
         limelight.start();
+
+
+
+
+
+
+
+
 
 
 
@@ -604,7 +809,23 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
         panelsTelemetry.update(telemetry);
+
+
+
+
+
+
+
+
 
 
 
@@ -624,7 +845,23 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
     @Override public void init_loop() {}
+
+
+
+
+
+
+
+
 
 
 
@@ -645,10 +882,36 @@ public class regCloseBlue extends OpMode {
 
 
 
+
+
+
+
+
+
+
+
     @Override public void stop() {
         limelight.stop();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
