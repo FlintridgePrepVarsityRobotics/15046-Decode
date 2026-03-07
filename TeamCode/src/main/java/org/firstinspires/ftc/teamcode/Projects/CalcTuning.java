@@ -326,7 +326,7 @@ public class CalcTuning extends LinearOpMode {
 
                 // Access general information
                 Pose3D botpose = result.getBotpose();
-                double distance = getDistance(result.getTa());
+                double distance = getDistance(result.getTy());
                 double tx = result.getTx();
                 double txnc = result.getTxNC();
                 double ty = result.getTy();
@@ -367,7 +367,7 @@ public class CalcTuning extends LinearOpMode {
             packet.put("Measured RPM", measuredRPM);
 
 
-            telemetry.addData("Distance", getDistance(result.getTa()));
+            telemetry.addData("Distance", getDistance(result.getTy()));
             packet.put("Distance", getDistance(result.getTa()));
 
 
@@ -390,10 +390,15 @@ public class CalcTuning extends LinearOpMode {
             lastDown = downSpeed;
         }
     }
-    public double getDistance (double ta){
-        double scale = 10;
-        double newDistance = scale / ta;
-        return (newDistance);
+    public double getDistance(double ty) {
+        double limelightMountAngle = 20.0;
+        double limelightHeightInches = 14;
+        double goalHeightInches = 29.5;
+        double angleToGoal = limelightMountAngle + ty;
+        double angleRadians = angleToGoal * (Math.PI / 180.0);
+
+
+        return (goalHeightInches - limelightHeightInches) / Math.tan(angleRadians);
     }
 }
 
